@@ -7,7 +7,7 @@ return [
   "templateSuffix" => "Plataforma",
   "templateVersion" => "1.0",
   "templateFree" => false,
-  "templateDescription" => "Plataforma para certificación de mezcal del OC CIDAM",
+  "templateDescription" => "Plataforma para la gestión de servicios CIDAM",
   "templateKeyword" => "mezcal, cidam, organismo certificador, certificación de mezcal",
   "licenseUrl" => "https://themeforest.net/licenses/standard",
   "livePreview" => "https://pixinvent.com/materialize-bootstrap-laravel-admin-template/",
