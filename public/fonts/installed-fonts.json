@@ -1,0 +1,38 @@
+{
+    "lucida sans unicode": {
+        "normal": "lucida_sans_unicode_normal_131737486ff7029e7bae9143e7807123"
+    },
+    "lucida sans seminegrita": {
+        "normal": "lucida_sans_seminegrita_normal_522be8df29874da4df1275d4a1a88296"
+    },
+    "arial negrita": {
+        "normal": "arial_negrita_normal_77d34e52dd1e4ce6845e48cc82473274"
+    },
+    "century gothic": {
+        "normal": "century_gothic_normal_b47783b362dc2e27d64bb38fb7f8aa69"
+    },
+    "century gothic negrita": {
+        "normal": "century_gothic_negrita_normal_d2a105cdbb35a480eaf86819474f91e2"
+    },
+    "calibri": {
+        "normal": "calibri_normal_f904fb7aec4aa6a102cede8230e668a1"
+    },
+    "calibri-bold": {
+        "normal": "calibri_bold_normal_1ace44c4fc3ba5f149a4a64fb7120658"
+    },
+    "century": {
+        "normal": "century_normal_701952a5e60038be5565a072d04a6565"
+    },
+    "cambria": {
+        "normal": "cambria_normal_5e25d3a82271ed81e2db20dffd80ee5e"
+    },
+    "cambria negrita": {
+        "normal": "cambria_negrita_normal_dc1123cb824e69ad3dbb42f166513d4e"
+    },
+    "fuentenormal": {
+        "normal": "fuentenormal_normal_17b24707a5a852e726c4a66d88541496"
+    },
+    "fuentenegrita": {
+        "normal": "fuentenegrita_normal_6d4280ad5be35548481951960a079506"
+    }
+}

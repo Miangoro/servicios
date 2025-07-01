@@ -1,0 +1,235 @@
+{
+  "menu": [
+    {
+      "name": "Inicio",
+      "url": "dashboard",
+      "icon": "menu-icon ri-home-2-fill",
+      "slug": "dashboard",
+      "can" : "Visualizar usuarios"
+    },
+    {
+      "name": "Usuarios",
+      "icon": "menu-icon ri-group-fill",
+      "slug": "usuarios",
+      "can" : "Visualizar usuarios",
+      "submenu": [
+        {
+          "url": "/usuarios/personal",
+          "name": "Personal",
+          "slug": "usuarios-personal"
+        },
+
+        {
+          "url": "/usuarios/clientes",
+          "name": "Clientes",
+          "slug": "usuarios-clientes"
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "icon": "menu-icon ri-user-follow-fill",
+      "slug": "clientes",
+      "can" : "Visualizar clientes",
+      "submenu": [
+ 
+        {
+          "url": "clientes/confirmados",
+          "name": "Confirmados",
+          "slug": "clientes-confirmados"
+        }
+      ]
+    },
+    {
+      "name": "Servicios",
+      "icon": "menu-icon ri-user-follow-fill",
+      "slug": "clientes",
+      "can" : "Visualizar clientes",
+      "submenu": [
+ 
+        {
+          "url": "clientes/confirmados",
+          "name": "De catálogo",
+          "slug": "clientes-confirmados"
+        },
+        {
+          "url": "clientes/confirmados",
+          "name": "Especializados",
+          "slug": "clientes-confirmados"
+        }
+      ]
+    },
+
+    {
+      "name": "Cotizaciones",
+      "url": "find_roles",
+      "icon": "menu-icon ri-user-settings-fill",
+      "slug": "find_roles",
+      "can" : "Visualizar roles"
+    },
+
+    {
+      "name": "Ventas",
+      "url": "find_roles",
+      "icon": "menu-icon ri-user-settings-fill",
+      "slug": "find_roles",
+      "can" : "Visualizar roles"
+    },
+
+    {
+      "name": "Laboratorios",
+      "icon": "menu-icon ri-user-follow-fill",
+      "slug": "clientes",
+      "can" : "Visualizar clientes",
+      "submenu": [
+ 
+        {
+          "url": "clientes/confirmados",
+          "name": "Ordenes de servicio",
+          "slug": "clientes-confirmados"
+        },
+        {
+          "url": "clientes/confirmados",
+          "name": "Recepción de muestra",
+          "slug": "clientes-confirmados"
+        },
+        {
+          "url": "clientes/confirmados",
+          "name": "Resultados",
+          "slug": "clientes-confirmados"
+        }
+      ]
+    },
+
+    {
+      "name": "Catálogos",
+      "icon": "menu-icon ri-book-open-fill",
+      "slug": "catalogo",
+      "submenu": [
+    
+        {
+          "url": "catalogo/categorias",
+          "name": "Unidades de cidam",
+          "slug": "catalogo-categorias",
+          "can" : "Visualizar categorías de mezcal"
+        },
+        {
+          "url": "catalogo/clases",
+          "name": "Laboratorios de cidam",
+          "slug": "catalogo-clases",
+          "can" : "Visualizar clases de mezcal"
+        }
+       
+      ]
+    },
+
+    
+
+    {
+      "name": "Solicitud de compras",
+      "icon": "menu-icon ri-file-chart-fill",
+      "slug": "revision",
+      "submenu": [
+        {
+          "url": "/revision/personal",
+          "name": "Personal",
+          "slug": "revision-personal",
+          "can" : "Visualizar revisión del personal"
+        },
+        {
+          "url": "/revision/consejo",
+          "name": "Consejo",
+          "slug": "revision-consejo",
+          "can" : "Visualizar revisión del consejo"
+        }
+      ]
+    },
+     {
+      "name": "Inventarios",
+      "icon": "menu-icon ri-file-chart-fill",
+      "slug": "revision",
+      "submenu": [
+        {
+          "url": "/revision/personal",
+          "name": "Reactivos",
+          "slug": "revision-personal",
+          "can" : "Visualizar revisión del personal"
+        },
+        {
+          "url": "/revision/consejo",
+          "name": "Equipos",
+          "slug": "revision-consejo",
+          "can" : "Visualizar revisión del consejo"
+        }
+      ]
+    },
+
+     {
+      "name": "Personal",
+      "icon": "menu-icon ri-file-chart-fill",
+      "slug": "revision",
+      "submenu": [
+        {
+          "url": "/revision/personal",
+          "name": "Expediente",
+          "slug": "revision-personal",
+          "can" : "Visualizar revisión del personal"
+        },
+        {
+          "url": "/revision/consejo",
+          "name": "Superviciones",
+          "slug": "revision-consejo",
+          "can" : "Visualizar revisión del consejo"
+        }
+      ]
+    },
+
+    {
+      "name": "SGC",
+      "url": "resumen-datos",
+      "icon": "menu-icon ri-contacts-book-2-fill",
+      "slug": "resumen",
+      "can" : "Visualizar resumen de datos"
+    },
+
+    {
+      "name": "Capacitaciones",
+      "url": "resumen-datos",
+      "icon": "menu-icon ri-contacts-book-2-fill",
+      "slug": "resumen",
+      "can" : "Visualizar resumen de datos"
+    },
+
+    {
+      "name": "Solicitudes de mantenimiento",
+      "url": "resumen-datos",
+      "icon": "menu-icon ri-contacts-book-2-fill",
+      "slug": "resumen",
+      "can" : "Visualizar resumen de datos"
+    },
+
+    {
+      "name": "Resumen de datos",
+      "url": "resumen-datos",
+      "icon": "menu-icon ri-contacts-book-2-fill",
+      "slug": "resumen",
+      "can" : "Visualizar resumen de datos"
+    },
+
+    {
+      "name": "Roles",
+      "url": "find_roles",
+      "icon": "menu-icon ri-user-settings-fill",
+      "slug": "find_roles",
+      "can" : "Visualizar roles"
+    },
+    {
+      "name": "Permisos",
+      "url": "find_permisos",
+      "icon": "menu-icon ri-shield-keyhole-fill",
+      "slug": "find_permisos",
+      "can" : "Visualizar permisos"
+    }
+
+ ]
+}
