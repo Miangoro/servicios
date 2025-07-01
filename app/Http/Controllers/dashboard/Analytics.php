@@ -21,76 +21,10 @@ class Analytics extends Controller
 {
   public function index()
   {
-    //$datos = solicitudesModel::All();
-    $solicitudesSinInspeccion = solicitudesModel::doesntHave('inspeccion')->where('fecha_solicitud','>','2024-12-31')->count();
-    $solicitudesSinActa = solicitudesModel::whereNotIn('id_tipo', [12, 13, 15])
-    ->where('fecha_solicitud', '>', '2024-12-31')
-    ->where(function ($query) {
-        $query->doesntHave('documentacion_completa')
-              ->orWhereDoesntHave('documentacion_completa', function ($q) {
-                  $q->where('id_documento', 69);
-              });
-    })
-    ->get();
+   
 
 
-
-
-
-
-    $hoy = Carbon::today(); // Solo la fecha, sin hora.
-    $fechaLimite = $hoy->copy()->addDays(5); // Fecha límite en 5 días.
-
-
-    $dictamenesInstalacion = Dictamen_instalaciones::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    $dictamenesGranel = Dictamen_granel::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    //$dictamenesEnvasado = Dictamen_Envasado::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    $dictamenesExportacion = Dictamen_Exportacion::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    $dictamenesPorVencer = $dictamenesInstalacion
-      ->merge($dictamenesGranel)
-      //->merge($dictamenesEnvasado)
-      ->merge($dictamenesExportacion);
-
-    $certificadosInstalacion = Certificados::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    $certificadosGranel = CertificadosGranel::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    $certificadosExportacion = Certificado_Exportacion::whereBetween('fecha_vigencia', [$hoy, $fechaLimite])->get();
-    $certificadosPorVencer = $certificadosInstalacion
-      ->merge($certificadosGranel)
-      ->merge($certificadosExportacion);
-
-
-    $dictamenesInstalacionesSinCertificado = Dictamen_instalaciones::whereDoesntHave('certificado')->where('fecha_emision','>','2024-12-31')->get();
-    $dictamenesGranelesSinCertificado = Dictamen_Granel::whereDoesntHave('certificado')->where('fecha_emision','>','2024-12-31')->get();
-    $dictamenesExportacionSinCertificado  = Dictamen_Exportacion::whereDoesntHave('certificado')->where('fecha_emision','>','2024-12-31')->get();
-
-    $lotesSinFq = LotesGranel::whereDoesntHave('fqs')->get();
-
-    $certificadoGranelSinEscaneado = CertificadosGranel::whereDoesntHave('certificadoEscaneado')->get();
-    
-
-
-// Traer las inspecciones futuras con su inspector
-$inspecciones = inspecciones::with('inspector')
-    ->whereHas('inspector') // asegura que tenga inspector
-    ->where('fecha_servicio', '>', Carbon::parse('2024-12-31'))
-    ->get()
-    ->unique('num_servicio') // <-- omite duplicados por num_servicio
-    ->groupBy(function ($inspeccion) {
-        return $inspeccion->inspector->id; // agrupamos por ID del inspector
-    });
-
-// Preparar el resultado
-$inspeccionesInspector = $inspecciones->map(function ($grupo) {
-    $inspector = $grupo->first()->inspector;
-    return [
-        'nombre' => $inspector->name,
-        'foto' => $inspector->profile_photo_path,
-        'total_inspecciones' => $grupo->count(),
-    ];
-})->sortByDesc('total_inspecciones'); 
-
-
-    return view('content.dashboard.dashboards-analytics', compact('certificadoGranelSinEscaneado','lotesSinFq','inspeccionesInspector','solicitudesSinInspeccion', 'solicitudesSinActa', 'dictamenesPorVencer', 'certificadosPorVencer', 'dictamenesInstalacionesSinCertificado', 'dictamenesGranelesSinCertificado','dictamenesExportacionSinCertificado'));
+    return view('content.dashboard.dashboards-analytics');
   }
 
   public function estadisticasCertificados(Request $request)

@@ -3,7 +3,7 @@
 return [
   "creatorName" => "CIDAM A.C.",
   "creatorUrl" => "https://cidam.org",
-  "templateName" => "OC CIDAM",
+  "templateName" => "CIDAM",
   "templateSuffix" => "Plataforma",
   "templateVersion" => "1.0",
   "templateFree" => false,
