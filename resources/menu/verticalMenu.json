@@ -114,6 +114,9 @@
           "can" : "Visualizar categorías de mezcal"
         },
         {
+          "url": "Laboratorios",
+          "name": "Laboratorios de cidam",
+          "slug": "laboratorios.index",
           "url": "Unidades",
           "name": "Unidades",
           "slug": "Unidades.index",

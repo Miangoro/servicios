@@ -172,7 +172,7 @@ use App\Http\Controllers\insertar_datos_bd_lotes_envasado;
 use App\Http\Controllers\insertar_datos_bd_predios;
 use App\Http\Controllers\permisos\permisosController;
 use App\Http\Controllers\permisos\rolesController;
-use App\Http\Controllers\CatalogoUnidades;
+use App\Http\Controllers\CatalogoLaboratorios;
 
 // Main Page Route
 //Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -191,9 +191,10 @@ Route::get('/docusign/descargar/{envelopeId}', [DocuSignController::class, 'desc
 Route::get('/estadoSobre/{envelopeId}', [DocuSignController::class, 'estadoSobre'])->name('estadoSobre');
 Route::get('/add_firmar_docusign', [DocuSignController::class, 'add_firmar_docusign'])->name('add_firmar_docusign');
 
+//catalogos
 // Agrupar rutas con el middleware 'auth' y el mismo controlador Nacional
-Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function () {
-   Route::get('Unidades', 'index')->name('Unidades.index');
+Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(function () {
+   Route::get('Laboratorios', 'index')->name('laboratorios.index');
 });
 
 //Para documentos
@@ -504,7 +505,10 @@ Route::post('/marcas-list/update', [marcasCatalogoController::class, 'update'])-
 Route::post('/etiquetado/updateEtiquetas', [marcasCatalogoController::class, 'updateEtiquetas'])->middleware(['auth']);
 Route::get('/marcas-list/{id}/editEtiquetas', [marcasCatalogoController::class, 'editEtiquetas'])->name('marcas.edit')->middleware(['auth']);
 
-
+// Agrupar rutas con el middleware 'auth' y el mismo controlador Nacional
+Route::middleware('auth')->controller(Informes070Controller::class)->group(function () {
+   Route::get('Informes070', 'index')->name('informes.index');
+});
 
 //Etiquetas
 Route::get('/catalogo/etiquetas', [EtiquetasController::class, 'UserManagement'])->name('catalogo-etiquetas')->middleware(['auth']);
