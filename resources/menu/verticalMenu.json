@@ -109,14 +109,14 @@
     
         {
           "url": "catalogo/categorias",
-          "name": "Unidades de cidam",
+          "name": "Laboratorios de cidam",
           "slug": "catalogo-categorias",
           "can" : "Visualizar categorías de mezcal"
         },
         {
-          "url": "catalogo/clases",
-          "name": "Laboratorios de cidam",
-          "slug": "catalogo-clases",
+          "url": "Unidades",
+          "name": "Unidades",
+          "slug": "Unidades.index",
           "can" : "Visualizar clases de mezcal"
         }
        
