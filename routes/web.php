@@ -161,60 +161,7 @@ use App\Http\Controllers\charts\ChartJs;
 use App\Http\Controllers\maps\Leaflet;
 use App\Http\Controllers\solicitudCliente\solicitudClienteController;
 use App\Http\Controllers\pdfscontrollers\CartaAsignacionController;
-use App\Http\Controllers\EnviarCorreoController;
-use App\Http\Controllers\clientes\clientesProspectoController;
-use App\Http\Controllers\catalogo\categoriasController;
-use App\Http\Controllers\catalogo\marcasCatalogoController;
-use App\Http\Controllers\catalogo\claseController;
-use App\Http\Controllers\catalogo\lotesEnvasadoController;
-use App\Http\Controllers\guias\GuiasController;
-use App\Http\Controllers\hologramas\solicitudHologramaController;
-use App\Http\Controllers\clientes\clientesConfirmadosController;
-use App\Http\Controllers\documentacion\documentacionController;
-use App\Http\Controllers\domicilios\DomiciliosController;
-use App\Http\Controllers\domicilios\prediosController;
-use App\Http\Controllers\domicilios\DestinosController;
-use App\Http\Controllers\FileController;
-use App\Http\Controllers\getFuncionesController;
-use App\Http\Controllers\usuarios\UsuariosController;
-use App\Http\Controllers\usuarios\UsuariosInspectoresController;
-use App\Http\Controllers\usuarios\UsuariosPersonalController;
-use App\Http\Controllers\usuarios\UsuariosConsejoController;
-use App\Http\Controllers\catalogo\lotesGranelController;
-use App\Http\Controllers\documentacion\DocumentosController;
-use App\Http\Controllers\solicitudes\SolicitudesTipoController;
-//Tipos maguey/agave
-use App\Http\Controllers\catalogo\tiposController;
-use App\Http\Controllers\dictamenes\DictamenInstalacionesController;
-use App\Http\Controllers\dictamenes\DictamenGranelController;
-use App\Http\Controllers\dictamenes\DictamenEnvasadoController;
-use App\Http\Controllers\certificados\Certificado_InstalacionesController;
-use App\Http\Controllers\certificados\Certificado_GranelController;
-use App\Http\Controllers\hologramas\solicitudHolograma;
-use App\Http\Controllers\catalogo\catalogoEquiposController;
-use App\Http\Controllers\insertar_datos_bd;
-use App\Http\Controllers\inspecciones\inspeccionesController;
-use App\Http\Controllers\NotificacionController;
-use App\Http\Controllers\solicitudes\solicitudesController;
-use App\Http\Controllers\TrazabilidadController;
-use App\Http\Controllers\pdf_llenado\PdfController;
-use App\Http\Controllers\revision\RevisionPersonalController;
-use App\Http\Controllers\revision\RevisionConsejoController;
-use App\Http\Controllers\revision\catalogo_personal_seleccion_preguntas_controller;
-use App\Http\Controllers\bitacoras\BitacoraMezcalController;
-use App\Http\Controllers\bitacoras\BitacoraProductoMaduracionController;
-use App\Http\Controllers\bitacoras\BitacoraProcesoElaboracionController;
-use App\Http\Controllers\bitacoras\BitacoraProductoTerminadoController;
-use App\Http\Controllers\bitacoras\BitacoraHologramasController;
-use App\Http\Controllers\catalogo\EtiquetasController;
-use App\Http\Controllers\certificados\Certificado_ExportacionController;
-use App\Http\Controllers\certificados\Certificado_NacionalController;
-use App\Http\Controllers\insertar_datos_bd_certificados;
-use App\Http\Controllers\insertar_datos_bd_dictamenes;
-use App\Http\Controllers\Tramite_impi\impiController;
-use App\Http\Controllers\dictamenes\DictamenExportacionController;
-use App\Http\Controllers\clientes\resumenController;
-use App\Http\Controllers\DocuSignController;
+
 use App\Http\Controllers\efirma\firmaController;
 use App\Http\Controllers\hologramas\hologramasACtivar;
 use App\Http\Controllers\insertar_datos_bd_actas;
@@ -225,6 +172,7 @@ use App\Http\Controllers\insertar_datos_bd_lotes_envasado;
 use App\Http\Controllers\insertar_datos_bd_predios;
 use App\Http\Controllers\permisos\permisosController;
 use App\Http\Controllers\permisos\rolesController;
+use App\Http\Controllers\CatalogoLaboratorios;
 
 // Main Page Route
 //Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -243,7 +191,11 @@ Route::get('/docusign/descargar/{envelopeId}', [DocuSignController::class, 'desc
 Route::get('/estadoSobre/{envelopeId}', [DocuSignController::class, 'estadoSobre'])->name('estadoSobre');
 Route::get('/add_firmar_docusign', [DocuSignController::class, 'add_firmar_docusign'])->name('add_firmar_docusign');
 
-
+//catalogos
+// Agrupar rutas con el middleware 'auth' y el mismo controlador Nacional
+Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(function () {
+   Route::get('Laboratorios', 'index')->name('laboratorios.index');
+});
 
 //Para documentos
 Route::get('files/{filename}', [FileController::class, 'show'])
@@ -552,6 +504,11 @@ Route::post('/marcas-list/update', [marcasCatalogoController::class, 'update'])-
 Route::post('/marcas-list/update', [marcasCatalogoController::class, 'update'])->name('marcas.update')->middleware(['auth']);
 Route::post('/etiquetado/updateEtiquetas', [marcasCatalogoController::class, 'updateEtiquetas'])->middleware(['auth']);
 Route::get('/marcas-list/{id}/editEtiquetas', [marcasCatalogoController::class, 'editEtiquetas'])->name('marcas.edit')->middleware(['auth']);
+
+// Agrupar rutas con el middleware 'auth' y el mismo controlador Nacional
+Route::middleware('auth')->controller(Informes070Controller::class)->group(function () {
+   Route::get('Informes070', 'index')->name('informes.index');
+});
 
 //Etiquetas
 Route::get('/catalogo/etiquetas', [EtiquetasController::class, 'UserManagement'])->name('catalogo-etiquetas')->middleware(['auth']);
