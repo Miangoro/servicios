@@ -51,6 +51,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h1 class="mb-0"><b>Catálogo de laboratorios</b></h1>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewAddress"> Nuevo catálogo </button>
                         </div>
                         <div class="col-6 text-right">
                         
@@ -95,3 +96,4 @@
 @endpush
 
 @endsection
+@include('_partials/_modals/modal-add-new-laboratorio')
