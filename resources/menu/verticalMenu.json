@@ -108,15 +108,15 @@
       "submenu": [
     
         {
-          "url": "Laboratorios",
+          "url": "catalogos/laboratorios",
           "name": "Laboratorios de cidam",
-          "slug": "laboratorios.index"
+          "slug": "laboratorios"
         },
         {
-          "url": "Unidades",
+          "url": "/catalogos/unidades",
           "name": "Unidades",
           "slug": "Unidades.index",
-          "can" : "Visualizar clases de mezcal"
+          "can" : "Visualizar clases de mezcal" 
         }
        
       ]

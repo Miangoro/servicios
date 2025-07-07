@@ -8,7 +8,7 @@
             serverSide: true,
             responsive: true,
             ajax: {
-        url: "/laboratorios",
+        url: "/catalogos/laboratorios",
         type: "GET",
         data: function (d) {
         }

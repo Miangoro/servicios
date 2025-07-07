@@ -40,10 +40,10 @@ class CatalogoLaboratorios extends Controller
 
     //Manda a la vista de agregar 
 
-    public function add_NombreDeSUVista()
+    public function add_catalogo_laboratorio()
     {
     
-        return view('informes.add_informes');
+        return view('catalogo.add_catalogo_laboratorio');
 
     }
 

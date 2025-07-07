@@ -194,7 +194,13 @@ Route::get('/add_firmar_docusign', [DocuSignController::class, 'add_firmar_docus
 //catalogos
 // Agrupar rutas con el middleware 'auth' y el mismo controlador Nacional
 Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(function () {
-   Route::get('/laboratorios', 'index')->name('laboratorios.index');
+    Route::get('/catalogos/laboratorios', 'index')->name('laboratorios.index');
+    Route::get('/add_catalogo_laboratorio', 'add_catalogo_laboratorio')->name('add_catalogo_laboratorio');
+});
+
+Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function () {
+    Route::get('/catalogos/unidades', 'index')->name('unidades.index');
+    Route::get('/add_catalogo_unidades', 'add_catalogo_unidades')->name('add_catalogo_unidades');
 });
 
 //Para documentos
