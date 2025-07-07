@@ -16,7 +16,7 @@ class CatalogoLaboratorios extends Controller
     {
         if($request->ajax()){
             $sql = CatalogoLaboratorio::all();//Nombre del modelo
-           return Datatables::of($sql)->addIndexColumn()
+           return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('action', function($row){
 
                     $btn = '
