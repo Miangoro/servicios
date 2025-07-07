@@ -173,6 +173,8 @@ use App\Http\Controllers\insertar_datos_bd_predios;
 use App\Http\Controllers\permisos\permisosController;
 use App\Http\Controllers\permisos\rolesController;
 use App\Http\Controllers\CatalogoLaboratorios;
+use App\Http\Controllers\CatalogoUnidades;
+
 
 // Main Page Route
 //Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');

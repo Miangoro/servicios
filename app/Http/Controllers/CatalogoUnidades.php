@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CatalogoUnidad;
 use Illuminate\Http\Request;
-use DataTables;
+use Yajra\DataTables\DataTables;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
 
@@ -13,9 +13,9 @@ class CatalogoUnidades extends Controller
 {
    public function index(Request $request)
     {
-       // if($request->ajax()){
-            $Uni = CatalogoUnidad::all();//Nombre del modelo
-           /* return Datatables::of($res_model)->addIndexColumn()
+        if($request->ajax()){
+            $sql = CatalogoUnidad::all();//Nombre del modelo
+           return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('action', function($row){
 
                     $btn = '
@@ -24,16 +24,16 @@ class CatalogoUnidades extends Controller
                             Opciones
                           </button>
                           <div class="dropdown-menu">
-                            
+                           
                           </div>
                         </div>';
                     return $btn;
                 })
             ->rawColumns(['action'])
             ->make(true);
-        }*/
+        }
        
-        return view('catalogo.Unidades', [ 'Uni'  =>$Uni]);  
+        return view('catalogo.unidades');  
         
     }
 
