@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\FacadesRoute;
 use App\Models\CatalogoLaboratorio;
-use DataTables;
+use Yajra\DataTables\DataTables;
+
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
 
@@ -13,9 +14,9 @@ class CatalogoLaboratorios extends Controller
 {
     public function index(Request $request)
     {
-        //if($request->ajax()){
-            $labs = CatalogoLaboratorio::all();//Nombre del modelo
-        /*    return Datatables::of($res_model)->addIndexColumn()
+        if($request->ajax()){
+            $sql = CatalogoLaboratorio::all();//Nombre del modelo
+           return Datatables::of($sql)->addIndexColumn()
                 ->addColumn('action', function($row){
 
                     $btn = '
@@ -31,9 +32,9 @@ class CatalogoLaboratorios extends Controller
                 })
             ->rawColumns(['action'])
             ->make(true);
-        }*/
+        }
        
-        return view('catalogo.Laboratorios', ['labs' => $labs]);  
+        return view('catalogo.Laboratorios');  
         
     }
 

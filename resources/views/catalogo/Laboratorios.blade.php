@@ -71,20 +71,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($labs as $lab)
-                                <tr>
-                                    {{ $lab->id_laboratorio }}
-                                </tr>
-                                <tr>
-                                    {{ $lab->clave }}
-                                </tr>
-                                <tr>
-                                    {{ $lab->laboratorio }}
-                                </tr>
-                                <tr>
-                                    {{ $lab->descripcion }}
-                                </tr>
-                            @endforeach
+                           
                         </tbody>
                     </table>
                 </div>
@@ -100,59 +87,11 @@
 
 @push('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-@endpush
+
 
 <script>
-    $(function() {
-        var table = $('.lab_datatable').DataTable({
-
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-            },
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            ajax: {
-        url: "{{ route('laboratorios.index') }}",
-        type: "GET",
-        data: function (d) {
-        }
-        },
-            dataType: 'json',
-            type: "POST",
-            columns: [
-                {
-                    data: 'id_laboratorio',
-                    name: 'id_laboratorio'
-                },
-                
-               
-                {
-                    data: 'clave',
-                    name: 'clave'
-                }, 
-                
-                {
-                    data: 'laboratorio',
-                    name: 'laboratorio'
-                },
-                {
-                    data: 'descripcion',
-                    name: 'descripcion'
-                },
-
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                },
-            ]
-
-        });
-       
-    });
+  
 </script>
-
+@endpush
 
 @endsection
