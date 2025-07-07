@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Tipos de Maguey o Agave')
+@section('title', 'Laboratorios')
 
 <!-- Vendor Styles -->
 @section('vendor-style')
@@ -36,92 +36,60 @@
 @endsection
 
 @section('content')
+<style>
+  /* Aplica solo a la clase que contiene la tabla */
+.lab_datatable td {
+    white-space: nowrap;
+}
 
-{{-- <meta name="csrf-token" content="{{ csrf_token() }}">
- --}}
-<!-- Users List Table -->
-<div class="card">
-    <div class="card-header pb-0">
-        <h3 class="card-title mb-0">Catálogo de Unidades</h3>
-    </div>
-
-    <div class="card-datatable table-responsive">
-        <table class="datatables-users table">
-            <thead class="table-dark">
-                <tr>
-
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Habilitado</th>
-                    <th>ID USUARIO</th>
-                </tr>
-
-                <tr>
-                <td>1</td>
-                <td>Andrea</td>
-                <td>1</td>
-                <td>0</td>
-            </tr>
-          
-            </thead>
-        </table>
-    </div>
-
-
-    <!-- Offcanvas Agregar nuevo tipo -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasAddUser" aria-labelledby="offcanvasAddUserLabel">
-        <div class="offcanvas-header border-bottom">
-            <h5 id="offcanvasAddUserLabel" class="offcanvas-title">Nuevo Tipo de Maguey/Agave</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body mx-0 flex-grow-0 h-100">
-            <form class="add-new-user pt-0" id="addNewCategoryForm">
-                @csrf
-                <div class="form-floating form-floating-outline mb-5">
-                    <input type="text" class="form-control" id="nombre" placeholder="Tipo de maguey o agave" name="nombre" aria-label="Nombre" required>
-                    <label for="nombre">Nombre del Tipo</label>
+</style>
+<div class="container-fluid mt--7">
+    <div class="row">
+        <div class="col">
+            <div class="card shadow">
+                <div class="card-header border-0">
+                    <div class="row align-items-center">
+                        <div class="col-6">
+                            <h1 class="mb-0"><b>Catálogo de laboratorios</b></h1>
+                        </div>
+                        <div class="col-6 text-right">
+                        
+                        </div>
+                    </div>
                 </div>
-                <div class="form-floating form-floating-outline mb-5">
-                    <input type="text" class="form-control" id="ciencitico" placeholder="cientifico" name="cientifico" aria-label="Nombre" required>
-                    <label for="cientifico">Nombre del cientifico</label>
+                
+                <div class="table-responsive p-3">
+                    <table class="table table-flush table-bordered unidades_datatable table-striped table-sm">
+                       
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col" class="text-white">No.</th>
+                                <th scope="col" class="text-white">NOmbre</th>
+                                <th scope="col"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           
+                        </tbody>
+                    </table>
                 </div>
-                <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">Registrar</button>
-                <button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancelar</button>
-            </form>
+                <div class="card-footer py-4">
+                    <nav class="d-flex justify-content-end" aria-label="..."></nav>
+                </div>
+            </div>
         </div>
     </div>
-
-
-    <!-- Offcanvas EDITAR -->
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="editTipo">
-        <div class="offcanvas-header border-bottom">
-            <h5 class="offcanvas-title">Editar</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body mx-0 flex-grow-0 h-100">
-            <form class="edit-class-form pt-0" id="editTipoForm">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="id_tipo" id="edit_id_tipo" value="">
-                <div class="form-floating form-floating-outline mb-5">
-                    <input type="text" class="form-control" id="edit_nombre" placeholder="Nombre de la Categoría" name="nombre" aria-label="Categoría" required>
-                    <label for="nombre">Nombre de la Categoría</label>
-                </div>
-                <div class="form-floating form-floating-outline mb-5">
-                    <input type="text" class="form-control" id="edit_cientifico" placeholder="Nombre del cientifico" name="cientifico" aria-label="Categoría" required>
-                    <label for="cientifico">Nombre de la Categoría</label>
-                </div>
-                <button type="submit" class="btn btn-primary me-sm-3 me-1">Guardar Cambios</button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancelar</button>
-            </form>
-        </div>
-    </div>
-
 
 </div>
 
-<!-- Modal -->
-@include('_partials._modals.modal-pdfs-frames')
-<!-- /Modal -->
+
+@push('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+
+<script>
+  
+</script>
+@endpush
 
 @endsection
