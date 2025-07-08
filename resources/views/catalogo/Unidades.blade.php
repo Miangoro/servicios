@@ -51,7 +51,8 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h1 class="mb-0"><b>Catálogo de Unidades</b></h1>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades"> Nueva Unidad </button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
+                        <i class="fas fa-plus me-2"></i> Nueva Unidad</button>
                        
                         </div>
                         <div class="col-6 text-right">
@@ -65,9 +66,8 @@
                        
                         <thead class="table-dark">
                             <tr>
-                                <th scope="col" class="text-white">No.</th>
-                                <th scope="col" class="text-white">NOmbre</th>
-                                <th scope="col"></th>
+                                <th style="width: 80px;">NO.</th>   <th>NOMBRE</th> 
+                                <th class="text-center" style="width: 120px;">Acciones</th> </tr>
                             </tr>
                         </thead>
                         <tbody>

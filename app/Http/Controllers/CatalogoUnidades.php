@@ -11,24 +11,40 @@ use assets\js\components\charts;
 
 class CatalogoUnidades extends Controller
 {
-   public function index(Request $request)
+
+public function index(Request $request)
     {
         if($request->ajax()){
             $sql = CatalogoUnidad::all();//Nombre del modelo
            return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('action', function($row){
 
-                    $btn = '
-                    <div class="dropdown">
-                          <button  class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
-                            Opciones
-                          </button>
-                          <div class="dropdown-menu">
-                           
-                          </div>
-                        </div>';
-                    return $btn;
-                })
+                   $btn = '
+                   <div class="dropdown">
+        <button class="btn btn-info dropdown-toggle" type="button" 
+                id="dropdownMenuButton_' . $row->id_unidad . '"' . // ID único para cada botón
+                ' data-bs-toggle="dropdown" aria-expanded="false">'. // Usar data-bs-toggle para Bootstrap 5
+            '<i class="fas fa-gear"></i>&nbsp;Opciones
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_unidad . '">'. // Referencia al ID único del botón
+            '<li>
+                <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad(' . $row->id_unidad . ')">'. // Llama a una función JS para editar
+                    '<i class="fas fa-edit me-2"></i> Editar'. // Icono de editar y margen derecho
+                '</a>
+            </li>
+            <li>
+                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteUnidad(' . $row->id_unidad . ')">'. // Llama a una función JS para eliminar
+                    '<i class="fas fa-trash-alt me-2"></i> Eliminar'. // Icono de eliminar y margen derecho
+                '</a>
+            </li>
+            '
+        .'</ul>
+    </div>';
+
+                return $btn;
+                   })
+
+
             ->rawColumns(['action'])
             ->make(true);
         }
@@ -52,7 +68,7 @@ class CatalogoUnidades extends Controller
 
 
         $informes = CatalogoUnidad::create([
-                //'folio_solicitud' =>  helper::folioSolicitud(),
+                 //'folio_solicitud' =>  helper::folioSolicitud(),
                 //'destino' => 1,
                 //'id_inspector' => $request->id_inspector,
                 //'folio' => $request->folio

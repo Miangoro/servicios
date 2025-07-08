@@ -1,70 +1,73 @@
 <!-- Add New Address Modal -->
-<div class="modal fade" id="agregarUnidades" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-simple modal-add-new-address">
-    <div class="modal-content">
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      <div class="modal-body p-0">
-        <div class="text-center mb-6">
-          <h4 class="address-title mb-2">Registrar Nueva Unidad</h4>
-          <p class="address-subtitle"></p>
-        </div>
-        <form id="addNewAddressForm" class="row g-5" onsubmit="return false">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
 
-          <div class="col-12">
-            <div class="row g-5">
-              <div class="col-md mb-md-0">
-                
-              </div>
-              </div>
-            </div>
-          </div>
-          <div class="row mb-3">
-          <div class="col-12 col-md-6">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressLastName" name="modalAddressLastName" class="form-control" placeholder="Doe" />
+.modal-header.bg-custom-green-modal-header {
+    background-color: rgb(88, 213, 117); 
+    color: white; 
+    border-bottom: none; 
+    
+    
+    padding-top: 0.75rem;   
+    padding-bottom: 0.75rem; 
+    
+    padding-left: 1.5rem; 
+    padding-right: 1.5rem; 
+    
+    
+    border-top-left-radius: var(--bs-modal-border-radius, 0.3rem);
+    border-top-right-radius: var(--bs-modal-border-radius, 0.3rem);
+}
+
+
+.modal-header.bg-custom-green-modal-header .modal-title {
+    color: white; 
+    margin-bottom: 0;
+}
+
+
+.modal-header.bg-custom-green-modal-header .btn-close {
+    filter: invert(1) grayscale(1) brightness(2); 
+    margin: -0.5rem -0.5rem -0.5rem auto; 
+}
+
+
+.modal-content {
+    border-top: 5px solid rgb(88, 213, 117); 
+    border-radius: var(--bs-modal-border-radius, 0.3rem); 
+}
+</style>
+
+<div class="modal fade" id="agregarUnidades" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      
+      <div class="modal-header bg-custom-green-modal-header">
+        <h4 class="modal-title" id="agregarUnidadesLabel">Registrar Nueva Unidad</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <form id="addNewAddressForm" class="row g-3" onsubmit="return false">
+          
+           <div class="form-floating form-floating-outline">
+              <input type="text" id="modalAddressLastName" name="modalAddressLastName" class="form-control" placeholder=" " />
               <label for="modalAddressLastName">Nombre de la Unidad</label>
             </div>
-          </div>
-          <div class="col-12 col-md-6">
-            <div class="form-floating form-floating-outline">
-              <select id="modalAddressCountry" name="modalAddressCountry" class="select2 form-select" data-allow-clear="true">
-                <option value="">Seleccionar Coordinador</option>
-                <option value="Australia">Australia</option>
-                <option value="Bangladesh">Bangladesh</option>
-                <option value="Belarus">Belarus</option>
-                <option value="Brazil">Brazil</option>
-                <option value="Canada">Canada</option>
-                <option value="China">China</option>
-                <option value="France">France</option>
-                <option value="Germany">Germany</option>
-                <option value="India">India</option>
-                <option value="Indonesia">Indonesia</option>
-                <option value="Israel">Israel</option>
-                <option value="Italy">Italy</option>
-                <option value="Japan">Japan</option>
-                <option value="Korea">Korea, Republic of</option>
-                <option value="Mexico">Mexico</option>
-                <option value="Philippines">Philippines</option>
-                <option value="Russia">Russian Federation</option>
-                <option value="South Africa">South Africa</option>
-                <option value="Thailand">Thailand</option>
-                <option value="Turkey">Turkey</option>
-                <option value="Ukraine">Ukraine</option>
-                <option value="United Arab Emirates">United Arab Emirates</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-              </select>
-              <label for="modalAddressCountry"> </label>
-            </div>
-          </div>
-          </div>
-          <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-            <button type="submit" class="btn btn-primary">Registrar</button>
-            <button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="modal" aria-label="Close">Regresar</button>
+
+          <div class="col-12 text-end mt-4"> 
+            <hr class="mb-3"> 
+            <button type="submit" class="btn btn-primary me-2"> 
+                <i class="fas fa-plus me-2"></i> Registrar
+            </button>
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+                <i class="fas fa-times me-2"></i> Cancelar
+            </button>
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
-<!--/ Add New Address Modal -->
