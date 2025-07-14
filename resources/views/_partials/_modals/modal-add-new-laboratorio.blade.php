@@ -67,7 +67,7 @@
           </div>
            <div class="col-12">
             <div class="form-floating form-floating-outline">
-              <input type="text" id="descripcion" name="descripcion" class="form-control" placeholder="12, Business Park" />
+              <input type="text" id="add-descripcion" name="descripcionCampo" class="form-control" placeholder="12, Business Park" />
               <label for="descripcion">Descripción</label>
             </div>
           </div>

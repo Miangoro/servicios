@@ -9,13 +9,14 @@ use Yajra\DataTables\DataTables;
 
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
+use Illuminate\Validation\ValidationException;
 
 class CatalogoLaboratorios extends Controller
 {
     public function index(Request $request)
     {
         if($request->ajax()){
-            $sql = CatalogoLaboratorio::all();//Nombre del modelo
+            $sql = CatalogoLaboratorio::orderBy('id_laboratorio', 'desc')->get();//Nombre del modelo
            return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('action', function($row){
 
@@ -37,7 +38,7 @@ class CatalogoLaboratorios extends Controller
                             </li>'
                         .'</ul>
                           
-                        </div>';
+                    </div>';
                     return $btn;
                 })
             ->rawColumns(['action'])
@@ -61,10 +62,10 @@ class CatalogoLaboratorios extends Controller
     public function store(Request $request)
     {
 
-        $informes = CatalogoLaboratorio::create([
+        $laboratorio = CatalogoLaboratorio::create([
                 'laboratorio' => $request->nombre,
-                'descripcion' => $request->descripcion,
                 'clave' => $request->clave,
+                'descripcion' => $request->descripcionCampo,
                 'habilitado' => 1,
                 'id_usuario' => 1,
                 
@@ -75,26 +76,51 @@ class CatalogoLaboratorios extends Controller
     }
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla
-    public function edit($id_informe)
+    public function getLaboratorio($id)
 {
-    $informe = CatalogoLaboratorio::findOrFail($id_informe);
-    return view('informes.editar_informes', ['informe' => $informe]);
+    try {
+        $laboratorio = CatalogoLaboratorio::find($id);
+
+        if (!$laboratorio) {
+            return response()->json(['error' => 'Laboratorio no encontrado.'], 404);
+        }
+        return response()->json([
+            'id_laboratorio' => $laboratorio->id_laboratorio,
+            'nombre' => $laboratorio->laboratorio,
+            'clave' => $laboratorio->clave,
+            'descripcion' => $laboratorio->descripcion,
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json(['error' => 'Error al obtener el laboratorio: ' . $e->getMessage()], 500);
+    }
 }
 
         //Aqui se edita el informe
-    public function update(Request $request, $id_informe)
+    public function update(Request $request, $id)
     {
+        try {
+            // validación de los datos
+            $request->validate([
+                'laboratorio' => 'required|string|max:255',
+                'clave' => 'nullable|string|max:50',
+                'descripcion' => 'nullable|string|max:500',
+            ]);
 
-     $informe = CatalogoLaboratorio::findOrFail($id_informe);
-     $informe->update([
-     //'id_inspector' => $request->id_inspector,
-     //'id_gerente' => $request->id_gerente,
-     //'folio' => $request->folio
-     ]);
+            //Encontrar el laboratorio o fallar si no existe
+            $laboratorio = CatalogoLaboratorio::findOrFail($id);
+            $laboratorio->update([
+                'laboratorio' => $request->laboratorio,
+                'clave' => $request->clave,
+                'descripcion' => $request->descripcion,
+            ]);
+            return response()->json(['message' => 'Laboratorio modificado correctamente.']);
 
-
-        session()->flash('status', 'Solicitud modificada correctamente.');
-        return redirect()->route('informes.index');
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar modificar el laboratorio: ' . $e->getMessage()], 500);
+        }
     }
 
 }

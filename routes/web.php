@@ -198,6 +198,8 @@ Route::get('/add_firmar_docusign', [DocuSignController::class, 'add_firmar_docus
 Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(function () {
     Route::get('/catalogos/laboratorios', 'index')->name('laboratorios.index');
     Route::post('/catalogos/laboratorios', [CatalogoLaboratorios::class, 'store']);
+    Route::get('/laboratorios/{id}/edit', [CatalogoLaboratorios::class, 'getLaboratorio'])->name('laboratorios.edit');
+    Route::put('/laboratorios/{id}', [CatalogoLaboratorios::class, 'update']);
     Route::get('/add_catalogo_laboratorio', 'add_catalogo_laboratorio')->name('add_catalogo_laboratorio');
 });
 

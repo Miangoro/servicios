@@ -14,7 +14,7 @@ class CatalogoLaboratorio extends Model
     protected $fillable = [
         'id_laboratorio',
         'laboratorio',
-        'descripción',
+        'descripcion',
         'clave',
         'habilitado',
         'id_usuario'

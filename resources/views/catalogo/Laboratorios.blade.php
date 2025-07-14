@@ -63,7 +63,7 @@
                 </div>
                 
                 <div class="table-responsive p-3">
-                    <table class="table table-flush table-bordered lab_datatable table-striped table-sm">
+                    <table id="tablaLaboratorios" class="table table-flush table-bordered lab_datatable table-striped table-sm">
                        
                         <thead class="table-dark">
                             <tr>
@@ -100,3 +100,4 @@
 
 @endsection
 @include('_partials/_modals/modal-add-new-laboratorio')
+@include('_partials/_modals/modal-edit-laboratorio')
