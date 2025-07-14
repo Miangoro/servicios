@@ -49,18 +49,20 @@
       </div>
 
       <div class="modal-body">
-        <form id="addNewAddressForm" class="row g-3" onsubmit="return false">
-          
+        <form id="addNewAddressForm" class="row g-3" action="/catalogos/unidades" method="POST">
+          @csrf 
            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressLastName" name="modalAddressLastName" class="form-control" placeholder=" " />
-              <label for="modalAddressLastName">Nombre de la Unidad</label>
+              <input type="text" id="nombreUnidad" name="nombreUnidad" class="form-control" placeholder=" " />
+              <label for="nombreUnidad">Nombre de la Unidad</label>
             </div>
 
           <div class="col-12 text-end mt-4"> 
             <hr class="mb-3"> 
+
             <button type="submit" class="btn btn-primary me-2"> 
                 <i class="fas fa-plus me-2"></i> Registrar
             </button>
+
             <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
                 <i class="fas fa-times me-2"></i> Cancelar
             </button>
@@ -71,3 +73,6 @@
     </div>
   </div>
 </div>
+
+
+

@@ -96,3 +96,4 @@
 
 @endsection
 @include('_partials/_modals/modal-add-unidades')
+@include('_partials/_modals/modal-addedit-unidades')

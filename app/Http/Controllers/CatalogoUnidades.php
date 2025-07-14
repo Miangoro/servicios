@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
-
+use Illuminate\Validation\ValidationException;
 
 class CatalogoUnidades extends Controller
 {
@@ -64,43 +64,66 @@ public function index(Request $request)
 
     // Registrar datos
     public function store(Request $request)
+   
+    
     {
 
 
         $informes = CatalogoUnidad::create([
-                 //'folio_solicitud' =>  helper::folioSolicitud(),
-                //'destino' => 1,
-                //'id_inspector' => $request->id_inspector,
-                //'folio' => $request->folio
-                
+                     'nombre' => $request ->nombreUnidad,
+                    'habilitado' => 1,
+                    'id_usuario' => 1,
             ]);
 
 
         session()->flash('status', 'Solicitud guardada correctamente.');
-        return redirect()->route('informes.index');//Ruta del index
+        return redirect()->route('unidades.index');//Ruta del index
      }
+     
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla
-    public function edit($id_informe)
-{
-    $informe = CatalogoUnidad::findOrFail($id_informe);
-    return view('informes.editar_informes', ['informe' => $informe]);
-}
+  public function getUnidad($id)
+    {
+        try {
+            $unidad = CatalogoUnidades::find($id);
+
+            if (!$unidad) {
+                return response()->json(['error' => 'Unidad no encontrada.'], 404);
+            }
+
+            return response()->json([
+                'id_unidad'=> $unidad -> id_unidad,
+                'nombre'=> $unidad -> nombre
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener la Unidad: ' . $e->getMessage()], 500);
+        }
+    }
     
   //Aqui se edita el informe
-    public function update(Request $request, $id_informe)
+    public function update(Request $request, $id)
     {
+        try {
+            $request->validate([
+                'Unidad' => 'required|string|max:255',
+            ]);
 
-    // $informe = CatalogoUnidad::findOrFail($id_informe);
-   //  $informe->update([
-     //'id_inspector' => $request->id_inspector,
-     //'id_gerente' => $request->id_gerente,
-     //'folio' => $request->folio
-     //]);
+            $unidad = CatalogoUnidad::find($id);
+            $unidad->update([
+                'Unidad' => $request->nombre, 
 
+            ]);
 
-       // session()->flash('status', 'Solicitud modificada correctamente.');
-        // return redirect()->route('informes.index');
-    } 
+           
+            return response()->json(['message' => 'Laboratorio modificado correctamente.']);
+
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            // Captura cualquier otro error inesperado y devuelve un mensaje de error 500
+            return response()->json(['error' => 'Ocurrió un error al intentar modificar el laboratorio: ' . $e->getMessage()], 500);
+        }
+    }
+     
 }
 
