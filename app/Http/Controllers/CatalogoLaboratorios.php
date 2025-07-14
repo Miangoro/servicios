@@ -21,12 +21,22 @@ class CatalogoLaboratorios extends Controller
 
                     $btn = '
                     <div class="dropdown">
-                          <button  class="btn btn-info dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
-                            Opciones
-                          </button>
-                          <div class="dropdown-menu">
-                           
-                          </div>
+                        <button  class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="fas fa-gear me-2"></i> Opciones
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_laboratorio . '">'.
+                            '<li>
+                                <a class="dropdown-item" href="javascript:void(0);" onclick="editLab(' . $row->id_laboratorio . ')">'.
+                                    '<i class="fas fa-edit me-2"></i> Editar'.
+                                '</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteLab(' . $row->id_unidad . ')">'.
+                                    '<i class="fas fa-trash-alt me-2"></i> Eliminar'.
+                                '</a>
+                            </li>'
+                        .'</ul>
+                          
                         </div>';
                     return $btn;
                 })
@@ -51,17 +61,17 @@ class CatalogoLaboratorios extends Controller
     public function store(Request $request)
     {
 
-
         $informes = CatalogoLaboratorio::create([
-                //'folio_solicitud' =>  helper::folioSolicitud(),
-                //'destino' => 1,
-                //'id_inspector' => $request->id_inspector,
-                //'folio' => $request->folio
+                'laboratorio' => $request->nombre,
+                'descripcion' => $request->descripcion,
+                'clave' => $request->clave,
+                'habilitado' => 1,
+                'id_usuario' => 1,
                 
             ]);
 
         session()->flash('status', 'Solicitud guardada correctamente.');
-        return redirect()->route('informes.index');//Ruta del index
+        return redirect()->route('laboratorios.index');
     }
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla

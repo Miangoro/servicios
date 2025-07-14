@@ -43,6 +43,9 @@
 }
 
 </style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <div class="container-fluid mt--7">
     <div class="row">
         <div class="col">
@@ -51,7 +54,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h1 class="mb-0"><b>Catálogo de laboratorios</b></h1>
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNewAddress"> Nuevo catálogo </button>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarLab"><i class="fas fa-plus me-2"></i> Nuevo catálogo </button>
                         </div>
                         <div class="col-6 text-right">
                         

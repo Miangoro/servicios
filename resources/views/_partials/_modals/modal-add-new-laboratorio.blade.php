@@ -1,62 +1,74 @@
 <!-- Add New Address Modal -->
-<div class="modal fade" id="addNewAddress" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-simple modal-add-new-address">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+
+.modal-header.bg-custom-green-modal-header {
+    background-color: rgb(88, 213, 117); 
+    color: white; 
+    border-bottom: none; 
+    
+    
+    padding-top: 0.75rem;   
+    padding-bottom: 0.75rem; 
+    
+    padding-left: 1.5rem; 
+    padding-right: 1.5rem; 
+    
+    
+    border-top-left-radius: var(--bs-modal-border-radius, 0.3rem);
+    border-top-right-radius: var(--bs-modal-border-radius, 0.3rem);
+}
+
+
+.modal-header.bg-custom-green-modal-header .modal-title {
+    color: white; 
+    margin-bottom: 0;
+}
+
+
+.modal-header.bg-custom-green-modal-header .btn-close {
+    filter: invert(1) grayscale(1) brightness(2); 
+    margin: -0.5rem -0.5rem -0.5rem auto; 
+}
+
+
+.modal-content {
+    border-top: 5px solid rgb(88, 213, 117); 
+    border-radius: var(--bs-modal-border-radius, 0.3rem); 
+}
+
+</style>
+
+<div class="modal fade" id="agregarLab" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      <div class="modal-body p-0">
-        <div class="text-center mb-6">
-          <h4 class="address-title mb-2">Agregar Laboratorio</h4>
-          <p class="address-subtitle">Add new address for express delivery</p>
-        </div>
-        <form id="addNewAddressForm" class="row g-5" onsubmit="return false">
+
+      
+      <div class="modal-header bg-custom-green-modal-header">
+        <h4 class="modal-title" id="agregarLabLabel">Agregar Laboratorio</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <form id="agregarLaboratorio" class="row g-5" action="/catalogos/laboratorios" method="POST" >
+          @csrf
           <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressFirstName" name="modalAddressFirstName" class="form-control" placeholder="John" />
-              <label for="modalAddressFirstName">Nombre</label>
+              <input type="text" id="nombre" name="nombre" class="form-control" placeholder="John" />
+              <label for="nombre">Nombre</label>
             </div>
           </div>
           <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressLastName" name="modalAddressLastName" class="form-control" placeholder="Doe" />
-              <label for="modalAddressLastName">Clave</label>
+              <input type="text" id="clave" name="clave" class="form-control" placeholder="Doe" />
+              <label for="clave">Clave</label>
             </div>
           </div>
            <div class="col-12">
             <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressAddress1" name="modalAddressAddress1" class="form-control" placeholder="12, Business Park" />
-              <label for="modalAddressAddress1">Descripción</label>
-            </div>
-          </div>
-          <div class="col-12 d-flex ">
-            <div class="form-floating form-floating-outline">
-              <select id="modalAddressCountry" name="modalAddressCountry" class="select2 form-select" data-allow-clear="true">
-                <option value="">Select</option>
-                <option value="Australia">Australia</option>
-                <option value="Bangladesh">Bangladesh</option>
-                <option value="Belarus">Belarus</option>
-                <option value="Brazil">Brazil</option>
-                <option value="Canada">Canada</option>
-                <option value="China">China</option>
-                <option value="France">France</option>
-                <option value="Germany">Germany</option>
-                <option value="India">India</option>
-                <option value="Indonesia">Indonesia</option>
-                <option value="Israel">Israel</option>
-                <option value="Italy">Italy</option>
-                <option value="Japan">Japan</option>
-                <option value="Korea">Korea, Republic of</option>
-                <option value="Mexico">Mexico</option>
-                <option value="Philippines">Philippines</option>
-                <option value="Russia">Russian Federation</option>
-                <option value="South Africa">South Africa</option>
-                <option value="Thailand">Thailand</option>
-                <option value="Turkey">Turkey</option>
-                <option value="Ukraine">Ukraine</option>
-                <option value="United Arab Emirates">United Arab Emirates</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-              </select>
-              <label for="modalAddressCountry">Country</label>
+              <input type="text" id="descripcion" name="descripcion" class="form-control" placeholder="12, Business Park" />
+              <label for="descripcion">Descripción</label>
             </div>
           </div>
           
@@ -66,7 +78,8 @@
           </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
-<!--/ Add New Address Modal -->
+
