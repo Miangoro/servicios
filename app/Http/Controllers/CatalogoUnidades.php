@@ -21,19 +21,17 @@ public function index(Request $request)
                 ->addColumn('action', function($row){
 
                   $btn = '
-                    <div class="dropdown">
-                        <button  class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                          <i class="fas fa-gear me-2"></i> Opciones
-                        </button>
+                    <div class="d-flex align-items-center gap-50">
+                        <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_unidad . '">'.
                             '<li>
                                 <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id_unidad.')">
-                                <i class="fas fa-edit me-2"></i> Editar
+                               <i class="ri-edit-box-line ri-20px text-info"></i>Editar
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteUnidad(' . $row->id_unidad . ')">'.
-                                    '<i class="fas fa-trash-alt me-2"></i> Eliminar'.
+                                    '<i class="ri-delete-bin-7-line ri-20px text-danger"></i> Eliminar </a>'.
                                 '</a>
                             </li>'
                         .'</ul>
@@ -123,6 +121,17 @@ public function update(Request $request, $id)
         ], 500);
     }
 }
+
+public function destroy($id)
+    {
+        try {
+            $Unidad = CatalogoUnidad::findOrFail($id);
+            $Unidad->delete();
+            return response()->json(['message' => 'Unidad eliminado correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar eliminar la Unidad: ' . $e->getMessage()], 500);
+        }
+    }
      
 }
 

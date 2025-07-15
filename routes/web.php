@@ -209,6 +209,7 @@ Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function (
     Route::post('/catalogos/unidades', [CatalogoUnidades::class, 'store']);
     Route::get('/getUnidad/{id}', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.get');
     Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
+    Route::delete('/unidades/{id}', [CatalogoUnidades::class, 'destroy']);
     Route::get('/add_catalogo_unidades', 'add_catalogo_unidades')->name('add_catalogo_unidades');
 });
 

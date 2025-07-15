@@ -33,6 +33,8 @@
 <!-- Page Scripts -->
 @section('page-script')
 @vite(['resources/js/tipos.js'])
+<script src="{{ asset('js/unidades.js') }}"></script>
+
 @endsection
 
 @section('content')
@@ -50,9 +52,10 @@
                 <div class="card-header border-0">
                     <div class="row align-items-center">
                         <div class="col-6">
-                            <h1 class="mb-0"><b>Catálogo de Unidades</b></h1>
+                            <h3 class="mb-0"><b>Catálogo de Unidades</b></h3>
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
-                        <i class="fas fa-plus me-2"></i> Nueva Unidad</button>
+                        <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                             <span class="d-none d-sm-inline-block">Nuev Unidad</span></button>
                        
                         </div>
                         <div class="col-6 text-right">
@@ -60,9 +63,11 @@
                         </div>
                     </div>
                 </div>
+
+                <meta name="csrf-token" content="{{ csrf_token() }}">
                 
                 <div class="table-responsive p-3">
-                    <table class="table table-flush table-bordered unidades_datatable table-striped table-sm">
+                    <table id= "tablaUnidades" class="table table-flush table-bordered unidades_datatable table-striped table-sm">
                        
                         <thead class="table-dark">
                             <tr>
