@@ -32,7 +32,7 @@ class CatalogoLaboratorios extends Controller
                                 '</a>
                             </li>
                             <li>
-                                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteLab(' . $row->id_unidad . ')">'.
+                                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteLab(' . $row->id_laboratorio . ')">'.
                                     '<i class="fas fa-trash-alt me-2"></i> Eliminar'.
                                 '</a>
                             </li>'
@@ -77,24 +77,24 @@ class CatalogoLaboratorios extends Controller
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla
     public function getLaboratorio($id)
-{
-    try {
-        $laboratorio = CatalogoLaboratorio::find($id);
+    {
+        try {
+            $laboratorio = CatalogoLaboratorio::find($id);
 
-        if (!$laboratorio) {
-            return response()->json(['error' => 'Laboratorio no encontrado.'], 404);
+            if (!$laboratorio) {
+                return response()->json(['error' => 'Laboratorio no encontrado.'], 404);
+            }
+            return response()->json([
+                'id_laboratorio' => $laboratorio->id_laboratorio,
+                'nombre' => $laboratorio->laboratorio,
+                'clave' => $laboratorio->clave,
+                'descripcion' => $laboratorio->descripcion,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener el laboratorio: ' . $e->getMessage()], 500);
         }
-        return response()->json([
-            'id_laboratorio' => $laboratorio->id_laboratorio,
-            'nombre' => $laboratorio->laboratorio,
-            'clave' => $laboratorio->clave,
-            'descripcion' => $laboratorio->descripcion,
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Error al obtener el laboratorio: ' . $e->getMessage()], 500);
     }
-}
 
         //Aqui se edita el informe
     public function update(Request $request, $id)
@@ -120,6 +120,17 @@ class CatalogoLaboratorios extends Controller
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Ocurrió un error al intentar modificar el laboratorio: ' . $e->getMessage()], 500);
+        }
+    }
+
+     public function destroy($id)
+    {
+        try {
+            $laboratorio = CatalogoLaboratorio::findOrFail($id);
+            $laboratorio->delete();
+            return response()->json(['message' => 'Laboratorio eliminado correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar eliminar el laboratorio: ' . $e->getMessage()], 500);
         }
     }
 
