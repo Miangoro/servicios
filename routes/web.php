@@ -206,8 +206,8 @@ Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(functi
 Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function () {
     Route::get('/catalogos/unidades', 'index')->name('unidades.index');
     Route::post('/catalogos/unidades', [CatalogoUnidades::class, 'store']);
-    Route::get('/unidades/{id}/edit', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.edit');
-    Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update']);
+    Route::get('/getUnidad/{id}', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.get');
+    Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
     Route::get('/add_catalogo_unidades', 'add_catalogo_unidades')->name('add_catalogo_unidades');
 });
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CatalogoUnidad;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
+
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
 use Illuminate\Validation\ValidationException;
@@ -19,27 +20,26 @@ public function index(Request $request)
            return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('action', function($row){
 
-                   $btn = '
-                   <div class="dropdown">
-        <button class="btn btn-info dropdown-toggle" type="button" 
-                id="dropdownMenuButton_' . $row->id_unidad . '"' . // ID único para cada botón
-                ' data-bs-toggle="dropdown" aria-expanded="false">'. // Usar data-bs-toggle para Bootstrap 5
-            '<i class="fas fa-gear"></i>&nbsp;Opciones
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_unidad . '">'. // Referencia al ID único del botón
-            '<li>
-                <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad(' . $row->id_unidad . ')">'. // Llama a una función JS para editar
-                    '<i class="fas fa-edit me-2"></i> Editar'. // Icono de editar y margen derecho
-                '</a>
-            </li>
-            <li>
-                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteUnidad(' . $row->id_unidad . ')">'. // Llama a una función JS para eliminar
-                    '<i class="fas fa-trash-alt me-2"></i> Eliminar'. // Icono de eliminar y margen derecho
-                '</a>
-            </li>
-            '
-        .'</ul>
-    </div>';
+                  $btn = '
+                    <div class="dropdown">
+                        <button  class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="fas fa-gear me-2"></i> Opciones
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_unidad . '">'.
+                            '<li>
+                                <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id_unidad.')">
+                                <i class="fas fa-edit me-2"></i> Editar
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteUnidad(' . $row->id_unidad . ')">'.
+                                    '<i class="fas fa-trash-alt me-2"></i> Eliminar'.
+                                '</a>
+                            </li>'
+                        .'</ul>
+                          
+                    </div>';
+                 
 
                 return $btn;
                    })
@@ -83,47 +83,46 @@ public function index(Request $request)
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla
   public function getUnidad($id)
-    {
-        try {
-            $unidad = CatalogoUnidades::find($id);
-
-            if (!$unidad) {
-                return response()->json(['error' => 'Unidad no encontrada.'], 404);
-            }
-
-            return response()->json([
-                'id_unidad'=> $unidad -> id_unidad,
-                'nombre'=> $unidad -> nombre
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Error al obtener la Unidad: ' . $e->getMessage()], 500);
-        }
+{
+    try {
+        $unidad = CatalogoUnidad::findOrFail($id);
+        
+        return response()->json([
+            'id_unidad' => $unidad->id_unidad,
+            'nombre_Unidad' => $unidad->nombre // Asegúrate que coincida con el formulario
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Unidad no encontrada: ' . $e->getMessage()
+        ], 404);
     }
-    
-  //Aqui se edita el informe
-    public function update(Request $request, $id)
-    {
-        try {
-            $request->validate([
-                'Unidad' => 'required|string|max:255',
-            ]);
+}
 
-            $unidad = CatalogoUnidad::find($id);
-            $unidad->update([
-                'Unidad' => $request->nombre, 
+public function update(Request $request, $id)
+{
+    try {
+        $request->validate([
+            'nombre_Unidad' => 'required|string|max:255',
+        ]);
 
-            ]);
+        $unidad = CatalogoUnidad::findOrFail($id);
+        $unidad->nombre = $request->nombre_Unidad;
+        $unidad->save();
 
-           
-            return response()->json(['message' => 'Laboratorio modificado correctamente.']);
+        return response()->json([
+            'message' => 'Unidad actualizada correctamente',
+            'data' => $unidad
+        ]);
 
-        } catch (ValidationException $e) {
-            return response()->json(['errors' => $e->errors()], 422);
-        } catch (\Exception $e) {
-            // Captura cualquier otro error inesperado y devuelve un mensaje de error 500
-            return response()->json(['error' => 'Ocurrió un error al intentar modificar el laboratorio: ' . $e->getMessage()], 500);
-        }
+    } catch (ValidationException $e) {
+        return response()->json(['errors' => $e->errors()], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Error al actualizar: ' . $e->getMessage()
+        ], 500);
     }
+}
      
 }
 

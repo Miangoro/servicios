@@ -38,7 +38,7 @@
 }
 </style>
 
-<div class="modal fade" id="editarUnidades" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editUnidadesModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
 
@@ -53,9 +53,9 @@
           @csrf 
           @method('PUT')
           <input type="hidden" id="idUnidad" name="id_unidad"/>
-           <div class="form-floating form-floating-outline">
-              <input type="text" id="nombreUnidad" name="nombreUnidad" class="form-control" placeholder=" " />
-              <label for="nombreUnidad">Nombre de la Unidad</label>
+            <div class="form-floating form-floating-outline">
+                <input type="text" id="nombre_Unidad" name="nombre_Unidad" class="form-control" placeholder=" " />
+                <label for="nombre_Unidad">Nombre de la Unidad</label>
             </div>
 
           <div class="col-12 text-end mt-4"> 
@@ -77,92 +77,66 @@
 </div>
 
 <script>
-   function editUnidad(id) {
-        fetch(/unidades/${id}/edit)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-              document.getElementById('idUnidad').value = data.id_unidad;
-              document.getElementById('nombreUnidad').value = data.nombre;
+// Define la función globalmente
+window.editUnidad = function(id) {
+    fetch(`/getUnidad/${id}`)
+        .then(response => {
+            if (!response.ok) throw new Error('Error en la red');
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            
+            // Rellena el formulario
+            document.getElementById('idUnidad').value = data.id_unidad;
+            document.getElementById('nombre_Unidad').value = data.nombre_Unidad;
+            
+            // Muestra el modal
+            const modal = new bootstrap.Modal(document.getElementById('editUnidadesModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al cargar: ' + error.message);
+        });
+};
 
-                // Show the modal
-                var editModal = new bootstrap.Modal(document.getElementById('editarUnidades'));
-                editModal.show();
+// Maneja el envío del formulario
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('editarunidad');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('idUnidad').value;
+            const formData = new FormData(form);
+            
+            fetch(`/unidades/${id}`, {
+                method: 'POST', // Laravel necesita POST para rutas PUT
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) throw new Error(data.error);
+                if (data.message) {
+                    alert(data.message);
+                    // Cierra el modal y recarga la tabla
+                    bootstrap.Modal.getInstance(document.getElementById('editUnidadesModal')).hide();
+                    $('#tablaLaboratorios').DataTable().ajax.reload(null, false);
+                }
             })
             .catch(error => {
-                console.error('Error fetching laboratory data:', error);
-                alert('No se pudo cargar la información del laboratorio. Por favor, intente de nuevo.');
+                console.error('Error:', error);
+                alert('Error al guardar: ' + error.message);
             });
+        });
     }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const editLaboratorioForm = document.getElementById('editLaboratorio');
-        if (editLaboratorioForm) {
-            editLaboratorioForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                const form = event.target;
-                const laboratorioId = document.getElementById('id_laboratorio_modal').value;
-                const formData = new FormData(form);
-
-                fetch(/laboratorios/${laboratorioId}, {
-                    method: 'POST', // Esto sigue siendo POST porque @method('PUT') lo convierte
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: formData,
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(errorData => {
-                            throw new Error(JSON.stringify(errorData));
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.message) {
-                        alert(data.message);
-                        var editModal = bootstrap.Modal.getInstance(document.getElementById('editLabModal'));
-                        if (editModal) {
-                            editModal.hide();
-                        }
-                        // Recargar DataTables para ver el cambio
-                        $('#tablaLaboratorios').DataTable().ajax.reload();
-                    } else if (data.errors) {
-                        let errorMessages = 'Errores de validación:\n';
-                        for (const field in data.errors) {
-                            errorMessages += ` - ${field}: ${data.errors[field].join(', ')}\n`;
-                        }
-                        alert(errorMessages);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error al actualizar el laboratorio:', error);
-                    let errorMessage = 'Error al actualizar el laboratorio. Por favor, intente de nuevo.';
-                    try {
-                        const parsedError = JSON.parse(error.message);
-                        if (parsedError.error) {
-                            errorMessage = 'Error del servidor: ' + parsedError.error;
-                        } else if (parsedError.errors) {
-                            let validationErrors = 'Errores de validación:\n';
-                            for (const field in parsedError.errors) {
-                                validationErrors += ` - ${field}: ${parsedError.errors[field].join(', ')}\n`;
-                            }
-                            errorMessage = validationErrors;
-                        }
-                    } catch (e) { /* ignore */ }
-                    alert(errorMessage);
-                });
-            });
-        }
-    });
-
-  </script>
+});
+</script>
 
 
 
