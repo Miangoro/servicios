@@ -17,6 +17,12 @@ class CatalogoLaboratorio extends Model
         'descripcion',
         'clave',
         'habilitado',
-        'id_usuario'
+        'id_usuario',
+        'id_unidad'
       ];
+
+      //funcion para la relación
+      public function unidad(){
+        return $this->belongsTo('App\Models\CatalogoUnidad');
+      }
 }

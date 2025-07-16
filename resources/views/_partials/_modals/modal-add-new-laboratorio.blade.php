@@ -2,7 +2,6 @@
 <div class="modal fade" id="agregarLab" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-
       
       <div class="modal-header bg-custom-green-modal-header">
         <h4 class="modal-title" id="agregarLabLabel">Agregar Laboratorio</h4>
@@ -14,19 +13,25 @@
                     @csrf
                     <div class="col-12 col-md-6">
                         <div class="form-floating form-floating-outline">
-                            <input type="text" id="nombre" name="nombre" class="form-control" />
-                            <label for="nombre">Nombre</label>
+                            <input type="text" id="clave" name="clave" class="form-control" placeholder="Clave del laboratorio"/>
+                            <label for="clave">Clave</label>
                         </div>
+                        
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="form-floating form-floating-outline">
-                            <input type="text" id="clave" name="clave" class="form-control" />
-                            <label for="clave">Clave</label>
+                            <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Nombre del laboratorio"/>
+                            <label for="nombre">Nombre</label>
                         </div>
                     </div>
+                    <div class="mb-4">
+                        <select id="selectUnidades" class="form-select data-submit" name="selectUnidades" data-fvalidate="notEmpty">
+                         <option value="">Seleccione una unidad</option>
+                        </select>
+                    </div>
                     <div class="col-12">
-                        <div class="form-floating form-floating-outline">
-                            <input type="text" id="add-descripcion" name="descripcionCampo" class="form-control" />
+                        <div class="form-floating form-floating-outline mb-6">
+                            <textarea class="form-control h-px-100" id="add-descripcion" name="descripcionCampo" placeholder="Descripción"></textarea>
                             <label for="add-descripcion">Descripción</label>
                         </div>
                     </div>
@@ -45,4 +50,3 @@
     </div>
   </div>
 </div>
-

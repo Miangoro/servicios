@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\FacadesRoute;
 use App\Models\CatalogoLaboratorio;
+use App\Models\CatalogoUnidad;
 use Yajra\DataTables\DataTables;
 
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
@@ -21,7 +22,7 @@ class CatalogoLaboratorios extends Controller
                 ->addColumn('action', function($row){
 
                     $btn = '
-                    <div class="dropdown">
+                    <div class="dropdown d-flex justify-content-center">
                         <button  class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                           <i class="fas fa-gear me-2"></i> Opciones
                         </button>
@@ -49,15 +50,6 @@ class CatalogoLaboratorios extends Controller
         
     }
 
-    //Manda a la vista de agregar 
-
-    public function add_catalogo_laboratorio()
-    {
-    
-        return view('catalogo.add_catalogo_laboratorio');
-
-    }
-
     // Registrar datos
     public function store(Request $request)
     {
@@ -68,7 +60,7 @@ class CatalogoLaboratorios extends Controller
                 'descripcion' => $request->descripcionCampo,
                 'habilitado' => 1,
                 'id_usuario' => 1,
-                
+                'id_unidad' => $request->selectUnidades,
             ]);
 
         session()->flash('status', 'Solicitud guardada correctamente.');
@@ -88,6 +80,7 @@ class CatalogoLaboratorios extends Controller
                 'id_laboratorio' => $laboratorio->id_laboratorio,
                 'nombre' => $laboratorio->laboratorio,
                 'clave' => $laboratorio->clave,
+                'id_unidad' => $laboratorio->id_unidad,
                 'descripcion' => $laboratorio->descripcion,
             ]);
 
@@ -96,7 +89,14 @@ class CatalogoLaboratorios extends Controller
         }
     }
 
-        //Aqui se edita el informe
+    //obtener las unidades para el select
+    public function getUnidades(Request $request)
+    {
+        $unidades = CatalogoUnidad::pluck('nombre', 'id_unidad');
+        return response()->json($unidades);
+    }
+
+        //Aqui se edita el registro
     public function update(Request $request, $id)
     {
         try {
@@ -113,6 +113,7 @@ class CatalogoLaboratorios extends Controller
                 'laboratorio' => $request->laboratorio,
                 'clave' => $request->clave,
                 'descripcion' => $request->descripcion,
+                'id_unidad' => $request->selectUnidadesEdit,
             ]);
             return response()->json(['message' => 'Laboratorio modificado correctamente.']);
 

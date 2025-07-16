@@ -25,16 +25,19 @@
 @section('page-script')
 @vite(['resources/js/tipos.js'])
 
-<script src="{{ asset('js/laboratorios.js') }}"></script>
-
-
 @endsection
 
 @section('content')
 <style>
-    .lab_datatable td {
-        white-space: nowrap;
+
+    .columna-descripcion {
+    width: auto;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     }
+
 </style>
 
 <div class="container-fluid mt--7">
@@ -64,8 +67,8 @@
                                 <th scope="col" class="text-white">No.</th>
                                 <th scope="col" class="text-white">Clave</th>
                                 <th scope="col" class="text-white">Nombre de laboratorio</th>
-                                <th scope="col" class="text-white">Descripción</th>
-                                <th scope="col"></th>
+                                <th scope="col" class="columna-descripcion text-white">Descripción</th>
+                                <th scope="col" class="text-white">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>

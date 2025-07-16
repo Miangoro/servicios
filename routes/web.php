@@ -199,6 +199,7 @@ Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(functi
     Route::get('/catalogos/laboratorios', 'index')->name('laboratorios.index');
     Route::post('/catalogos/laboratorios', [CatalogoLaboratorios::class, 'store']);
     Route::get('/laboratorios/{id}/edit', [CatalogoLaboratorios::class, 'getLaboratorio'])->name('laboratorios.edit');
+        Route::get('/laboratorios/unidades', [CatalogoLaboratorios::class, 'getUnidades'])->name('unidades.get');
     Route::put('/laboratorios/{id}', [CatalogoLaboratorios::class, 'update']);
     Route::delete('/laboratorios/{id}', [CatalogoLaboratorios::class, 'destroy']);
     Route::get('/add_catalogo_laboratorio', 'add_catalogo_laboratorio')->name('add_catalogo_laboratorio');

@@ -30,11 +30,16 @@
               <label for="clave_laboratorio_modal">Clave</label>
             </div>
           </div>
+          <div class="mb-4">
+                        <select id="selectUnidadesEdit" class="form-select data-submit" name="selectUnidadesEdit" data-fvalidate="notEmpty">
+                         <option value="">Seleccione una unidad</option>
+                        </select>
+                    </div>
            <div class="col-12">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="descripcion_laboratorio_modal" name="descripcion" class="form-control"/>
-              <label for="descripcion_laboratorio_modal">Descripción</label>
-            </div>
+              <div class="form-floating form-floating-outline mb-6">
+                  <textarea class="form-control h-px-100" id="descripcion_laboratorio_modal" name="descripcion" ></textarea>
+                  <label for="descripcion_laboratorio_modal">Descripción</label>
+              </div>
           </div>
           
           <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
