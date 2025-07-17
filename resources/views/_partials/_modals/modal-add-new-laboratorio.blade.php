@@ -3,8 +3,8 @@
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       
-      <div class="modal-header bg-custom-green-modal-header">
-        <h4 class="modal-title" id="agregarLabLabel">Agregar Laboratorio</h4>
+      <div class="modal-header bg-primary pb-4">
+        <h4 class="modal-title text-white" id="agregarLabLabel">Agregar Laboratorio</h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 

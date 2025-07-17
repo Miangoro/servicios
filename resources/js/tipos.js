@@ -1,59 +1,45 @@
 // public/js/laboratorios.js
 
-  $(function() {
-        var table = $('.lab_datatable').DataTable({
-
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-            },
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            ajax: {
-        url: "/catalogos/laboratorios",
-        type: "GET",
-        data: function (d) {
-        }
+$(function() {
+    var table = $('.lab_datatable').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
         },
-            dataType: 'json',
-            type: "POST",
-            columns: [
-                {
-                    data: null,
-                name: 'num',
-                orderable: false,
-                searchable: false,
-                render: function (data, type, row, meta) {
-                    return meta.row + 1;
-                }
-                },
-                
-               
-                {
-                    data: 'clave',
-                    name: 'clave'
-                }, 
-                
-                {
-                    data: 'laboratorio',
-                    name: 'laboratorio'
-                },
-                {
-                    data: 'descripcion',
-                    name: 'descripcion'
-                },
-
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: true,
-                    searchable: false
-                },
-            ]
-
-        });
-       
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        ajax: {
+            url: "/catalogos/laboratorios",
+            type: "GET",
+            data: function(d) {}
+        },
+        dataType: 'json',
+        type: "POST",
+        columns: [{
+            data: null,
+            name: 'num',
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row, meta) {
+                return meta.row + 1;
+            }
+        }, {
+            data: 'clave',
+            name: 'clave'
+        }, {
+            data: 'laboratorio',
+            name: 'laboratorio'
+        }, {
+            data: 'descripcion',
+            name: 'descripcion'
+        }, {
+            data: 'action',
+            name: 'action',
+            orderable: true,
+            searchable: false
+        }, ]
     });
+});
 
 function showAlert(message, type = 'success') {
     if (typeof Swal !== 'undefined') {
@@ -84,7 +70,7 @@ function reloadTableOrPage() {
  * Abre el modal de edición y carga los datos del laboratorio.
  * @param {number} id - El ID del laboratorio a editar.
  */
- window.editLab = function(id) {
+window.editLab = function(id) {
     fetch(`/laboratorios/${id}/edit`)
         .then(response => {
             if (!response.ok) {
@@ -137,9 +123,44 @@ window.deleteLab = function(id) {
                 cancelButton: 'btn btn-outline-secondary'
             },
             buttonsStyling: false
-        }).then(function (result) {
+        }).then(function(result) {
             if (result.value) {
                 fetch(`/laboratorios/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(JSON.stringify(errorData));
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showAlert(data.message, 'success');
+                        reloadTableOrPage();
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar el laboratorio:', error);
+                        let errorMessage = 'Error al eliminar el laboratorio. Por favor, intente de nuevo.';
+                        try {
+                            const parsedError = JSON.parse(error.message);
+                            if (parsedError.error) {
+                                errorMessage = 'Error del servidor: ' + parsedError.error;
+                            }
+                        } catch (e) { /* ignore */ }
+                        showAlert(errorMessage, 'error');
+                    });
+            }
+        });
+    } else {
+        if (confirm('¿Estás seguro de que quieres eliminar este laboratorio? Esta acción no se puede deshacer.')) {
+            fetch(`/laboratorios/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -170,41 +191,6 @@ window.deleteLab = function(id) {
                     } catch (e) { /* ignore */ }
                     showAlert(errorMessage, 'error');
                 });
-            }
-        });
-    } else {
-        if (confirm('¿Estás seguro de que quieres eliminar este laboratorio? Esta acción no se puede deshacer.')) {
-            fetch(`/laboratorios/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw new Error(JSON.stringify(errorData));
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                showAlert(data.message, 'success');
-                reloadTableOrPage();
-            })
-            .catch(error => {
-                console.error('Error al eliminar el laboratorio:', error);
-                let errorMessage = 'Error al eliminar el laboratorio. Por favor, intente de nuevo.';
-                try {
-                    const parsedError = JSON.parse(error.message);
-                    if (parsedError.error) {
-                        errorMessage = 'Error del servidor: ' + parsedError.error;
-                    }
-                } catch (e) { /* ignore */ }
-                showAlert(errorMessage, 'error');
-            });
         }
     }
 }
@@ -213,8 +199,10 @@ window.deleteLab = function(id) {
 document.addEventListener('DOMContentLoaded', function() {
     const agregarLaboratorioForm = document.getElementById('agregarLaboratorioForm');
     const editLaboratorioForm = document.getElementById('editLaboratorio');
+    let fvAdd;
+
     if (agregarLaboratorioForm) {
-        const fvAdd = FormValidation.formValidation(agregarLaboratorioForm, {
+        fvAdd = FormValidation.formValidation(agregarLaboratorioForm, {
             fields: {
                 nombre: {
                     validators: {
@@ -226,19 +214,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 clave: {
                     validators: {
                         notEmpty: {
-                           message: 'Por favor, introduce la clave.'
-                         },
+                            message: 'Por favor, introduce la clave.'
+                        },
                         stringLength: {
                             max: 50,
                             message: 'La clave no debe exceder los 50 caracteres.'
-                        }
-                    }
-                },
-                descripcionCampo: {
-                    validators: {
-                        stringLength: {
-                            max: 500,
-                            message: 'La descripción no debe exceder los 500 caracteres.'
                         }
                     }
                 }
@@ -253,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 autoFocus: new FormValidation.plugins.AutoFocus()
             }
         });
-        
+
         fetch('/laboratorios/unidades')
             .then(response => response.json())
             .then(data => {
@@ -328,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Limpiar la validación cuando el modal se oculta
         const addModalElement = document.getElementById('agregarLab');
         if (addModalElement) {
-            addModalElement.addEventListener('hidden.bs.modal', function () {
+            addModalElement.addEventListener('hidden.bs.modal', function() {
                 fvAdd.resetForm(true);
                 agregarLaboratorioForm.reset();
             });
@@ -336,7 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // Inicializar FormValidation para el formulario de Editar
     if (editLaboratorioForm) {
         const fvEdit = FormValidation.formValidation(editLaboratorioForm, {
             fields: {
@@ -358,14 +337,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     }
                 },
-                descripcion: {
-                    validators: {
-                        stringLength: {
-                            max: 500,
-                            message: 'La descripción no debe exceder los 500 caracteres.'
-                        }
-                    }
-                }
             },
             plugins: {
                 trigger: new FormValidation.plugins.Trigger(),
@@ -378,7 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-          fetch('/laboratorios/unidades')
+        fetch('/laboratorios/unidades')
             .then(response => response.json())
             .then(data => {
                 const select = document.getElementById('selectUnidadesEdit');
@@ -391,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
 
-                fvAdd.addField('selectUnidadesEdit', {
+                fvEdit.addField('selectUnidadesEdit', {
                     validators: {
                         notEmpty: {
                             message: 'Por favor, seleccione una unidad.'
@@ -400,8 +371,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             })
             .catch(error => console.error('Error al obtener datos:', error));
-        
-        fvAdd.on('core.form.valid', function() {
+
+        fvEdit.on('core.form.valid', function() {
             // El formulario de editar es válido, procede con el envío AJAX
             const laboratorioId = document.getElementById('id_laboratorio_modal').value;
             const formData = new FormData(editLaboratorioForm);
@@ -450,49 +421,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const editModalElement = document.getElementById('editLabModal');
         if (editModalElement) {
-            editModalElement.addEventListener('hidden.bs.modal', function () {
+            editModalElement.addEventListener('hidden.bs.modal', function() {
                 fvEdit.resetForm(true); // Resetear la validación
             });
         }
     }
 });
 
-      $(function() {
-        var table = $('.unidades_datatable').DataTable({
-
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-            },
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            ajax: {
-        url: "/catalogos/unidades",
-        type: "GET",
-        data: function (d) {
-        }
+$(function() {
+    var table = $('.unidades_datatable').DataTable({
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
         },
-            dataType: 'json',
-            type: "POST",
-            columns: [
-                {
-                    data: 'id_unidad',
-                    name: 'id_unidad'
-                },
-                
-               
-                {
-                    data: 'nombre',
-                    name: 'nombre'
-                }, 
-                {
-                    data: 'action',
-                    name: 'action',
-                    orderable: false,
-                    searchable: false
-                },
-            ]
-
-        });
-       
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        ajax: {
+            url: "/catalogos/unidades",
+            type: "GET",
+            data: function(d) {}
+        },
+        dataType: 'json',
+        type: "POST",
+        columns: [{
+            data: null,
+            name: 'num',
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row, meta) {
+                return meta.row + 1;
+            }
+        }, {
+            data: 'nombre',
+            name: 'nombre'
+        }, {
+            data: 'action',
+            name: 'action',
+            orderable: false,
+            searchable: false
+        }, ]
     });
+});

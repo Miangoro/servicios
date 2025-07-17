@@ -8,8 +8,8 @@
     <div class="modal-content">
 
       
-      <div class="modal-header bg-custom-green-modal-header">
-        <h4 class="modal-title" id="agregarLabLabel">Editar Laboratorio</h4>
+      <div class="modal-header bg-primary pb-4">
+        <h4 class="modal-title text-white" id="agregarLabLabel">Editar Laboratorio</h4>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
@@ -20,14 +20,14 @@
           <input type="hidden" id="id_laboratorio_modal" name="id_laboratorio">
           <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
-              <input type="text" id="nombre_laboratorio_modal" name="laboratorio" class="form-control"/>
-              <label for="nombre_laboratorio_modal">Nombre</label>
+              <input type="text" id="clave_laboratorio_modal" name="clave" class="form-control"/>
+              <label for="clave_laboratorio_modal">Clave</label>
             </div>
           </div>
           <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
-              <input type="text" id="clave_laboratorio_modal" name="clave" class="form-control"/>
-              <label for="clave_laboratorio_modal">Clave</label>
+              <input type="text" id="nombre_laboratorio_modal" name="laboratorio" class="form-control"/>
+              <label for="nombre_laboratorio_modal">Nombre</label>
             </div>
           </div>
           <div class="mb-4">
@@ -37,14 +37,14 @@
                     </div>
            <div class="col-12">
               <div class="form-floating form-floating-outline mb-6">
-                  <textarea class="form-control h-px-100" id="descripcion_laboratorio_modal" name="descripcion" ></textarea>
+                  <textarea class="form-control h-px-100" id="descripcion_laboratorio_modal" name="descripcion" placeholder="Descripción"></textarea>
                   <label for="descripcion_laboratorio_modal">Descripción</label>
               </div>
           </div>
           
           <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
                   <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
-                    <i class="ri-add-line"></i> Guardar
+                    <i class="ri-save-line"></i> Guardar
                   </button>
                   <button type="reset" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">
                      <i class="ri-close-line"></i> Cancelar

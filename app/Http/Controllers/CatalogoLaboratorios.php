@@ -7,6 +7,7 @@ use Illuminate\Support\FacadesRoute;
 use App\Models\CatalogoLaboratorio;
 use App\Models\CatalogoUnidad;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\Auth;
 
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
@@ -46,25 +47,31 @@ class CatalogoLaboratorios extends Controller
             ->make(true);
         }
        
-        return view('catalogo.Laboratorios');  
+        return view('catalogo.find_catalogo_laboratorios');  
         
     }
 
     // Registrar datos
     public function store(Request $request)
     {
-
+        try{
         $laboratorio = CatalogoLaboratorio::create([
                 'laboratorio' => $request->nombre,
                 'clave' => $request->clave,
                 'descripcion' => $request->descripcionCampo,
                 'habilitado' => 1,
-                'id_usuario' => 1,
+                'id_usuario' => Auth::id(),
                 'id_unidad' => $request->selectUnidades,
             ]);
 
         session()->flash('status', 'Solicitud guardada correctamente.');
         return redirect()->route('laboratorios.index');
+
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar agregar ' . $e->getMessage()], 500);
+        }
     }
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla
@@ -100,12 +107,6 @@ class CatalogoLaboratorios extends Controller
     public function update(Request $request, $id)
     {
         try {
-            // validación de los datos
-            $request->validate([
-                'laboratorio' => 'required|string|max:255',
-                'clave' => 'nullable|string|max:50',
-                'descripcion' => 'nullable|string|max:500',
-            ]);
 
             //Encontrar el laboratorio o fallar si no existe
             $laboratorio = CatalogoLaboratorio::findOrFail($id);
