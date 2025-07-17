@@ -50,20 +50,19 @@
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0">
-                    <div class="row align-items-center">
-                        <div class="col-6">
-                            <h3 class="mb-0"><b>Catálogo de Unidades</b></h3>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
-                        <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                             <span class="d-none d-sm-inline-block">Nuev Unidad</span></button>
-                       
-                        </div>
-                        <div class="col-6 text-right">
-                        
-                        </div>
-                    </div>
-                </div>
-
+    <div class="row align-items-start">  <!-- Cambiado de align-items-center a align-items-start -->
+        <div class="col-6">
+            <h3 class="mb-3"><b>Catálogo de Unidades</b></h3>  <!-- Añadido mb-3 para margen inferior -->
+            <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
+                <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                <span class="d-none d-sm-inline-block">Nueva Unidad</span>
+            </button>
+        </div>
+        <div class="col-6 text-right">
+            <!-- Contenido derecho si es necesario -->
+        </div>
+    </div>
+</div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 
                 <div class="table-responsive p-3">
@@ -90,15 +89,23 @@
 </div>
 
 
+<!-- FormValidation -->
+<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
+<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js') }}"></script>
+
+<!-- SweetAlert2 -->
+<script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+
+<!-- Tu archivo de unidades -->
+<script src="{{ asset('assets/js/unidades.js') }}"></script>
+
 @push('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 
-<script>
-  
-</script>
 @endpush
 
 @endsection
 @include('_partials/_modals/modal-add-unidades')
-@include('_partials/_modals/modal-addedit-unidades')
+@include('_partials/_modals/modal-add-edit-unidades')
