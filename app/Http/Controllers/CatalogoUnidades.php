@@ -9,7 +9,7 @@ use Yajra\DataTables\DataTables;
 use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Auth;
 class CatalogoUnidades extends Controller
 {
 
@@ -47,7 +47,7 @@ public function index(Request $request)
             ->make(true);
         }
        
-        return view('catalogo.unidades');  
+        return view('catalogo.find_catalogo_unidades');  
         
     }
 
@@ -61,22 +61,35 @@ public function index(Request $request)
     }
 
     // Registrar datos
-    public function store(Request $request)
-   
-    
-    {
+   public function store(Request $request)
+{
+    try {
 
+        $unidad = CatalogoUnidad::create([
+            'nombre' => $request->nombreUnidad,
+            'habilitado' => 1,
+            'id_usuario' => Auth::id()
+        ]);
 
-        $informes = CatalogoUnidad::create([
-                     'nombre' => $request ->nombreUnidad,
-                    'habilitado' => 1,
-                    'id_usuario' => 1,
-            ]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Unidad registrada correctamente',
+            'data' => $unidad
+        ]);
 
-
-        session()->flash('status', 'Solicitud guardada correctamente.');
-        return redirect()->route('unidades.index');//Ruta del index
-     }
+    } catch (ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors(),
+            'message' => 'Error de validación'
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error al registrar la unidad: ' . $e->getMessage()
+        ], 500);
+    }
+}
      
 
     //Este manda a la vista del editar, siempre te llevas el id de la tabla
