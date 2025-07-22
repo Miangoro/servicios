@@ -243,6 +243,7 @@ Route:: get('/PDFRecibodePago', function ( ){
 
 
 
+
 // layout
 Route::get('/layouts/collapsed-menu', [CollapsedMenu::class, 'index'])->name('layouts-collapsed-menu');
 Route::get('/layouts/content-navbar', [ContentNavbar::class, 'index'])->name('layouts-content-navbar');
@@ -513,6 +514,15 @@ Route::get('/lista_empresas/{id}', [getFuncionesController::class, 'find_cliente
 Route::get('/lista_inspetores', [getFuncionesController::class, 'usuariosInspectores'])->middleware(['auth']);
 Route::get('/datosComunes/{id_empresa}', [getFuncionesController::class, 'datosComunes'])->middleware(['auth']);
 
+//clientes empresas
+    Route::middleware('auth')->controller(historialCliente::class)->group(function () {
+    Route::get('/clientes/empresas', 'index')->name('clientesE.index');
+    Route::post('/clientes/empresas', [CatalogoUnidades::class, 'store']);
+    Route::get('/getUnidad/{id}', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.get');
+    Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
+    Route::delete('/unidades/{id}', [CatalogoUnidades::class, 'destroy']);
+    Route::get('/add_catalogo_unidades', 'add_catalogo_unidades')->name('add_catalogo_unidades');
+});
 /*obtener el editar*/
 Route::get('/cliente_confirmado/{id}/edit', [clientesConfirmadosController::class, 'editarCliente'])->name('editarCliente')->middleware(['auth']);
 /*editar*/

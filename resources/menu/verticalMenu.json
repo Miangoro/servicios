@@ -37,7 +37,13 @@
           "url": "clientes/confirmados",
           "name": "Confirmados",
           "slug": "clientes-confirmados"
+        },
+        {
+          "url": "clientes/empresas",
+          "name": "Historial",
+          "slug": "clientes-Historial"
         }
+
       ]
     },
     {
@@ -57,6 +63,7 @@
           "name": "Especializados",
           "slug": "clientes-confirmados"
         }
+
       ]
     },
 
