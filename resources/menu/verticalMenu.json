@@ -124,6 +124,11 @@
           "name": "Unidades",
           "slug": "Unidades.index",
           "can" : "Visualizar clases de mezcal" 
+        },
+        {
+          "url": "catalogos/proveedores",
+          "name": "Proveedores",
+          "slug": "proveedores"
         }
        
       ]

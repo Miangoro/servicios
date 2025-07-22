@@ -174,6 +174,7 @@ use App\Http\Controllers\permisos\permisosController;
 use App\Http\Controllers\permisos\rolesController;
 use App\Http\Controllers\CatalogoLaboratorios;
 use App\Http\Controllers\CatalogoUnidades;
+use App\Http\Controllers\CatalogoProveedores;
 
 use Barryvdh\DomPDF\Facade\pdf as PDF;
 
@@ -213,6 +214,16 @@ Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function (
     Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
     Route::delete('/unidades/{id}', [CatalogoUnidades::class, 'destroy']);
     Route::get('/add_catalogo_unidades', 'add_catalogo_unidades')->name('add_catalogo_unidades');
+});
+
+//rutas para catalogo de proveedores
+Route::middleware('auth')->controller(CatalogoProveedores::class)->group(function () {
+    Route::get('/catalogos/proveedores', 'index')->name('proveedores.index');
+    Route::post('/catalogos/proveedores', [CatalogoProveedores::class, 'store']);
+    Route::get('/getProveedor/{id}', [CatalogoProveedores::class, 'getProveedor'])->name('proveedores.get');
+    Route::put('/proveedores/{id}', [CatalogoProveedores::class, 'update'])->name('proveedores.update');
+    Route::delete('/proveedores/{id}', [CatalogoProveedores::class, 'destroy']);
+    Route::get('/add_catalogo_proveedores', 'add_catalogo_proveedores')->name('add_catalogo_proveedores');
 });
 
 //Para documentos
