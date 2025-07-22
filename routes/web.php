@@ -175,6 +175,7 @@ use App\Http\Controllers\permisos\rolesController;
 use App\Http\Controllers\CatalogoLaboratorios;
 use App\Http\Controllers\CatalogoUnidades;
 
+use Barryvdh\DomPDF\Facade\pdf as PDF;
 
 // Main Page Route
 //Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
@@ -229,6 +230,13 @@ Route::get('/dashboard/analytics', [Analytics::class, 'index'])->name('dashboard
 Route::get('/dashboard/crm', [Crm::class, 'index'])->name('dashboard-crm');
 // locale
 Route::get('/lang/{locale}', [LanguageController::class, 'swap']);
+
+Route:: get('/PDFVentas', function ( ){
+    $pdf = PDF :: loadView( 'pdfs.pdf_ventas' ) ;
+    return $pdf->stream();
+});
+
+
 
 // layout
 Route::get('/layouts/collapsed-menu', [CollapsedMenu::class, 'index'])->name('layouts-collapsed-menu');
