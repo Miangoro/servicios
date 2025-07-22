@@ -236,6 +236,11 @@ Route:: get('/PDFVentas', function ( ){
     return $pdf->stream();
 });
 
+Route:: get('/PDFRecibodePago', function ( ){
+    $pdf = PDF :: loadView( 'cotizaciones.recibo_de_pago' ) ;
+    return $pdf->stream();
+});
+
 
 
 // layout
