@@ -175,7 +175,7 @@ use App\Http\Controllers\permisos\rolesController;
 use App\Http\Controllers\CatalogoLaboratorios;
 use App\Http\Controllers\CatalogoUnidades;
 use App\Http\Controllers\CatalogoProveedores;
-
+use App\Http\Controllers\historialClienteController;
 use Barryvdh\DomPDF\Facade\pdf as PDF;
 
 // Main Page Route
@@ -526,9 +526,11 @@ Route::get('/lista_inspetores', [getFuncionesController::class, 'usuariosInspect
 Route::get('/datosComunes/{id_empresa}', [getFuncionesController::class, 'datosComunes'])->middleware(['auth']);
 
 //clientes empresas
-    Route::middleware('auth')->controller(historialCliente::class)->group(function () {
+    Route::middleware('auth')->controller(historialClienteController::class)->group(function () {
     Route::get('/clientes/empresas', 'index')->name('clientesE.index');
+    Route::get('/clientes/empresas', [historialClienteController::class, 'index'])->name('clientes.empresas.index');
     Route::post('/clientes/empresas', [CatalogoUnidades::class, 'store']);
+    
     Route::get('/getUnidad/{id}', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.get');
     Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
     Route::delete('/unidades/{id}', [CatalogoUnidades::class, 'destroy']);

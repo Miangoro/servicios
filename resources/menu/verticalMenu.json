@@ -39,9 +39,9 @@
           "slug": "clientes-confirmados"
         },
         {
-          "url": "clientes/empresas",
+          "url": "/clientes/empresas",
           "name": "Historial",
-          "slug": "clientes-Historial"
+          "slug": "clientesHistorial"
         }
 
       ]
