@@ -13,7 +13,7 @@ class EvaluacionProveedor extends Model
         'id_evaluacion',
         'id_compra',
         'material',
-        'proveedor', // Este campo debe ser el id del proveedor para la relación belongsTo
+        'proveedor',
         'n_evaluacion',
         'fecha_recepcion',
         'fecha_evaluacion',
@@ -33,9 +33,6 @@ class EvaluacionProveedor extends Model
         'id_usuario'
     ];
 
-    /**
-     * Get the provider that owns the evaluation.
-     */
     public function catalogoProveedor()
     {
         return $this->belongsTo(CatalogoProveedor::class, 'proveedor', 'id_proveedor');

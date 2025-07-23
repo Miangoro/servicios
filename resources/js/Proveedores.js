@@ -1,5 +1,5 @@
 $(function() {
-    var table = $('.lab_datatable').DataTable({
+    var table = $('.prov_datatable').DataTable({
         language: {
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
         },
@@ -7,14 +7,12 @@ $(function() {
         serverSide: true,
         responsive: true,
         ajax: {
-            url: "/catalogos/proveedores", // Asegúrate de que esta URL apunte al método `getProveedores` en tu controlador
+            url: "/catalogos/proveedores",
             type: "GET",
-            // data: function(d) {} // No necesitas esto a menos que envíes filtros adicionales
         },
         dataType: 'json',
-        // type: "POST", // DataTables server-side con GET es común, si tu backend espera POST, manténlo.
         columns: [{
-            data: 'DT_RowIndex', // Esto es lo que `addIndexColumn()` de Yajra DataTables devuelve por defecto
+            data: 'DT_RowIndex', // para contar el número de fila
             name: 'num',
             orderable: false,
             searchable: false
@@ -28,12 +26,12 @@ $(function() {
             data: 'rfc',
             name: 'RFC'
         },{
-            data: 'Datos Bancarios', // Nombre de la columna generada en el controlador
+            data: 'Datos Bancarios',
             name: 'Datos Bancarios',
-            orderable: false, // Probablemente no quieras ordenar por este texto HTML
-            searchable: false // Probablemente no quieras buscar por este texto HTML
+            orderable: false,
+            searchable: false
         },{
-            data: 'Contacto', // Nombre de la columna generada en el controlador
+            data: 'Contacto',
             name: 'Contacto',
             orderable: false,
             searchable: false
@@ -41,15 +39,65 @@ $(function() {
             data: 'tipo',
             name: 'Tipo de Compra',
         },{
-            data: 'Evaluacion del Proveedor', // Nombre de la columna generada en el controlador
+            data: 'Evaluacion del Proveedor',
             name: 'Evaluación del Proveedor',
             orderable: false,
             searchable: false
         }, {
             data: 'action',
             name: 'action',
-            orderable: true, // Si tus botones de acción no afectan el orden, déjalo true.
+            orderable: true,
             searchable: false
         }, ]
     });
 });
+
+ $(function () {
+        var maxlengthInput = $('.bootstrap-maxlength-example'),
+            formRepeater = $('.form-repeater');
+
+        // Bootstrap Max Length
+        // --------------------------------------------------------------------
+        if (maxlengthInput.length) {
+            maxlengthInput.each(function () {
+                $(this).maxlength({
+                    warningClass: 'label label-success bg-success text-white',
+                    limitReachedClass: 'label label-danger',
+                    separator: ' out of ',
+                    preText: 'You typed ',
+                    postText: ' chars available.',
+                    validate: true,
+                    threshold: +this.getAttribute('maxlength')
+                });
+            });
+        }
+
+        // Form Repeater
+        // ! Using jQuery each loop to add dynamic id and class for inputs. You may need to improve it based on form fields.
+        // -----------------------------------------------------------------------------------------------------------------
+
+        if (formRepeater.length) {
+            var row = 2;
+            var col = 1;
+            formRepeater.repeater({
+                show: function () {
+                    var fromControl = $(this).find('.form-control, .form-select');
+                    var formLabel = $(this).find('.form-label');
+
+                    fromControl.each(function (i) {
+                        var id = 'form-repeater-' + row + '-' + col;
+                        $(fromControl[i]).attr('id', id);
+                        $(formLabel[i]).attr('for', id);
+                        col++;
+                    });
+
+                    row++;
+
+                    $(this).slideDown();
+                },
+                hide: function (e) {
+                    confirm('Are you sure you want to delete this element?') && $(this).slideUp(e);
+                }
+            });
+        }
+    });

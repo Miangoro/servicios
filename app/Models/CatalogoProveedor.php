@@ -14,7 +14,7 @@ class CatalogoProveedor extends Model
         'razon_social',
         'direccion',
         'rfc',
-        'd_bancarios', // Este campo parece no usarse directamente si n_banco y clave son los relevantes
+        'd_bancarios',
         'n_banco',
         'clave',
         'tipo',
@@ -24,22 +24,13 @@ class CatalogoProveedor extends Model
         'id_usuario'
     ];
 
-    /**
-     * Get the contacts for the provider.
-     */
     public function contactos()
     {
         return $this->hasMany(ProveedoresContactos::class, 'id_proveedor', 'id_proveedor');
     }
 
-    /**
-     * Get the evaluations for the provider.
-     */
     public function evaluaciones()
     {
-        // Asumiendo que 'proveedor' en 'evaluacion_proveedor' es el id del proveedor.
-        // Si 'proveedor' almacena el nombre o la razón social, necesitarías ajustarlo o normalizarlo.
-        // Para una relación directa con id_proveedor, esto es lo más común.
         return $this->hasMany(EvaluacionProveedor::class, 'proveedor', 'id_proveedor');
     }
 }
