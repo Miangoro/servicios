@@ -10,6 +10,7 @@ use LaravelDaily\LaravelCharts\Classes\LaravelChart;
 use assets\js\components\charts;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
+
 class CatalogoUnidades extends Controller
 {
 

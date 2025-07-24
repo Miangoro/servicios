@@ -6,137 +6,149 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                    <form id="formAgregarContacto" class="row g-5" onsubmit="return false">
+                <form id="formAgregarContacto" class="row g-5" action="{{ route('empresas.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf {{-- Protección CSRF --}}
 
-          <span>INFORMACION DEL CLIENTE</span>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressCodigoCliente" name="modalAddressCodigoCliente" class="form-control" placeholder=" " />
-              <label for="modalAddressCodigoCliente">Codigo Cliente</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressRazonSocial" name="modalAddressRazonSocial" class="form-control" placeholder=" " />
-              <label for="modalAddressRazonSocial">Razón Social (Nombre de la empresa o Cliente)</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressRFC" name="modalAddressRFC" class="form-control" placeholder=" " />
-              <label for="modalAddressRFC">RFC</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <select id="modalAddressRegimen" name="modalAddressRegimen" class="select2 form-select" data-allow-clear="true">
-                <option value="">Selecciona un Regímen</option>
-                <option value="Australia">Australia</option>
-                <option value="Bangladesh">Bangladesh</option>
-                <option value="Belarus">Belarus</option>
-                <option value="Brazil">Brazil</option>
-                <option value="Canada">Canada</option>
-                <option value="China">China</option>
-                <option value="France">France</option>
-                <option value="Germany">Germany</option>
-                <option value="India">India</option>
-                <option value="Indonesia">Indonesia</option>
-                <option value="Israel">Israel</option>
-                <option value="Italy">Italy</option>
-                <option value="Japan">Japan</option>
-                <option value="Korea">Korea, Republic of</option>
-                <option value="Mexico">Mexico</option>
-                <option value="Philippines">Philippines</option>
-                <option value="Russia">Russian Federation</option>
-                <option value="South Africa">South Africa</option>
-                <option value="Thailand">Thailand</option>
-                <option value="Turkey">Turkey</option>
-                <option value="Ukraine">Ukraine</option>
-                <option value="United Arab Emirates">United Arab Emirates</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-              </select>
-              <label for="modalAddressRegimen">Régimen Fiscal</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <select id="modalAddressCredito" name="modalAddressCredito" class="select2 form-select" data-allow-clear="true">
-                <option value="">Selecciona una Opción</option>
-                <option value="">Con Crédito</option>
-                <option value="Australia">Sin Crédito</option>
-                
-              </select>
-              <label for="modalAddressCredito">Crédito</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressEstado" name="modalAddressEstado" class="form-control" placeholder=" " />
-              <label for="modalAddressEstado">Estado</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressCiudad" name="modalAddressCiudad" class="form-control" placeholder=" " />
-              <label for="modalAddressCiudad">Ciudad</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressLocalidad" name="modalAddressLocalidad" class="form-control" placeholder=" " />
-              <label for="modalAddressLocalidad">Localidad</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressCalle" name="modalAddressCalle" class="form-control" placeholder=" " />
-              <label for="modalAddressCalle">Calle</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressNo" name="modalAddressNo" class="form-control" placeholder=" # " />
-              <label for="modalAddressNo">No</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressColonia" name="modalAddressColonia" class="form-control" placeholder=" " />
-              <label for="modalAddressColonia">Colonia</label>
-            </div>
-          </div>
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressCodigo" name="modalAddressCodigo" class="form-control" placeholder=" " />
-              <label for="modalAddressCodigo">Código Postal</label>
-            </div>
-          </div>
-          
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressTelefono" name="modalAddressTelefono" class="form-control" placeholder=" " />
-              <label for="modalAddressTelefono">Teléfono</label>
-            </div>
-          </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <select id="modalAddressRegimen" name="regimen" class="select2 form-select" data-allow-clear="true">
+                                <option value="">Selecciona un Regímen</option>
+                                <option value="General">General</option>
+                                <option value="Simplificado">Simplificado</option>
+                                <option value="Sueldos y Salarios e Ingresos Asimilados a Salarios">Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
+                                <!-- Agrega más opciones de régimen fiscal aquí -->
+                            </select>
+                            <label for="modalAddressRegimen">Regímen Fiscal *</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <select id="modalAddressCredito" name="credito" class="select2 form-select" data-allow-clear="true">
+                                <option value="">Selecciona una Opción</m>
+                                <option value="Con Crédito">Con Crédito</option>
+                                <option value="Sin Crédito">Sin Crédito</option>
+                            </select>
+                            <label for="modalAddressCredito">Crédito *</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
 
-          <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="text" id="modalAddressCorreo" name="modalAddressCorreo" class="form-control" placeholder=" " />
-              <label for="modalAddressCorreo">Correo</label>
-            </div>
-          </div>
-        <span>DOCUMENTOS</span>
-        <div class="col-12 col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="file" id="modalAddressConstancia" name="modalAddressConstancia" class="form-control" placeholder=" " />
-              <label for="modalAddressConstancia">Constancia de situación fiscal</label>
-            </div>
-          </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressRazonSocial" name="nombre" class="form-control" placeholder=" " />
+                            <label for="modalAddressRazonSocial">Razón Social (Nombre de la empresa) *</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressRFC" name="rfc" class="form-control" placeholder=" " />
+                            <label for="modalAddressRFC">RFC *</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressEstado" name="estado" class="form-control" placeholder=" " />
+                            <label for="modalAddressEstado">Estado</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressMunicipio" name="municipio" class="form-control" placeholder=" " />
+                            <label for="modalAddressMunicipio">Ciudad o municipio</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressLocalidad" name="localidad" class="form-control" placeholder=" " />
+                            <label for="modalAddressLocalidad">Localidad</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressCalle" name="calle" class="form-control" placeholder=" " />
+                            <label for="modalAddressCalle">Calle</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressNo" name="no_exterior" class="form-control" placeholder=" # " />
+                            <label for="modalAddressNo">No</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressColonia" name="colonia" class="form-control" placeholder=" " />
+                            <label for="modalAddressColonia">Colonia</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressCodigo" name="codigo_postal" class="form-control" placeholder=" " />
+                            <label for="modalAddressCodigo">CP</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressTelefono" name="telefono" class="form-control" placeholder=" " />
+                            <label for="modalAddressTelefono">Teléfono</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+                    <div class="12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="text" id="modalAddressCorreo" name="correo" class="form-control" placeholder=" " />
+                            <label for="modalAddressCorreo">Correo</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="form-floating form-floating-outline">
+                            <input type="file" id="modalAddressConstancia" name="constancia" class="form-control" placeholder=" " />
+                            <label for="modalAddressConstancia">Constancia de situación fiscal</label>
+                        </div>
+                        <div class="invalid-feedback"></div>
+                    </div>
+
+                    {{-- Sección de Contactos Dinámicos --}}
+                    <div class="col-12 mt-5">
+                        <h5 class="mb-3">Contactos Adicionales</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 5%;" class="text-center"> {{-- Columna para el botón '+' --}}
+                                            <button type="button" class="btn btn-success btn-sm" id="add-contact-row-agregar">
+                                                <i class="ri-add-line"></i>
+                                            </button>
+                                        </th>
+                                        <th style="width: 30%;">Contacto</th>
+                                        <th style="width: 30%;">Celular</th>
+                                        <th style="width: 35%;">Correo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contact-rows-container-agregar">
+                                    {{-- Las filas de contacto se añadirán aquí dinámicamente --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
 
                     <div class="col-12 text-end mt-4">
-
-                        <button type="submit" class="btn btn-primary me-2">
+                        <button type="submit" id="agregar-empresa-btn" class="btn btn-primary me-2">
                             <i class="ri-add-line"></i> Agregar Contacto
                         </button>
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
@@ -148,3 +160,53 @@
         </div>
     </div>
 </div>
+
+{{-- Template para una nueva fila de contacto (oculto) --}}
+<template id="contact-row-template">
+    <tr class="contact-row">
+        <td class="text-center"> {{-- Columna para el botón '-' --}}
+            <button type="button" class="btn btn-danger btn-sm remove-contact-row">
+                <i class="ri-delete-bin-7-line"></i>
+            </button>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <input type="text" class="form-control" name="contactos[INDEX][contacto]" placeholder="Nombre del Contacto" />
+                <label>Contacto</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <input type="text" class="form-control" name="contactos[INDEX][celular]" placeholder="Celular" />
+                <label>Celular</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <input type="email" class="form-control" name="contactos[INDEX][correo]" placeholder="Correo Electrónico" />
+                <label>Correo</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        {{-- Los campos de estatus y observaciones solo se mostrarán en la modal de edición --}}
+        <td class="d-none"> {{-- Oculto por defecto --}}
+            <div class="form-floating form-floating-outline mb-0">
+                <select class="form-select form-control-sm" name="contactos[INDEX][status]">
+                    <option value="0">Sin contactar</option>
+                    <option value="1">Contactado</option>
+                </select>
+                <label>Estatus</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td class="d-none"> {{-- Oculto por defecto --}}
+            <div class="form-floating form-floating-outline mb-0">
+                <textarea class="form-control form-control-sm h-px-40" name="contactos[INDEX][observaciones]" placeholder="Observaciones"></textarea>
+                <label>Observaciones</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+    </tr>
+</template>

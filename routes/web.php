@@ -526,16 +526,21 @@ Route::get('/lista_inspetores', [getFuncionesController::class, 'usuariosInspect
 Route::get('/datosComunes/{id_empresa}', [getFuncionesController::class, 'datosComunes'])->middleware(['auth']);
 
 //clientes empresas
-    Route::middleware('auth')->controller(historialClienteController::class)->group(function () {
-    Route::get('/clientes/empresas', 'index')->name('clientesE.index');
-    Route::get('/clientes/empresas', [historialClienteController::class, 'index'])->name('clientes.empresas.index');
-    Route::post('/clientes/empresas', [CatalogoUnidades::class, 'store']);
-    
-    Route::get('/getUnidad/{id}', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.get');
-    Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
-    Route::delete('/unidades/{id}', [CatalogoUnidades::class, 'destroy']);
-    Route::get('/add_catalogo_unidades', 'add_catalogo_unidades')->name('add_catalogo_unidades');
+Route::middleware('auth')->controller(historialClienteController::class)->group(function () {
+// Ruta para el índice de clientes (usada por DataTables)
+Route::get('/clientes/empresas', [historialClienteController::class, 'index'])->name('clientes.empresas.index');
+// Ruta para almacenar una nueva empresa (método POST)
+Route::post('/empresas', [historialClienteController::class, 'store'])->name('empresas.store');
+// Ruta para obtener el formulario de edición (devuelve la vista parcial HTML)
+Route::get('/empresas/{id}/edit-modal', [historialClienteController::class, 'editModal'])->name('empresas.editModal');
+// RUTA PARA ACTUALIZAR DATOS DE LA EMPRESA (MÉTODO PUT)
+// Esta ruta es esencial para la edición.
+Route::put('/empresas/{id}', [historialClienteController::class, 'update'])->name('empresas.update');
+// Ruta para eliminar una empresa (método DELETE)
+Route::delete('/empresas/{id}', [historialClienteController::class, 'destroy'])->name('empresas.destroy');
 });
+
+
 /*obtener el editar*/
 Route::get('/cliente_confirmado/{id}/edit', [clientesConfirmadosController::class, 'editarCliente'])->name('editarCliente')->middleware(['auth']);
 /*editar*/

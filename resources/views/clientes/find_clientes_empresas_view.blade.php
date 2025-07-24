@@ -35,7 +35,6 @@
 @section('page-script')
 <script>
     // Define una variable JavaScript con la URL de la ruta de DataTables
-    // Esto asegura que Blade procese la ruta correctamente antes de que el JS se ejecute
     var dataTableAjaxUrl = "{{ route('clientes.empresas.index') }}";
 </script>
 @vite(['resources/js/historial_clientes.js'])
@@ -44,17 +43,13 @@
 @section('content')
 
 <style>
-
 .constancia{
     width: auto;
     max-width: 200px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
 }
-
-
 </style>
 
 <div class="container-fluid mt--7">
@@ -105,7 +100,23 @@
     </div>
 </div>
 
+<!-- Incluye tu modal de agregar -->
 @include('_partials/_modals/modal-add-historialClientes')
-@include('_partials/_modals/modal-add-edit-unidades')
+
+<!-- MODAL PRINCIPAL DE EDICIÓN: Solo la estructura externa, el contenido se carga dinámicamente -->
+<div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-add-new-role">
+        <div class="modal-content" id="editHistorialModalContent">
+            <!-- El contenido del formulario de edición se cargará aquí vía AJAX -->
+            <!-- Aquí se mostrará un spinner de carga inicialmente -->
+            <div class="modal-body text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-2">Cargando formulario de edición...</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 @endsection
