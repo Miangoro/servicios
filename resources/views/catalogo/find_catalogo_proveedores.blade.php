@@ -14,12 +14,18 @@
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
         //Animacion "loading"
         'resources/assets/vendor/libs/spinkit/spinkit.scss',
+        'resources/assets/vendor/libs/bootstrap-maxlength/bootstrap-maxlength.scss'
     ])
 @endsection
 
 <!-- Vendor Scripts -->
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/moment/moment.js', 'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js', 'resources/assets/vendor/libs/select2/select2.js', 'resources/assets/vendor/libs/@form-validation/popular.js', 'resources/assets/vendor/libs/@form-validation/bootstrap5.js', 'resources/assets/vendor/libs/@form-validation/auto-focus.js', 'resources/assets/vendor/libs/cleavejs/cleave.js', 'resources/assets/vendor/libs/cleavejs/cleave-phone.js', 'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
+    @vite(['resources/assets/vendor/libs/moment/moment.js', 'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js', 'resources/assets/vendor/libs/select2/select2.js', 'resources/assets/vendor/libs/@form-validation/popular.js', 'resources/assets/vendor/libs/@form-validation/bootstrap5.js', 'resources/assets/vendor/libs/@form-validation/auto-focus.js', 'resources/assets/vendor/libs/cleavejs/cleave.js', 'resources/assets/vendor/libs/cleavejs/cleave-phone.js', 'resources/assets/vendor/libs/sweetalert2/sweetalert2.js',
+    'resources/assets/vendor/libs/autosize/autosize.js',
+  'resources/assets/vendor/libs/cleavejs/cleave.js',
+  'resources/assets/vendor/libs/cleavejs/cleave-phone.js',
+  'resources/assets/vendor/libs/bootstrap-maxlength/bootstrap-maxlength.js',
+  'resources/assets/vendor/libs/jquery-repeater/jquery-repeater.js'])
 @endsection
 
 @section('page-script')
@@ -28,18 +34,6 @@
 @endsection
 
 @section('content')
-<style>
-
-    .columna-descripcion {
-    width: auto;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    }
-
-</style>
-
 <div class="container-fluid mt--7">
     <div class="row">
         <div class="col">
@@ -48,7 +42,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h3 class="mb-0"><b>Catálogo de proveedores</b></h3>
-                            <button type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarLab">
+                            <button type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarProv">
                              <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                              <span class="d-none d-sm-inline-block">Agregar Proveedor</span>
                             </button>
@@ -61,7 +55,7 @@
                 <meta name="csrf-token" content="{{ csrf_token() }}">
 
                 <div class="table-responsive p-3">
-                    <table id="tablaProveedores" class="table table-flush table-bordered lab_datatable table-striped table-sm">
+                    <table id="tablaProveedores" class="table table-flush table-bordered prov_datatable table-striped table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th scope="col" class="text-white">#</th>
@@ -87,6 +81,6 @@
     </div>
 </div>
 
-@include('_partials/_modals/modal-add-new-laboratorio')
-@include('_partials/_modals/modal-edit-laboratorio')
+@include('_partials/_modals/modal-add-new-proveedor')
+@include('_partials/_modals/modal-edit-proveedor')
 @endsection
