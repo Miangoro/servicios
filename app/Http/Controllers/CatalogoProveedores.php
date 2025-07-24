@@ -9,6 +9,7 @@ use App\Models\EvaluacionProveedor;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class CatalogoProveedores extends Controller
 {
@@ -83,6 +84,59 @@ class CatalogoProveedores extends Controller
         }
 
         return view('catalogo.find_catalogo_proveedores');
+    }
+
+    public function store(Request $request){
+        try{
+        $proveedor = CatalogoProveedor::create([
+        'razon_social' => $request->nombreProveedor,
+        'direccion' => $request->direccionProveedor,
+        'rfc' => $request->rfcProveedor,
+        'd_bancarios' => "",
+        'n_banco' => $request->nombreBanco,
+        'clave' => $request->clabeInterbancaria,
+        'tipo' => $request->selectTipoCompra,
+        'url_adjunto' => $request->urlAdjunto,
+        'fecha_registro' => now(),
+        'habilitado' => 1,
+        'id_usuario' => Auth::id()
+        ]);
+
+        DB::beginTransaction();
+
+           $contactosData = $request->input('contactos', []); // Obtiene el array de contactos, o un array vacío si no hay
+
+            if (!empty($contactosData)) {
+                // Validar cada contacto en el arreglo
+                $request->validate([
+                    'contactos.*.nombre' => 'required|string|max:255',
+                    'contactos.*.telefono' => 'required|string|max:20',
+                    'contactos.*.email' => 'nullable|email|max:255', // `nullable` si el email no es obligatorio
+                ]);
+
+                $nuevosContactos = [];
+                foreach ($contactosData as $contactoItem) {
+                    $contacto = new ProveedoresContactos();
+                    $contacto->proveedor_id = $proveedor->id; // Asocia el contacto al proveedor recién creado
+                    $contacto->nombre = $contactoItem['nombre'];
+                    $contacto->telefono = $contactoItem['telefono'];
+                    $contacto->email = $contactoItem['email'] ?? null; // Usa null si no se proporciona email
+                    $nuevosContactos[] = $contacto;
+                }
+                // Guarda todos los contactos relacionados al proveedor en una sola operación
+                $proveedor->contactos()->saveMany($nuevosContactos);
+            }
+        
+         DB::commit();
+
+        session()->flash('status', 'Solicitud guardada correctamente.');
+        return response()->json(['message' => 'Proveedor y contactos agregados correctamente.'], 200);
+
+        } catch (ValidationException $e) {
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar agregar ' . $e->getMessage()], 500);
+        }
     }
 
 }

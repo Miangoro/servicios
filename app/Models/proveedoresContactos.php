@@ -28,4 +28,9 @@ class ProveedoresContactos extends Model
     {
         return $this->belongsTo(CatalogoProveedor::class, 'id_proveedor', 'id_proveedor');
     }
+
+    public function contactos()
+    {
+        return $this->hasMany(ProveedoresContactos::class);
+    }
 }

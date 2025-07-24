@@ -34,18 +34,6 @@
 @endsection
 
 @section('content')
-<style>
-
-    .columna-descripcion {
-    width: auto;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    }
-
-</style>
-
 <div class="container-fluid mt--7">
     <div class="row">
         <div class="col">
@@ -54,7 +42,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h3 class="mb-0"><b>Catálogo de proveedores</b></h3>
-                            <button type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarLab">
+                            <button type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarProv">
                              <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                              <span class="d-none d-sm-inline-block">Agregar Proveedor</span>
                             </button>
