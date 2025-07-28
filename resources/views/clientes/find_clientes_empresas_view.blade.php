@@ -119,4 +119,7 @@
     </div>
 </div>
 
+<!-- Incluye tu modal para visualizar PDF -->
+@include('_partials/_modals/modal-add-view-pdf') {{-- Asegúrate de que este sea el nombre de tu archivo. --}}
+
 @endsection

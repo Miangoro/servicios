@@ -1,4 +1,5 @@
 <!-- resources/views/_partials/_modals/modal-add-edit-Historial.blade.php -->
+@php use Illuminate\Support\Facades\Storage; @endphp {{-- ¡IMPORTANTE: Añadido para resolver "Class Storage not found"! --}}
 
 <!-- El contenido de esta vista será cargado dinámicamente dentro de la modal principal -->
 
@@ -15,11 +16,18 @@
         <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
                 <select id="modalAddressRegimen" name="regimen" class="select2 form-select" data-allow-clear="true">
-                    <option value="">Selecciona un Regímen</option>
-                    <option value="General" {{ old('regimen', $empresa->regimen) == 'General' ? 'selected' : '' }}>General</option>
-                    <option value="Simplificado" {{ old('regimen', $empresa->regimen) == 'Simplificado' ? 'selected' : '' }}>Simplificado</option>
-                    <option value="Sueldos y Salarios e Ingresos Asimilados a Salarios" {{ old('regimen', $empresa->regimen) == 'Sueldos y Salarios e Ingresos Asimilados a Salarios' ? 'selected' : '' }}>Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
-                    <!-- Agrega más opciones de régimen fiscal aquí -->
+                    {{-- La opción por defecto "Selecciona un Regímen" se seleccionará si el régimen de la empresa es nulo, vacío o 0 --}}
+                    <option value="" {{ (isset($empresa) && ($empresa->regimen === null || $empresa->regimen === '' || $empresa->regimen == 0)) ? 'selected' : '' }}>Selecciona un Regímen</option>
+                    {{-- Itera sobre los regímenes fiscales obtenidos de la base de datos --}}
+                    @isset($regimenes)
+                        @foreach($regimenes as $regimen)
+                            {{-- Compara el valor del régimen de la empresa con el ID del régimen del catálogo --}}
+                            {{-- Asume que $empresa->regimen guarda el ID del régimen. Si guarda el nombre, cambia $regimen->id por $regimen->regimen --}}
+                            <option value="{{ $regimen->id }}" {{ (isset($empresa) && $empresa->regimen == $regimen->id && $empresa->regimen !== null && $empresa->regimen !== '') ? 'selected' : '' }}>
+                                {{ $regimen->regimen }} {{-- Muestra el nombre del régimen --}}
+                            </option>
+                        @endforeach
+                    @endisset
                 </select>
                 <label for="modalAddressRegimen">Regímen Fiscal *</label>
             </div>
@@ -150,7 +158,7 @@
                     </thead>
                     <tbody id="contact-rows-container-editar">
                         {{-- Las filas de contacto se añadirán aquí dinámicamente por JS --}}
-                        @foreach($empresa->clientesContactos as $contact)
+                        @forelse($empresa->clientesContactos as $contact)
                         <tr class="contact-row">
                             <td class="text-center">
                                 <button type="button" class="btn btn-danger btn-sm remove-contact-row">
@@ -179,10 +187,14 @@
                                 <div class="invalid-feedback"></div>
                             </td>
                             <td> {{-- Columna para Estatus --}}
-                                <select class="form-control-sm" name="contactos[{{ $loop->index }}][status]"> {{-- Clase 'form-select' eliminada --}}
-                                    <option value="0" {{ old('status', $contact->status) == '0' ? 'selected' : '' }}>Sin contactar</option>
-                                    <option value="1" {{ old('status', $contact->status) == '1' ? 'selected' : '' }}>Contactado</option>
-                                </select>
+                                <div class="form-floating form-floating-outline mb-0">
+                                    <select class="form-select form-select-sm contact-status-select" name="contactos[{{ $loop->index }}][status]">
+                                        <option value="0" {{ old('status', $contact->status) == '0' ? 'selected' : '' }}>Sin contactar</option>
+                                        <option value="1" {{ old('status', $contact->status) == '1' ? 'selected' : '' }}>Contactado</option>
+                                    </select>
+                                    <label>Estatus</label>
+                                </div>
+                                <div class="invalid-feedback"></div>
                             </td>
                             <td> {{-- Columna para Observaciones --}}
                                 <div class="form-floating form-floating-outline mb-0">
@@ -192,7 +204,54 @@
                                 <div class="invalid-feedback"></div>
                             </td>
                         </tr>
-                        @endforeach
+                        @empty
+                        {{-- Renderiza una fila vacía si no hay contactos para que los campos de estatus y observaciones estén siempre visibles --}}
+                        <tr class="contact-row">
+                            <td class="text-center">
+                                <button type="button" class="btn btn-danger btn-sm remove-contact-row">
+                                    <i class="ri-delete-bin-7-line"></i>
+                                </button>
+                            </td>
+                            <td>
+                                <div class="form-floating form-floating-outline mb-0">
+                                    <input type="text" class="form-control" name="contactos[0][contacto]" placeholder="Nombre del Contacto" />
+                                    <label>Contacto</label>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </td>
+                            <td>
+                                <div class="form-floating form-floating-outline mb-0">
+                                    <input type="text" class="form-control" name="contactos[0][celular]" placeholder="Celular" />
+                                    <label>Celular</label>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </td>
+                            <td>
+                                <div class="form-floating form-floating-outline mb-0">
+                                    <input type="email" class="form-control" name="contactos[0][correo]" placeholder="Correo Electrónico" />
+                                    <label>Correo</label>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </td>
+                            <td> {{-- Columna para Estatus --}}
+                                <div class="form-floating form-floating-outline mb-0">
+                                    <select class="form-select form-select-sm contact-status-select" name="contactos[0][status]">
+                                        <option value="0">Sin contactar</option>
+                                        <option value="1">Contactado</option>
+                                    </select>
+                                    <label>Estatus</label>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </td>
+                            <td> {{-- Columna para Observaciones --}}
+                                <div class="form-floating form-floating-outline mb-0">
+                                    <textarea class="form-control form-control-sm h-px-40" name="contactos[0][observaciones]" placeholder="Observaciones"></textarea>
+                                    <label>Observaciones</label>
+                                </div>
+                                <div class="invalid-feedback"></div>
+                            </td>
+                        </tr>
+                        @endempty
                     </tbody>
                 </table>
             </div>
@@ -221,44 +280,48 @@
 {{-- Template para una nueva fila de contacto (oculto) --}}
 <template id="contact-row-template">
     <tr class="contact-row">
-    <td class="text-center">
-        <button type="button" class="btn btn-danger btn-sm remove-contact-row">
-            <i class="ri-delete-bin-7-line"></i>
-        </button>
-    </td>
-    <td>
-        <div class="form-floating form-floating-outline mb-0">
-            <input type="text" class="form-control" name="contactos[0][contacto]" placeholder="Nombre del Contacto" value="ENRIQUE MARTINEZ" />
-            <label>Contacto</label>
-        </div>
-        <div class="invalid-feedback"></div>
-    </td>
-    <td>
-        <div class="form-floating form-floating-outline mb-0">
-            <input type="text" class="form-control" name="contactos[0][celular]" placeholder="Celular" value="4521743955" />
-            <label>Celular</label>
-        </div>
-        <div class="invalid-feedback"></div>
-    </td>
-    <td>
-        <div class="form-floating form-floating-outline mb-0">
-            <input type="email" class="form-control" name="contactos[0][correo]" placeholder="Correo Electrónico" value="emartinezparas@mc" />
-            <label>Correo</label>
-        </div>
-        <div class="invalid-feedback"></div>
-    </td>
-    <td>
-        <select class="form-control-sm" name="contactos[0][status]">
-            <option value="0">Sin contactar</option>
-            <option value="1">Contactado</option>
-        </select>
-    </td>
-    <td>
-        <div class="form-floating form-floating-outline mb-0">
-            <textarea class="form-control form-control-sm h-px-40" name="contactos[0][observaciones]" placeholder="Observaciones"></textarea>
-            <label>Observaciones</label>
-        </div>
-        <div class="invalid-feedback"></div>
-    </td>
-</tr>
+        <td class="text-center">
+            <button type="button" class="btn btn-danger btn-sm remove-contact-row">
+                <i class="ri-delete-bin-7-line"></i>
+            </button>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <input type="text" class="form-control" name="contactos[INDEX][contacto]" placeholder="Nombre del Contacto" />
+                <label>Contacto</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <input type="text" class="form-control" name="contactos[INDEX][celular]" placeholder="Celular" />
+                <label>Celular</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <input type="email" class="form-control" name="contactos[INDEX][correo]" placeholder="Correo Electrónico" />
+                <label>Correo</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <select class="form-select form-select-sm contact-status-select" name="contactos[INDEX][status]">
+                    <option value="0">Sin contactar</option>
+                    <option value="1">Contactado</option>
+                </select>
+                <label>Estatus</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+        <td>
+            <div class="form-floating form-floating-outline mb-0">
+                <textarea class="form-control form-control-sm h-px-40" name="contactos[INDEX][observaciones]" placeholder="Observaciones"></textarea>
+                <label>Observaciones</label>
+            </div>
+            <div class="invalid-feedback"></div>
+        </td>
+    </tr>
 </template>

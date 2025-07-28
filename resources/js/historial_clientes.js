@@ -1,5 +1,47 @@
 // resources/js/historial_clientes.js
 
+// Mueve la función viewPdf al ámbito global explícitamente
+window.viewPdf = function(pdfUrl) {
+    const pdfViewerFrame = document.getElementById('pdfViewerFrame');
+    const openPdfInNewTabBtn = document.getElementById('openPdfInNewTabBtn');
+    const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
+    const viewPdfModalElement = document.getElementById('viewPdfModal');
+
+    // Mostrar mensaje de carga y ocultar iframe mientras se carga
+    pdfLoadingMessage.style.display = 'block';
+    pdfViewerFrame.style.display = 'none';
+    pdfViewerFrame.src = ''; // Limpiar src anterior
+
+    // Asignar la URL del PDF al iframe
+    pdfViewerFrame.src = pdfUrl;
+    
+    // Actualizar el enlace del botón "Abrir en otra pestaña"
+    openPdfInNewTabBtn.href = pdfUrl;
+
+    // Manejar la carga del iframe
+    pdfViewerFrame.onload = function() {
+        pdfLoadingMessage.style.display = 'none'; // Ocultar mensaje de carga
+        pdfViewerFrame.style.display = 'block'; // Mostrar iframe
+    };
+
+    pdfViewerFrame.onerror = function() {
+        pdfLoadingMessage.innerText = 'Error al cargar el PDF. Intente abrirlo en una nueva pestaña.';
+        pdfLoadingMessage.style.display = 'block';
+        pdfViewerFrame.style.display = 'none';
+    };
+
+    // Mostrar la modal
+    const viewPdfModal = new bootstrap.Modal(viewPdfModalElement);
+    viewPdfModal.show();
+};
+
+// Opcional: Limpiar el iframe cuando la modal se cierra para liberar recursos
+document.getElementById('viewPdfModal').addEventListener('hidden.bs.modal', function (event) {
+    document.getElementById('pdfViewerFrame').src = ''; // Limpiar el src del iframe
+    document.getElementById('pdfLoadingMessage').style.display = 'none'; // Asegurarse de ocultar el mensaje
+});
+
+
 $(function() {
     // Verifica que la variable dataTableAjaxUrl esté definida (viene de la vista Blade)
     if (typeof dataTableAjaxUrl === 'undefined') {
@@ -57,8 +99,10 @@ $(function() {
         const clone = template.content.cloneNode(true);
         const newRow = clone.querySelector('.contact-row');
 
-        // Reemplazar INDEX con el índice actual
-        newRow.innerHTML = newRow.innerHTML.replace(/INDEX/g, contactIndex);
+        // Reemplazar INDEX con el índice actual en los atributos 'name'
+        $(newRow).find('[name^="contactos[INDEX]"]').each(function() {
+            $(this).attr('name', $(this).attr('name').replace('INDEX', contactIndex));
+        });
 
         // Pre-llenar los campos si se proporcionan datos
         if (data.contacto) {
@@ -80,19 +124,30 @@ $(function() {
             observacionesField.value = data.observaciones || '';
         }
 
-
         // Adjuntar listener para el botón de eliminar
         newRow.querySelector('.remove-contact-row').addEventListener('click', function() {
             this.closest('.contact-row').remove();
         });
 
         document.getElementById(containerId).appendChild(newRow);
+
+        // Inicializar Select2 para el nuevo select de estatus añadido
+        const newSelect = $(newRow).find('select[name$="[status]"]'); // Selecciona el select de estatus por su nombre
+        if (newSelect.length) {
+            newSelect.select2({
+                minimumResultsForSearch: Infinity, // Oculta la barra de búsqueda para selects pequeños
+                dropdownParent: newSelect.closest('td') // Asegura que el dropdown se muestre correctamente
+            });
+        }
+
         contactIndex++; // Incrementar el índice para la próxima fila
     }
 
     // --- Manejo de la modal de AGREGAR ---
     $('#agregarEmpresa').on('shown.bs.modal', function () {
         console.log('Modal Agregar mostrada. Inicializando Select2 y Contactos.');
+        // Inicializa Select2 para todos los selects dentro de la modal de agregar,
+        // incluyendo el select de Régimen Fiscal.
         $('#agregarEmpresa .select2').select2({
             dropdownParent: $('#agregarEmpresa')
         });
@@ -107,6 +162,8 @@ $(function() {
         if (formAgregarContacto) {
             clearValidationErrors(formAgregarContacto);
             formAgregarContacto.reset(); // También resetea el formulario al cerrar
+            // Destruir Select2 para evitar duplicados y problemas al reabrir
+            $('#agregarEmpresa .select2').select2('destroy');
         }
     });
 
@@ -159,9 +216,11 @@ $(function() {
                 }
 
                 // Asegurar que el Select2 se inicialice correctamente para los selects principales
+                // Esto incluye el select de Régimen Fiscal (#modalAddressRegimen)
                 $('#editarhistorial .select2').select2({
                     dropdownParent: $('#editHistorialModal')
                 });
+
                 // Y para los selects de estatus en las filas de contacto, si existen
                 $('#contact-rows-container-editar select[name$="[status]"]').each(function() {
                     $(this).select2({
@@ -170,60 +229,9 @@ $(function() {
                     });
                 });
 
-
-                $('#editHistorialModal').on('shown.bs.modal', function () {
-                    console.log('Modal Editar mostrada. Inicializando Select2.');
-                    $('#editarhistorial .select2').select2({
-                        dropdownParent: $('#editHistorialModal')
-                    });
-                     $('#contact-rows-container-editar select[name$="[status]"]').each(function() {
-                        $(this).select2({
-                            minimumResultsForSearch: Infinity,
-                            dropdownParent: $(this).closest('td')
-                        });
-                    });
-                });
-                if (editHistorialModal._isShown) {
-                    console.log('Modal Editar ya estaba visible. Inicializando Select2 directamente.');
-                    $('#editarhistorial .select2').select2({
-                        dropdownParent: $('#editHistorialModal')
-                    });
-                     $('#contact-rows-container-editar select[name$="[status]"]').each(function() {
-                        $(this).select2({
-                            minimumResultsForSearch: Infinity,
-                            dropdownParent: $(this).closest('td')
-                        });
-                    });
-                }
-
-                $('#editHistorialModal').on('hidden.bs.modal', function () {
-                    const form = document.getElementById('editarhistorial');
-                    if (form) {
-                        console.log('Modal Editar oculta. Limpiando errores.');
-                        clearValidationErrors(form);
-                        const motivoEdicionField = form.querySelector('#motivoEdicion');
-                        if (motivoEdicionField) {
-                            motivoEdicionField.value = '';
-                            motivoEdicionField.classList.remove('is-invalid');
-                            const feedback = motivoEdicionField.nextElementSibling;
-                            if (feedback && feedback.classList.contains('invalid-feedback')) {
-                                feedback.innerHTML = '';
-                            }
-                        }
-                    }
-                });
-
                 // Listener para el botón "Añadir contacto" en la modal de editar
                 document.getElementById('add-contact-row-editar').addEventListener('click', function() {
                     addContactRow('contact-rows-container-editar');
-                    // Re-inicializar Select2 para el nuevo select de estatus
-                    const newSelect = $('#contact-rows-container-editar .contact-row:last-child').find('select[name$="[status]"]');
-                    if (newSelect.length) {
-                        newSelect.select2({
-                            minimumResultsForSearch: Infinity,
-                            dropdownParent: newSelect.closest('td')
-                        });
-                    }
                 });
 
                 const form = document.getElementById('editarhistorial');
@@ -235,6 +243,7 @@ $(function() {
                         clearValidationErrors(this);
 
                         const formData = new FormData(this);
+                        formData.append('_method', 'PUT'); // Asegurar que el método PUT se envíe para Laravel
 
                         const empresaId = document.getElementById('idHistorial').value;
                         const updateUrl = `/empresas/${empresaId}`;
@@ -251,11 +260,11 @@ $(function() {
                         }
 
                         fetch(updateUrl, {
-                            method: 'POST',
+                            method: 'POST', // Usar POST con _method=PUT para Laravel
                             body: formData,
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
-                                'X-Requested-With': 'XMLHttpRequest'
+                                // 'X-Requested-With': 'XMLHttpRequest' // Comentado si se envían archivos, ya que FormData establece Content-Type
                             }
                         })
                         .then(response => {
@@ -331,10 +340,32 @@ $(function() {
         .catch(error => {
             console.error('Error al cargar el formulario de edición:', error);
             if (modalContentContainer) {
-                modalContentContainer.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar el formulario: ${error.message}</div></div>`;
+                modalContentContainer.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar el formulario: ${error.message || 'Error desconocido'}</div></div>`;
             }
         });
     };
+
+    // Al ocultar la modal de edición, destruir Select2 para evitar duplicados
+    $('#editHistorialModal').on('hidden.bs.modal', function () {
+        const form = document.getElementById('editarhistorial');
+        if (form) {
+            console.log('Modal Editar oculta. Limpiando errores y destruyendo Select2.');
+            clearValidationErrors(form);
+            const motivoEdicionField = form.querySelector('#motivoEdicion');
+            if (motivoEdicionField) {
+                motivoEdicionField.value = '';
+                motivoEdicionField.classList.remove('is-invalid');
+                const feedback = motivoEdicionField.nextElementSibling;
+                if (feedback && feedback.classList.contains('invalid-feedback')) {
+                    feedback.innerHTML = '';
+                }
+            }
+            // Destruir Select2 para todos los selects dentro de la modal de edición
+            $(form).find('.select2').select2('destroy');
+            $(form).find('select[name$="[status]"]').select2('destroy'); // También para los de contacto
+        }
+    });
+
 
     /**
      * Muestra los errores de validación en el formulario.
@@ -370,7 +401,8 @@ $(function() {
                     inputElement.classList.add('is-invalid');
 
                     // Para Select2, el error se muestra en el contenedor de Select2
-                    if ($(inputElement).hasClass('select2')) {
+                    // MODIFICADO: Ahora también busca la clase 'contact-status-select'
+                    if ($(inputElement).hasClass('select2') || $(inputElement).is('select[name$="[status]"]')) { // Usa .is() para la selección más específica
                         $(inputElement).next('.select2-container').find('.select2-selection--single').addClass('is-invalid');
                     }
 
@@ -415,7 +447,11 @@ $(function() {
             input.classList.remove('is-invalid');
         });
 
+        // Limpia los estilos de error de Select2
         $(formElement).find('.select2-container').find('.select2-selection--single').removeClass('is-invalid');
+        $(formElement).find('select[name$="[status]"]').each(function() {
+            $(this).next('.select2-container').find('.select2-selection--single').removeClass('is-invalid');
+        });
 
         formElement.querySelectorAll('.invalid-feedback').forEach(feedback => {
             feedback.innerHTML = '';
@@ -491,7 +527,7 @@ $(function() {
                         }
                     });
                 } else {
-                     Swal.fire({
+                    Swal.fire({
                         icon: 'error',
                         title: '¡Error!',
                         html: `${errorMessage}`,
@@ -546,7 +582,6 @@ $(function() {
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Éxito al eliminar empresa:', data);
                     Swal.fire({
                         icon: 'success',
                         title: '¡Eliminado!',
@@ -577,4 +612,17 @@ $(function() {
             }
         });
     };
+
+    // Delegación de eventos para el botón de visualizar PDF
+    // Escucha clics en el cuerpo del documento (o en un contenedor más específico si es posible)
+    // y filtra para los elementos con la clase 'view-pdf-btn'
+    $(document).on('click', '.view-pdf-btn', function(event) {
+        event.preventDefault(); // Evita el comportamiento predeterminado del enlace
+        const pdfUrl = $(this).data('pdf-url'); // Obtiene la URL del atributo data-pdf-url
+        if (pdfUrl) {
+            window.viewPdf(pdfUrl); // Llama a la función global viewPdf
+        } else {
+            console.warn('No se encontró la URL del PDF para este elemento.');
+        }
+    });
 });

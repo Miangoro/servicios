@@ -1,3 +1,6 @@
+<!-- resources/views/_partials/_modals/modal-add-edit-Historial.blade.php -->
+<!-- Este es el contenido de la modal de AGREGAR, que se carga directamente o se incluye en otra vista -->
+
 <div class="modal fade" id="agregarEmpresa" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
@@ -13,10 +16,13 @@
                         <div class="form-floating form-floating-outline">
                             <select id="modalAddressRegimen" name="regimen" class="select2 form-select" data-allow-clear="true">
                                 <option value="">Selecciona un Regímen</option>
-                                <option value="General">General</option>
-                                <option value="Simplificado">Simplificado</option>
-                                <option value="Sueldos y Salarios e Ingresos Asimilados a Salarios">Sueldos y Salarios e Ingresos Asimilados a Salarios</option>
-                                <!-- Agrega más opciones de régimen fiscal aquí -->
+                                {{-- Itera sobre los regímenes fiscales obtenidos de la base de datos --}}
+                                {{-- Asegúrate de que la variable $regimenes se pase a la vista que incluye esta modal --}}
+                                @isset($regimenes)
+                                    @foreach($regimenes as $regimen)
+                                        <option value="{{ $regimen->id }}">{{ $regimen->regimen }}</option>
+                                    @endforeach
+                                @endisset
                             </select>
                             <label for="modalAddressRegimen">Regímen Fiscal *</label>
                         </div>
@@ -107,7 +113,7 @@
                         </div>
                         <div class="invalid-feedback"></div>
                     </div>
-                    <div class="12 col-md-4">
+                    <div class="col-12 col-md-4">
                         <div class="form-floating form-floating-outline">
                             <input type="text" id="modalAddressCorreo" name="correo" class="form-control" placeholder=" " />
                             <label for="modalAddressCorreo">Correo</label>
