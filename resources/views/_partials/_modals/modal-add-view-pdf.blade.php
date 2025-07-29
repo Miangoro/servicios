@@ -1,36 +1,39 @@
-<!-- resources/views/_partials/_modals/modal-add-view-pdf.blade.php -->
+<!-- Modal para visualizar PDF (Botón en Encabezado) -->
 <div class="modal fade" id="viewPdfModal" tabindex="-1" aria-labelledby="viewPdfModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-xl modal-dialog-centered"> {{-- Tamaño 'xl' para el iframe --}}
         <div class="modal-content">
-            <!-- Encabezado de la modal con estilo personalizado (fondo verde, texto blanco) -->
-            <div class="modal-header" style="background-color: #28a745; color: #fff; padding: 0.75rem 1rem; border-bottom: 1px solid #dee2e6; display: flex; align-items: center;">
-                <h5 class="modal-title" id="viewPdfModalLabel" style="font-weight: bold; font-size: 1.1rem; color: #fff;">Documento</h5>
-                
-                <!-- Botón "Abrir en otra pestaña" (azul) -->
-                <!-- Se eliminó ms-auto para que el botón se posicione más a la izquierda -->
-                <a id="openPdfInNewTabBtn" href="#" target="_blank" class="btn btn-primary btn-sm me-2" style="background-color: #007bff; border-color: #007bff; border-radius: 0.3rem; padding: 0.4rem 0.8rem; font-size: 0.9rem; color: #fff; text-decoration: none;">
-                    Abrir en otra pestaña
-                </a>
-                
-                <!-- Botón de cerrar la modal -->
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1) grayscale(1) brightness(2);"></button>
+            <div class="modal-header bg-orange-header d-flex align-items-center justify-content-between"> {{-- Encabezado naranja, flexbox para alinear --}}
+                <h5 class="modal-title text-white" id="viewPdfModalLabel">Documento</h5> {{-- Título "Documento" --}}
+                <div class="d-flex align-items-center">
+                    <a id="openPdfInNewTabBtn" href="#" target="_blank" class="btn btn-success btn-sm rounded-pill px-3 py-2 me-2">Abrir en otra pestaña</a> {{-- Botón verde más pequeño, redondeado, con margen a la derecha --}}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button> {{-- Botón de cerrar blanco --}}
+                </div>
             </div>
-            <div class="modal-body p-0" style="height: 80vh; display: flex; justify-content: center; align-items: center;">
-                <!-- Iframe para cargar el PDF -->
-                <iframe id="pdfViewerFrame" src="" frameborder="0" width="100%" height="100%" style="border: none;"></iframe>
-                <!-- Mensaje de carga o error (opcional, si el PDF no carga) -->
-                <div id="pdfLoadingMessage" style="position: absolute; color: #6c757d; font-size: 1.2rem; display: none;">Cargando PDF...</div>
+            <div class="modal-body text-center py-3"> {{-- Cuerpo de la modal para el iframe y mensaje de carga --}}
+                <p id="pdfLoadingMessage" class="text-muted" style="display: none;">Cargando PDF... Si no se muestra aquí, por favor, usa el botón "Abrir en otra pestaña".</p>
+                <iframe id="pdfViewerFrame" style="width: 100%; height: 70vh; border: none; display: none;"></iframe>
             </div>
-            <!-- No se necesita footer si el botón "Abrir en otra pestaña" está en el header -->
+            {{-- El modal-footer se ha eliminado ya que el botón está en el encabezado --}}
         </div>
     </div>
 </div>
 
-<!-- Estilos personalizados para el botón de abrir en otra pestaña al pasar el ratón -->
 <style>
-    #openPdfInNewTabBtn:hover {
-        background-color: #ffffff !important; /* Fondo blanco al pasar el ratón */
-        color: #007bff !important; /* Texto azul al pasar el ratón para contraste */
-        border-color: #007bff !important; /* Borde azul al pasar el ratón */
+    /* Estilo para el encabezado naranja */
+    .bg-orange-header {
+        background-color: #17cd75ff !important; /* Naranja más oscuro para contraste */
+    }
+    /* Estilo para el botón de cerrar blanco en encabezados oscuros */
+    .btn-close-white {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707a1 1 0 010-1.414z'/%3e%3c/svg%3e") !important;
+        opacity: 1 !important;
+    }
+    .btn-close-white:hover {
+        opacity: 0.75 !important;
+    }
+    /* Ajuste para el título para que esté a la izquierda (ya manejado por justify-content-between) */
+    .modal-header .modal-title {
+        text-align: left;
+        /* margin-right: auto; Ya no es necesario con justify-content-between */
     }
 </style>

@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\empresas_clientes;
 use App\Models\clientes_contacto;
+use App\Models\CatalogoRegimen;
 use App\Models\catalogos_regimenes;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -23,15 +24,30 @@ class historialClienteController extends Controller
     {
         try {
             $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
-            // Obtener todos los regímenes fiscales para el select de edición
-            // Si solo quieres los habilitados, usa: $regimenes = CatalogoRegimen::where('habilitado', 1)->get();
-            $regimenes = catalogos_regimenes::all(); 
+            $regimenes = catalogos_regimenes::all();
             
-            // Pasar la empresa y los regímenes a la vista de edición
             return view('_partials._modals.modal-add-edit-Historial', compact('empresa', 'regimenes')); 
         } catch (\Exception $e) {
             Log::error('Error al cargar modal de edición de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
             return response()->json(['error' => 'No se pudo cargar la empresa para editar: ' . $e->getMessage()], 404);
+        }
+    }
+
+    /**
+     * Muestra el formulario de visualización (solo lectura) para una empresa específica dentro de una modal.
+     * Retorna la vista parcial del formulario HTML pre-rellenada en modo 'view'.
+     */
+    public function viewModal($id) // Nuevo método para visualización
+    {
+        try {
+            $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
+            $regimenes = catalogos_regimenes::all();
+            
+            // Pasa la empresa y los regímenes a la nueva vista de visualización
+            return view('_partials._modals.modal-add-visualizar-Historial', compact('empresa', 'regimenes'));
+        } catch (\Exception $e) {
+            Log::error('Error al cargar modal de visualización de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
+            return response()->json(['error' => 'No se pudo cargar la empresa para visualizar: ' . $e->getMessage()], 404);
         }
     }
 
@@ -69,7 +85,7 @@ class historialClienteController extends Controller
             $empresa->tipo = 0;
 
             if ($request->hasFile('constancia')) {
-                $path = $request->file('constancia')->store('constancias', 'public');
+                $path = $request->file('constancia')->store(date('Y/m/d'), 'public');
                 $empresa->constancia = $path;
                 Log::info('PDF subido. Ruta guardada en DB: ' . $path);
             }
@@ -83,7 +99,7 @@ class historialClienteController extends Controller
                             'cliente_id' => $empresa->id,
                             'nombre_contacto' => $contactData['contacto'] ?? null,
                             'telefono_contacto' => $contactData['celular'] ?? null,
-                            'correo_contacto' => $contactData['correo'] ?? '', 
+                            'correo_contacto' => $contactData['correo'] ?? '',
                             'status' => 1,
                             'observaciones' => null,
                         ]);
@@ -139,7 +155,7 @@ class historialClienteController extends Controller
                     Storage::disk('public')->delete($empresa->constancia);
                     Log::info('PDF anterior eliminado: ' . $empresa->constancia);
                 }
-                $path = $request->file('constancia')->store('constancias', 'public');
+                $path = $request->file('constancia')->store(date('Y/m/d'), 'public');
                 $empresa->constancia = $path;
                 Log::info('PDF actualizado. Nueva ruta guardada en DB: ' . $path);
             }
@@ -159,9 +175,9 @@ class historialClienteController extends Controller
                             'cliente_id' => $empresa->id,
                             'nombre_contacto' => $contactData['contacto'] ?? null,
                             'telefono_contacto' => $contactData['celular'] ?? null,
-                            'correo_contacto' => $contactData['correo'] ?? '', 
+                            'correo_contacto' => $contactData['correo'] ?? '',
                             'status' => $contactData['status'] ?? 0,
-                            'observaciones' => $contactData['observaciones'] ?? null,
+                            'observaciones' => null,
                         ]);
                     }
                 }
@@ -217,14 +233,11 @@ class historialClienteController extends Controller
             return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('constancia', function($row){
                     if (!empty($row->constancia) && str_ends_with($row->constancia, '.pdf')) {
-                        // Aquí se genera la URL pública del PDF
                         $pdfUrl = Storage::url($row->constancia);
-                        // ¡NUEVO! Log la URL generada para depuración
-                        Log::debug('URL de PDF generada: ' . $pdfUrl); 
+                        Log::info('URL de PDF generada para DataTables: ' . $pdfUrl);
 
                         $pdfIconUrl = 'https://servicios.cidam.org/apps/servicios/img/pdf.png';
 
-                        // Se usa data-pdf-url y la clase view-pdf-btn para la delegación de eventos
                         return '<a href="javascript:void(0);" class="btn btn-danger d-flex align-items-center justify-content-center view-pdf-btn" data-pdf-url="' . $pdfUrl . '" title="Ver Constancia" style="width: 50px; height: 50px; padding: 0; border-radius: 50%; overflow: hidden;">' .
                                     '<img src="' . $pdfIconUrl . '" alt="PDF Icon" style="width: 100%; height: 100%; object-fit: contain;">' .
                                '</a>';
@@ -236,6 +249,11 @@ class historialClienteController extends Controller
                         <div class="d-flex align-items-center gap-50">
                             <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id . '">'.
+                                '<li>
+                                    <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
+                                    <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
+                                    </a>
+                                </li>'.
                                 '<li>
                                     <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
                                     <i class="ri-edit-box-line ri-20px text-info"></i>Editar
@@ -253,7 +271,7 @@ class historialClienteController extends Controller
                 ->rawColumns(['constancia', 'action'])
                 ->make(true);
         }
-        $regimenes = catalogos_regimenes::all(); 
-        return view('clientes.find_clientes_empresas_view', compact('regimenes')); 
+        $regimenes = catalogos_regimenes::all();
+        return view('clientes.find_clientes_empresas_view', compact('regimenes'));
     }
 }
