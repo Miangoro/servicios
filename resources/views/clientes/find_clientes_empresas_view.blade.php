@@ -118,7 +118,59 @@
         </div>
     </div>
 </div>
+<!-- En tu archivo find_clientes_empresas_view.blade.php, o donde sea que tengas la estructura de tus modales -->
+<div class="modal fade" id="viewHistorialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="viewHistorialModalContent">
+            <!-- El contenido de modal-add-visualizar-Historial.blade.php se cargará aquí -->
+        </div>
+    </div>
+</div>
 
+<div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="editHistorialModalContent">
+            <!-- El contenido de modal-add-edit-Historial.blade.php se cargará aquí -->
+        </div>
+    </div>
+</div>
+
+<!-- En tu archivo find_clientes_empresas_view.blade.php, o donde sea que tengas la estructura de tus modales -->
+<div class="modal fade" id="viewHistorialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="viewHistorialModalContent">
+            <!-- El contenido de modal-add-visualizar-Historial.blade.php se cargará aquí -->
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="editHistorialModalContent">
+            <!-- El contenido de modal-add-edit-Historial.blade.php se cargará aquí -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal para visualizar PDF (asegúrate de que esta modal exista en tu HTML principal) -->
+<div class="modal fade" id="viewPdfModal" tabindex="-1" aria-labelledby="viewPdfModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewPdfModalLabel">Visualizar Constancia Fiscal</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="pdfLoadingMessage" style="display: none;">Cargando PDF...</p>
+                <iframe id="pdfViewerFrame" style="width: 100%; height: 70vh; border: none;"></iframe>
+            </div>
+            <div class="modal-footer">
+                <a id="openPdfInNewTabBtn" href="#" target="_blank" class="btn btn-primary">Abrir en nueva pestaña</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Incluye tu modal para visualizar PDF -->
 @include('_partials/_modals/modal-add-view-pdf') {{-- Asegúrate de que este sea el nombre de tu archivo. --}}
 

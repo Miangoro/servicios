@@ -4,7 +4,7 @@
 <!-- El contenido de esta vista será cargado dinámicamente dentro de la modal principal -->
 
 <div class="modal-header bg-primary pb-4">
-    <h4 class="modal-title" id="editEmpresaModalLabel">Editar Empresa: {{ $empresa->nombre ?? 'Cargando...' }}</h4>
+    <h4 class="modal-title text-white" id="editEmpresaModalLabel">Editar Empresa: {{ $empresa->nombre ?? 'Cargando...' }}</h4>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 <div class="modal-body">

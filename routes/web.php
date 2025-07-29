@@ -538,6 +538,8 @@ Route::get('/empresas/{id}/edit-modal', [historialClienteController::class, 'edi
 Route::put('/empresas/{id}', [historialClienteController::class, 'update'])->name('empresas.update');
 // Ruta para eliminar una empresa (método DELETE)
 Route::delete('/empresas/{id}', [historialClienteController::class, 'destroy'])->name('empresas.destroy');
+Route::get('/empresas/{id}/view-modal', [historialClienteController::class, 'viewModal'])->name('empresas.viewModal');
+
 });
 
 
