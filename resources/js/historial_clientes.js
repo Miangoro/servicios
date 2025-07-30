@@ -51,10 +51,17 @@ document.getElementById('viewPdfModal').addEventListener('hidden.bs.modal', func
 
 
 $(function() {
-    // Comprobar si dataTableAjaxUrl está definida
+    // Comprobar si dataTableAjaxUrl y totalEmpresasUrl están definidas
     if (typeof dataTableAjaxUrl === 'undefined') {
         console.error("Error: 'dataTableAjaxUrl' no está definida. Asegúrate de definirla en tu vista Blade.");
         return;
+    }
+
+    // Asegúrate de que esta URL esté definida en tu vista Blade, por ejemplo:
+    // <script> var totalEmpresasUrl = "{{ route('empresas.count') }}"; </script>
+    if (typeof totalEmpresasUrl === 'undefined') {
+        console.error("Error: 'totalEmpresasUrl' no está definida. Necesaria para actualizar el contador de empresas.");
+        // No retornamos aquí para permitir que el resto de la tabla funcione, pero el contador no se actualizará.
     }
 
     // Inicialización de la tabla de datos de historial de clientes
@@ -112,6 +119,37 @@ $(function() {
         ],
         autoWidth: false, // Desactivar ajuste automático del ancho de columna
     });
+
+    // Función para actualizar el contador de empresas
+    function updateCompanyCount() {
+        if (typeof totalEmpresasUrl === 'undefined') {
+            console.warn("totalEmpresasUrl no está definida. No se puede actualizar el contador de empresas.");
+            return;
+        }
+
+        fetch(totalEmpresasUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al obtener el conteo de empresas.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const companyCountElement = document.getElementById('totalEmpresasCount'); // ID del elemento donde se mostrará el conteo
+                if (companyCountElement) {
+                    companyCountElement.innerText = data.total; // Asume que la respuesta JSON tiene una propiedad 'total'
+                    console.log('Contador de empresas actualizado a:', data.total);
+                } else {
+                    console.warn("Elemento con ID 'totalEmpresasCount' no encontrado. Asegúrate de tenerlo en tu HTML.");
+                }
+            })
+            .catch(error => {
+                console.error('Error al actualizar el contador de empresas:', error);
+            });
+    }
+
+    // Inicializar el contador al cargar la página
+    updateCompanyCount();
 
     // Modales de Bootstrap
     const editHistorialModal = new bootstrap.Modal(document.getElementById('editHistorialModal'));
@@ -346,6 +384,7 @@ $(function() {
                             });
                             editHistorialModal.hide(); // Ocultar la modal de edición
                             table.ajax.reload(null, false); // Recargar la tabla de datos
+                            updateCompanyCount(); // <--- LLAMADA AGREGADA PARA ACTUALIZAR EL CONTADOR
                         })
                         .catch(error => {
                             console.error('Error en la solicitud AJAX (catch):', error);
@@ -374,7 +413,7 @@ $(function() {
                                     }
                                 });
                             }
-                        })
+                        }) //fin error
                         .finally(() => {
                             // Revertir estado del botón de envío
                             if (submitButton) {
@@ -623,6 +662,7 @@ $(function() {
                 });
                 agregarEmpresaModal.hide(); // Ocultar modal
                 table.ajax.reload(null, false); // Recargar DataTables
+                updateCompanyCount(); // <--- LLAMADA AGREGADA PARA ACTUALIZAR EL CONTADOR
             })
             .catch(error => {
                 let errorMessage = 'Hubo un error inesperado al agregar la empresa.';
@@ -721,6 +761,7 @@ $(function() {
                         }
                     });
                     table.ajax.reload(null, false); // Recargar DataTables
+                    updateCompanyCount(); // <--- LLAMADA AGREGADA PARA ACTUALIZAR EL CONTADOR
                 })
                 .catch(error => {
                     console.error('Error en la solicitud AJAX (catch) para eliminar:', error);
