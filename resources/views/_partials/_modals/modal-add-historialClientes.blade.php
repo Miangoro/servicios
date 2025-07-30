@@ -24,7 +24,7 @@
                                     @endforeach
                                 @endisset
                             </select>
-                            <label for="modalAddressRegimen">Regímen Fiscal *</label>
+                            <label for="modalAddressRegimen">Regímen Fiscal </label>
                         </div>
                         <div class="invalid-feedback"></div>
                     </div>
