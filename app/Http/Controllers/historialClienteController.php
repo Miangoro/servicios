@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\empresas_clientes;
 use App\Models\clientes_contacto;
-use App\Models\CatalogoRegimen; // Revisa si este modelo CatalogoRegimen se usa o es redundante con catalogos_regimenes
+use App\Models\CatalogoRegimen;
 use App\Models\catalogos_regimenes;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
@@ -25,8 +25,8 @@ class historialClienteController extends Controller
         try {
             $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
             $regimenes = catalogos_regimenes::all();
-            
-            return view('_partials._modals.modal-add-edit-Historial', compact('empresa', 'regimenes')); 
+
+            return view('_partials._modals.modal-add-edit-Historial', compact('empresa', 'regimenes'));
         } catch (\Exception $e) {
             Log::error('Error al cargar modal de edición de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
             return response()->json(['error' => 'No se pudo cargar la empresa para editar: ' . $e->getMessage()], 404);
@@ -42,13 +42,25 @@ class historialClienteController extends Controller
         try {
             $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
             $regimenes = catalogos_regimenes::all();
-            
+
             // Pasa la empresa y los regímenes a la nueva vista de visualización
             return view('_partials._modals.modal-add-visualizar-Historial', compact('empresa', 'regimenes'));
         } catch (\Exception $e) {
             Log::error('Error al cargar modal de visualización de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
             return response()->json(['error' => 'No se pudo cargar la empresa para visualizar: ' . $e->getMessage()], 404);
         }
+    }
+
+    /**
+     * Muestra la vista con opciones para exportar los datos de clientes/empresas.
+     * Esta vista puede contener filtros, botones para diferentes formatos (Excel, PDF, etc.).
+     *
+     * @return \Illuminate\View\View
+     */
+    public function exportView()
+    {
+        // Se ha actualizado el nombre de la vista según tu indicación
+        return view('_partials._modals.modal-add-export_clientes_empresas');
     }
 
     /**
@@ -76,43 +88,42 @@ class historialClienteController extends Controller
                 'contactos.*.contacto' => 'nullable|string|max:255',
                 'contactos.*.celular' => 'nullable|string|max:20',
                 'contactos.*.correo' => 'nullable|email|max:255',
-                // No se valida 'status' ni 'observaciones' aquí, ya que el 'store' crea contactos por defecto con status 1 y null
             ]);
 
             $empresa = new empresas_clientes();
-            $validatedData['noext'] = $validatedData['no_exterior']; // Mapeo de no_exterior a noext
-            unset($validatedData['no_exterior']); // Eliminar para evitar fillable issues si no_exterior no existe en el modelo directamente
-            
-            // Llenar los datos de la empresa, excluyendo 'constancia' y 'contactos'
+            $validatedData['noext'] = $validatedData['no_exterior'];
+            unset($validatedData['no_exterior']);
+
             $empresa->fill(Arr::except($validatedData, ['constancia', 'contactos']));
-            $empresa->tipo = 0; // Asignar el tipo
+            $empresa->tipo = 0;
 
             if ($request->hasFile('constancia')) {
                 $path = $request->file('constancia')->store(date('Y/m/d'), 'public');
                 $empresa->constancia = $path;
                 Log::info('PDF subido. Ruta guardada en DB: ' . $path);
             } else {
-                $empresa->constancia = null; // Asegúrate de que si no se sube, sea null
+                $empresa->constancia = null;
             }
 
             $empresa->save();
 
             if ($request->has('contactos') && is_array($request->input('contactos'))) {
                 foreach ($request->input('contactos') as $contactData) {
-                    // Solo crear contacto si al menos un campo relevante no está vacío
                     if (!empty($contactData['contacto']) || !empty($contactData['celular']) || !empty($contactData['correo'])) {
                         clientes_contacto::create([
                             'cliente_id' => $empresa->id,
                             'nombre_contacto' => $contactData['contacto'] ?? null,
                             'telefono_contacto' => $contactData['celular'] ?? null,
                             'correo_contacto' => $contactData['correo'] ?? '',
-                            'status' => 1, // Por defecto al crear un nuevo contacto
+                            'status' => 1,
                             'observaciones' => null,
                         ]);
                     }
                 }
             }
+
             return response()->json(['message' => 'Empresa registrada con éxito.', 'empresa' => $empresa], 201);
+
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Error de validación.',
@@ -157,20 +168,15 @@ class historialClienteController extends Controller
             ]);
 
             if ($request->hasFile('constancia')) {
-                // Eliminar PDF anterior si existe
                 if ($empresa->constancia && Storage::disk('public')->exists($empresa->constancia)) {
                     Storage::disk('public')->delete($empresa->constancia);
                     Log::info('PDF anterior eliminado: ' . $empresa->constancia);
                 }
-                // Almacenar nuevo PDF
                 $path = $request->file('constancia')->store(date('Y/m/d'), 'public');
                 $empresa->constancia = $path;
                 Log::info('PDF actualizado. Nueva ruta guardada en DB: ' . $path);
-            } 
-            // Si no hay archivo nuevo y el campo está marcado para 'limpiar' (si tuvieras esa lógica)
-            // o si simplemente no se envió un archivo nuevo y quieres que sea null si antes había uno
-            // Esto es importante si el usuario puede "quitar" el PDF existente
-            else if ($request->input('constancia_cleared')) { // Ejemplo: si el frontend envía una bandera
+            }
+            else if ($request->input('constancia_cleared')) {
                 if ($empresa->constancia && Storage::disk('public')->exists($empresa->constancia)) {
                     Storage::disk('public')->delete($empresa->constancia);
                     Log::info('PDF existente eliminado por solicitud del usuario.');
@@ -178,15 +184,12 @@ class historialClienteController extends Controller
                 $empresa->constancia = null;
             }
 
-
             $validatedData['noext'] = $validatedData['no_exterior'];
             unset($validatedData['no_exterior']);
 
-            // Actualizar los datos de la empresa, excluyendo 'constancia', 'contactos' y 'motivo_edicion'
             $empresa->update(Arr::except($validatedData, ['constancia', 'contactos', 'motivo_edicion']));
-            $empresa->save(); // Importante guardar después de actualizar la 'constancia' si se hizo por separado
+            $empresa->save();
 
-            // Eliminar contactos existentes y crear nuevos (esto es una forma de sincronizar)
             $empresa->clientesContactos()->delete();
 
             if ($request->has('contactos') && is_array($request->input('contactos'))) {
@@ -226,16 +229,15 @@ class historialClienteController extends Controller
     {
         try {
             $empresa = empresas_clientes::findOrFail($id);
-            // Eliminar el PDF asociado si existe
             if ($empresa->constancia && Storage::disk('public')->exists($empresa->constancia)) {
                 Storage::disk('public')->delete($empresa->constancia);
                 Log::info('PDF eliminado al borrar empresa: ' . $empresa->constancia);
             }
-            // Eliminar contactos relacionados
             $empresa->clientesContactos()->delete();
-            // Eliminar la empresa
             $empresa->delete();
+
             return response()->json(['message' => 'Empresa eliminada con éxito.'], 200);
+
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('Empresa no encontrada para eliminar: ' . $id);
             return response()->json(['message' => 'Empresa no encontrada.'], 404);
@@ -251,18 +253,14 @@ class historialClienteController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $sql = empresas_clientes::query(); // Es mejor usar query() en lugar de get() directamente aquí
+            $sql = empresas_clientes::query();
 
             return DataTables::of($sql)->addIndexColumn()
                 ->addColumn('constancia', function($row){
-                    // La lógica para la columna 'constancia' ya es correcta.
-                    // Devolvemos la URL del PDF si existe y es un PDF, de lo contrario, null.
                     if (!empty($row->constancia) && str_ends_with($row->constancia, '.pdf')) {
-                        // Genera la URL pública para el archivo almacenado en 'storage/app/public'
                         return Storage::url($row->constancia);
                     }
-                    // Si no hay PDF o no es un PDF, devuelve null
-                    return null; 
+                    return null;
                 })
                 ->addColumn('action', function($row){
                     $btn = '
@@ -288,10 +286,30 @@ class historialClienteController extends Controller
                         </div>';
                     return $btn;
                 })
-                ->rawColumns(['constancia', 'action']) // 'constancia' debe seguir siendo rawColumns porque el JS inyectará HTML
+                ->rawColumns(['constancia', 'action'])
                 ->make(true);
         }
+
+        $totalClientes = empresas_clientes::count();
         $regimenes = catalogos_regimenes::all();
-        return view('clientes.find_clientes_empresas_view', compact('regimenes'));
+
+        return view('clientes.find_clientes_empresas_view', compact('regimenes', 'totalClientes'));
+    }
+
+    /**
+     * Obtiene el conteo total de empresas registradas.
+     * Este método será llamado vía AJAX para actualizar el contador en tiempo real.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function countCompanies()
+    {
+        try {
+            $total = empresas_clientes::count();
+            return response()->json(['total' => $total]);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener el conteo de empresas: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
+            return response()->json(['error' => 'No se pudo obtener el conteo de empresas'], 500);
+        }
     }
 }

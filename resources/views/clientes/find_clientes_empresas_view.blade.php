@@ -2,7 +2,6 @@
 
 @section('title', 'ClientesEmpresas')
 
-<!-- Vendor Styles -->
 @section('vendor-style')
     @vite([
         'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
@@ -17,7 +16,6 @@
     ])
 @endsection
 
-<!-- Vendor Scripts -->
 @section('vendor-script')
     @vite([
         'resources/assets/vendor/libs/moment/moment.js',
@@ -34,8 +32,10 @@
 
 @section('page-script')
 <script>
-    // Define una variable JavaScript con la URL de la ruta de DataTables
+    // Define variables JavaScript con las URLs de las rutas
     var dataTableAjaxUrl = "{{ route('clientes.empresas.index') }}";
+    // *** AÑADIDO: Define la URL para obtener el conteo total de empresas ***
+    var totalEmpresasUrl = "{{ route('empresas.count') }}";
 </script>
 @vite(['resources/js/historial_clientes.js'])
 @endsection
@@ -50,6 +50,15 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Estilos para mostrar la cantidad total de clientes */
+.total-clientes-count {
+    font-size: 1.5rem; /* Tamaño de fuente para que se vea prominente */
+    font-weight: normal; /* Hace la letra más delgada */
+    color: #4B4B4B; /* Un gris oscuro para que sea legible */
+    margin-top: 0.5rem; /* Espacio superior para separarlo del título */
+    margin-bottom: 1rem; /* Espacio inferior para separarlo del botón */
+}
 </style>
 
 <div class="container-fluid mt--7">
@@ -60,13 +69,24 @@
                     <div class="row align-items-start">
                         <div class="col-6">
                             <h3 class="mb-3"><b>Historial Clientes</b></h3>
-                            <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#agregarEmpresa">
-                                <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                                <span class="d-none d-sm-inline-block">Agregar Cliente</span>
-                            </button>
+                            {{-- Aquí se mostrará la cantidad de clientes registrados --}}
+                            <div class="total-clientes-count">
+                                Clientes total registrados: <span id="totalEmpresasCount">{{ $totalClientes ?? 0 }}</span>
+                            </div>
+                            <div class="d-flex gap-2"> {{-- Contenedor flex para los botones --}}
+                                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#agregarEmpresa">
+                                    <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                                    <span class="d-none d-sm-inline-block">Agregar Cliente</span>
+                                </button>
+                                {{-- Nuevo Botón Exportar con el icono actualizado --}}
+                                <a href="{{ route('clientes.empresas.export.view') }}" target="_blank" class="btn btn-info mt-2">
+                                    <i class="ri-file-upload-line ri-16px me-0 me-sm-2 align-baseline"></i> {{-- ICONO ACTUALIZADO --}}
+                                    <span class="d-none d-sm-inline-block">Exportar</span>
+                                </a>
+                            </div>
                         </div>
                         <div class="col-6 text-right">
-                            <!-- Contenido derecho si es necesario -->
+                            {{-- Puedes añadir algo aquí si lo necesitas --}}
                         </div>
                     </div>
                 </div>
@@ -88,7 +108,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- DataTables llenará este tbody vía AJAX -->
+                            {{-- Los datos de la tabla se cargarán con DataTables --}}
                         </tbody>
                     </table>
                 </div>
@@ -100,15 +120,11 @@
     </div>
 </div>
 
-<!-- Incluye tu modal de agregar -->
 @include('_partials/_modals/modal-add-historialClientes')
 
-<!-- MODAL PRINCIPAL DE EDICIÓN: Solo la estructura externa, el contenido se carga dinámicamente -->
 <div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-add-new-role">
         <div class="modal-content" id="editHistorialModalContent">
-            <!-- El contenido del formulario de edición se cargará aquí vía AJAX -->
-            <!-- Aquí se mostrará un spinner de carga inicialmente -->
             <div class="modal-body text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
@@ -118,42 +134,14 @@
         </div>
     </div>
 </div>
-<!-- En tu archivo find_clientes_empresas_view.blade.php, o donde sea que tengas la estructura de tus modales -->
+
 <div class="modal fade" id="viewHistorialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content" id="viewHistorialModalContent">
-            <!-- El contenido de modal-add-visualizar-Historial.blade.php se cargará aquí -->
-        </div>
+            </div>
     </div>
 </div>
 
-<div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" id="editHistorialModalContent">
-            <!-- El contenido de modal-add-edit-Historial.blade.php se cargará aquí -->
-        </div>
-    </div>
-</div>
-
-<!-- En tu archivo find_clientes_empresas_view.blade.php, o donde sea que tengas la estructura de tus modales -->
-<div class="modal fade" id="viewHistorialModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" id="viewHistorialModalContent">
-            <!-- El contenido de modal-add-visualizar-Historial.blade.php se cargará aquí -->
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" id="editHistorialModalContent">
-            <!-- El contenido de modal-add-edit-Historial.blade.php se cargará aquí -->
-        </div>
-    </div>
-</div>
-
-
-<!-- Incluye tu modal para visualizar PDF -->
-@include('_partials/_modals/modal-add-view-pdf') {{-- Asegúrate de que este sea el nombre de tu archivo. --}}
+@include('_partials/_modals/modal-add-view-pdf')
 
 @endsection

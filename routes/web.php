@@ -527,19 +527,16 @@ Route::get('/datosComunes/{id_empresa}', [getFuncionesController::class, 'datosC
 
 //clientes empresas
 Route::middleware('auth')->controller(historialClienteController::class)->group(function () {
-// Ruta para el índice de clientes (usada por DataTables)
 Route::get('/clientes/empresas', [historialClienteController::class, 'index'])->name('clientes.empresas.index');
-// Ruta para almacenar una nueva empresa (método POST)
 Route::post('/empresas', [historialClienteController::class, 'store'])->name('empresas.store');
-// Ruta para obtener el formulario de edición (devuelve la vista parcial HTML)
 Route::get('/empresas/{id}/edit-modal', [historialClienteController::class, 'editModal'])->name('empresas.editModal');
-// RUTA PARA ACTUALIZAR DATOS DE LA EMPRESA (MÉTODO PUT)
-// Esta ruta es esencial para la edición.
+
 Route::put('/empresas/{id}', [historialClienteController::class, 'update'])->name('empresas.update');
-// Ruta para eliminar una empresa (método DELETE)
 Route::delete('/empresas/{id}', [historialClienteController::class, 'destroy'])->name('empresas.destroy');
 Route::get('/empresas/{id}/view-modal', [historialClienteController::class, 'viewModal'])->name('empresas.viewModal');
-
+Route::get('/empresas/count', [historialClienteController::class, 'countCompanies'])->name('empresas.count');
+// Ruta para la vista de exportación de clientes/empresas
+Route::get('/clientes/empresas/export', [historialClienteController::class, 'exportView'])->name('clientes.empresas.export.view');
 });
 
 
