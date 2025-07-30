@@ -220,7 +220,7 @@ Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function (
 Route::middleware('auth')->controller(CatalogoProveedores::class)->group(function () {
     Route::get('/catalogos/proveedores', 'index')->name('proveedores.index');
     Route::post('/catalogos/proveedores', [CatalogoProveedores::class, 'store']);
-    Route::get('/getProveedor/{id}', [CatalogoProveedores::class, 'getProveedor'])->name('proveedores.get');
+    Route::get('/proveedores/{id}/edit', [CatalogoProveedores::class, 'getProveedor'])->name('proveedores.edit');
     Route::put('/proveedores/{id}', [CatalogoProveedores::class, 'update'])->name('proveedores.update');
     Route::delete('/proveedores/{id}', [CatalogoProveedores::class, 'destroy']);
     Route::get('/add_catalogo_proveedores', 'add_catalogo_proveedores')->name('add_catalogo_proveedores');
