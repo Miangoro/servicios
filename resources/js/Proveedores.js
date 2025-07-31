@@ -340,6 +340,92 @@ document.addEventListener('DOMContentLoaded', function () {
       });
   });
 
+  window.deleteProv = function(id) {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: '¡No podrás revertir esto!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Eliminar',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'btn btn-danger me-3',
+                cancelButton: 'btn btn-outline-secondary'
+            },
+            buttonsStyling: false
+        }).then(function(result) {
+            if (result.value) {
+                fetch(`/proveedores/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(errorData => {
+                                throw new Error(JSON.stringify(errorData));
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        showAlert(data.message, 'success');
+                        reloadTableOrPage();
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar el proveedor:', error);
+                        let errorMessage = 'Error al eliminar el proveedor. Por favor, intente de nuevo.';
+                        try {
+                            const parsedError = JSON.parse(error.message);
+                            if (parsedError.error) {
+                                errorMessage = 'Error del servidor: ' + parsedError.error;
+                            }
+                        } catch (e) { /* ignore */ }
+                        showAlert(errorMessage, 'error');
+                    });
+            }
+        });
+    } else {
+        if (confirm('¿Estás seguro de que quieres eliminar este proveedor? Esta acción no se puede deshacer.')) {
+            fetch(`/proveedores/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(JSON.stringify(errorData));
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    showAlert(data.message, 'success');
+                    reloadTableOrPage();
+                })
+                .catch(error => {
+                    console.error('Error al eliminar el proveedor:', error);
+                    let errorMessage = 'Error al eliminar el proveedor. Por favor, intente de nuevo.';
+                    try {
+                        const parsedError = JSON.parse(error.message);
+                        if (parsedError.error) {
+                            errorMessage = 'Error del servidor: ' + parsedError.error;
+                        }
+                    } catch (e) { /* ignore */ }
+                    showAlert(errorMessage, 'error');
+                });
+        }
+    }
+}
+
   document.getElementById('agregarProv')?.addEventListener('hidden.bs.modal', () => {
     clearDynamicFields();
     registeredFields.clear();
@@ -447,3 +533,127 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 });
+
+window.verGraficas = function () {
+
+  window.location.href = "{{ route('proveedores.graficas') }}";
+
+  // Color Variables
+  const purpleColor = '#836AF9',
+    yellowColor = '#ffe800',
+    cyanColor = '#28dac6',
+    orangeColor = '#FF8132',
+    orangeLightColor = '#ffcf5c',
+    oceanBlueColor = '#299AFF',
+    greyColor = '#4F5D70',
+    greyLightColor = '#EDF1F4',
+    blueColor = '#2B9AFF',
+    blueLightColor = '#84D0FF';
+
+  let cardColor, headingColor, labelColor, borderColor, legendColor;
+
+  if (isDarkStyle) {
+    cardColor = config.colors_dark.cardColor;
+    headingColor = config.colors_dark.headingColor;
+    labelColor = config.colors_dark.textMuted;
+    legendColor = config.colors_dark.bodyColor;
+    borderColor = config.colors_dark.borderColor;
+  } else {
+    cardColor = config.colors.cardColor;
+    headingColor = config.colors.headingColor;
+    labelColor = config.colors.textMuted;
+    legendColor = config.colors.bodyColor;
+    borderColor = config.colors.borderColor;
+  }
+
+
+// Set height according to their data-height
+  // --------------------------------------------------------------------
+  const chartList = document.querySelectorAll('.chartjs');
+  chartList.forEach(function (chartListItem) {
+    chartListItem.height = chartListItem.dataset.height;
+  });
+
+  // Bar Chart
+  // --------------------------------------------------------------------
+  const barChart = document.getElementById('barChart');
+  if (barChart) {
+    const barChartVar = new Chart(barChart, {
+      type: 'bar',
+      data: {
+        labels: [
+          '7/12',
+          '8/12',
+          '9/12',
+          '10/12',
+          '11/12',
+          '12/12',
+          '13/12',
+          '14/12',
+          '15/12',
+          '16/12',
+          '17/12',
+          '18/12',
+          '19/12'
+        ],
+        datasets: [
+          {
+            data: [275, 90, 190, 205, 125, 85, 55, 87, 127, 150, 230, 280, 190],
+            backgroundColor: orangeLightColor,
+            borderColor: 'transparent',
+            maxBarThickness: 15,
+            borderRadius: {
+              topRight: 15,
+              topLeft: 15
+            }
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 500
+        },
+        plugins: {
+          tooltip: {
+            rtl: isRtl,
+            backgroundColor: cardColor,
+            titleColor: headingColor,
+            bodyColor: legendColor,
+            borderWidth: 1,
+            borderColor: borderColor
+          },
+          legend: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            grid: {
+              color: borderColor,
+              drawBorder: false,
+              borderColor: borderColor
+            },
+            ticks: {
+              color: labelColor
+            }
+          },
+          y: {
+            min: 0,
+            max: 400,
+            grid: {
+              color: borderColor,
+              drawBorder: false,
+              borderColor: borderColor
+            },
+            ticks: {
+              stepSize: 100,
+              color: labelColor
+            }
+          }
+        }
+      }
+    });
+  }
+}

@@ -86,13 +86,13 @@ class CatalogoProveedores extends Controller
                         </li>
 
                         <li>
-                                <a class="dropdown-item" href="javascript:void(0);" onclick="eliminarProveedor(' . $row->id_proveedor . ')">' .
+                                <a class="dropdown-item" href="javascript:void(0);" onclick="verGraficas(' . $row->id_proveedor . ')">' .
                         '<i class="ri-bar-chart-box-fill ri-20px text-primary"></i> Ver gráficas de evaluación' .
                         '</a>
                         </li>
 
                         <li>
-                                <a class="dropdown-item" href="javascript:void(0);" onclick="verGraficas(' . $row->id_proveedor . ')">' .
+                                <a class="dropdown-item" href="javascript:void(0);" onclick="deleteProv(' . $row->id_proveedor . ')">' .
                         '<i class="ri-delete-bin-2-fill ri-20px text-danger"></i> Eliminar' .
                         '</a>
                         </li>'
@@ -277,5 +277,36 @@ class CatalogoProveedores extends Controller
             DB::rollBack();
             return response()->json(['message' => 'Ocurrió un error al actualizar el proveedor.'], 500);
         }
+    }
+
+         public function destroy($id)
+    {
+        try {
+            $proveedor = CatalogoProveedor::findOrFail($id);
+            $proveedor->delete();
+
+            return response()->json(['message' => 'Proveedor eliminado correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Ocurrió un error al intentar eliminar el proveedor: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getGraficas($id)
+    {
+        //try {
+           /* $evaluaciones = EvaluacionProveedor::where('id_proveedor', $id)
+                ->orderBy('fecha_evaluacion', 'desc')
+                ->get();
+
+            if ($evaluaciones->isEmpty()) {
+                return response()->json(['message' => 'No hay evaluaciones registradas para este proveedor.'], 404);
+            }
+
+            return response()->json($evaluaciones);*/
+            return view('catalogo.graficas_evaluaciones_proveedores');
+        
+        /*} catch (\Exception $e) {
+            return response()->json(['error' => 'Error al obtener las gráficas: ' . $e->getMessage()], 500);
+        }*/
     }
 }
