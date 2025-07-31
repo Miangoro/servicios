@@ -37,13 +37,12 @@ class historialClienteController extends Controller
      * Muestra el formulario de visualización (solo lectura) para una empresa específica dentro de una modal.
      * Retorna la vista parcial del formulario HTML pre-rellenada en modo 'view'.
      */
-    public function viewModal($id) // Nuevo método para visualización
+    public function viewModal($id)
     {
         try {
             $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
             $regimenes = catalogos_regimenes::all();
 
-            // Pasa la empresa y los regímenes a la nueva vista de visualización
             return view('_partials._modals.modal-add-visualizar-Historial', compact('empresa', 'regimenes'));
         } catch (\Exception $e) {
             Log::error('Error al cargar modal de visualización de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
@@ -59,7 +58,6 @@ class historialClienteController extends Controller
      */
     public function exportView()
     {
-        // Se ha actualizado el nombre de la vista según tu indicación
         return view('_partials._modals.modal-add-export_clientes_empresas');
     }
 
@@ -221,6 +219,47 @@ class historialClienteController extends Controller
             return response()->json(['message' => 'Error interno del servidor al actualizar la empresa: ' . $e->getMessage()], 500);
         }
     }
+    
+    /**
+     * Actualiza el estatus de una empresa para darla de baja (soft delete).
+     */
+    public function darDeBaja(Request $request, $id)
+    {
+        try {
+            $empresa = empresas_clientes::findOrFail($id);
+            // Asume que 0 significa "dado de baja" o inactivo
+            $empresa->estatus = 0; 
+            $empresa->save();
+            Log::info('Empresa ' . $empresa->id . ' ha sido dada de baja.');
+            return response()->json(['message' => 'Empresa dada de baja con éxito.'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Empresa no encontrada para dar de baja: ' . $id);
+            return response()->json(['message' => 'Empresa no encontrada.'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error al dar de baja la empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
+            return response()->json(['message' => 'Error al dar de baja la empresa: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Actualiza el estatus de una empresa para darla de alta.
+     */
+    public function darDeAlta(Request $request, $id)
+    {
+        try {
+            $empresa = empresas_clientes::findOrFail($id);
+            $empresa->estatus = 1; // Asume que 1 significa "activo"
+            $empresa->save();
+            Log::info('Empresa ' . $empresa->id . ' ha sido dada de alta.');
+            return response()->json(['message' => 'Empresa dada de alta con éxito.'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('Empresa no encontrada para dar de alta: ' . $id);
+            return response()->json(['message' => 'Empresa no encontrada.'], 404);
+        } catch (\Exception $e) {
+            Log::error('Error al dar de alta la empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
+            return response()->json(['message' => 'Error al dar de alta la empresa: ' . $e->getMessage()], 500);
+        }
+    }
 
     /**
      * Elimina una empresa de la base de datos.
@@ -248,7 +287,7 @@ class historialClienteController extends Controller
     }
 
     /**
-     * Obtiene los datos de las empresas para DataTables.
+     * Obtiene los datos de las empresas para DataTables y calcula los contadores disponibles.
      */
     public function index(Request $request)
     {
@@ -263,27 +302,36 @@ class historialClienteController extends Controller
                     return null;
                 })
                 ->addColumn('action', function($row){
-                    $btn = '
-                        <div class="d-flex align-items-center gap-50">
-                            <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id . '">'.
-                                '<li>
-                                    <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
-                                    <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
-                                    </a>
-                                </li>'.
-                                '<li>
-                                    <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
-                                    <i class="ri-edit-box-line ri-20px text-info"></i>Editar
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteUnidad(' . $row->id . ')">'.
-                                        '<i class="ri-delete-bin-7-line ri-20px text-danger"></i> Eliminar </a>'.
-                                    '</a>
-                                </li>'
-                            .'</ul>
-                        </div>';
+                    if ($row->estatus === 0) {
+                        return '<span class="badge bg-danger-light text-danger">Dado de baja</span>
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
+                                        <i class="ri-check-line me-1"></i>
+                                        Dar de alta
+                                    </button>
+                                </div>';
+                    }
+
+                    $btn = '<div class="dropdown">
+                                <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
+                                            <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
+                                            <i class="ri-edit-box-line ri-20px text-info"></i>Editar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
+                                            <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>';
                     return $btn;
                 })
                 ->rawColumns(['constancia', 'action'])
@@ -291,13 +339,26 @@ class historialClienteController extends Controller
         }
 
         $totalClientes = empresas_clientes::count();
+        $personasFisicas = empresas_clientes::where('tipo', 0)->count();
+        $otrosRegimenes = empresas_clientes::where('tipo', '!=', 0)->count();
+
         $regimenes = catalogos_regimenes::all();
 
-        return view('clientes.find_clientes_empresas_view', compact('regimenes', 'totalClientes'));
+        $porcentajeFisicas = ($totalClientes > 0) ? ($personasFisicas / $totalClientes * 100) : 0;
+        $porcentajeOtros = ($totalClientes > 0) ? ($otrosRegimenes / $totalClientes * 100) : 0;
+
+        return view('clientes.find_clientes_empresas_view', compact(
+            'regimenes',
+            'totalClientes',
+            'personasFisicas',
+            'otrosRegimenes',
+            'porcentajeFisicas',
+            'porcentajeOtros'
+        ));
     }
 
     /**
-     * Obtiene el conteo total de empresas registradas.
+     * Obtiene el conteo total de empresas, personas físicas y otros regímenes.
      * Este método será llamado vía AJAX para actualizar el contador en tiempo real.
      *
      * @return \Illuminate\Http\JsonResponse
@@ -306,7 +367,19 @@ class historialClienteController extends Controller
     {
         try {
             $total = empresas_clientes::count();
-            return response()->json(['total' => $total]);
+            $personasFisicas = empresas_clientes::where('tipo', 0)->count();
+            $otrosRegimenes = empresas_clientes::where('tipo', '!=', 0)->count();
+
+            $porcentajeFisicas = ($total > 0) ? ($personasFisicas / $total * 100) : 0;
+            $porcentajeOtros = ($total > 0) ? ($otrosRegimenes / $total * 100) : 0;
+
+            return response()->json([
+                'total' => $total,
+                'fisicas' => $personasFisicas,
+                'otros' => $otrosRegimenes,
+                'porcentajeFisicas' => number_format($porcentajeFisicas, 2),
+                'porcentajeOtros' => number_format($porcentajeOtros, 2),
+            ]);
         } catch (\Exception $e) {
             Log::error('Error al obtener el conteo de empresas: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
             return response()->json(['error' => 'No se pudo obtener el conteo de empresas'], 500);

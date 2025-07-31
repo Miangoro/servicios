@@ -532,7 +532,7 @@ Route::post('/empresas', [historialClienteController::class, 'store'])->name('em
 Route::get('/empresas/{id}/edit-modal', [historialClienteController::class, 'editModal'])->name('empresas.editModal');
 
 Route::put('/empresas/{id}', [historialClienteController::class, 'update'])->name('empresas.update');
-Route::delete('/empresas/{id}', [historialClienteController::class, 'destroy'])->name('empresas.destroy');
+Route::put('/empresas/{id}/dar-de-baja', [historialClienteController::class, 'darDeBaja'])->name('clientes.empresas.darBaja');
 Route::get('/empresas/{id}/view-modal', [historialClienteController::class, 'viewModal'])->name('empresas.viewModal');
 Route::get('/empresas/count', [historialClienteController::class, 'countCompanies'])->name('empresas.count');
 // Ruta para la vista de exportación de clientes/empresas

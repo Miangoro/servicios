@@ -1,88 +1,251 @@
-// resources/js/historial_clientes.js
+/**
+ * Script para la gestión de empresas (CRUD) mediante AJAX.
+ *
+ * MODIFICACIÓN CLAVE:
+ * - Cuando una empresa está "dada de baja" (en localStorage), un ícono de "prohibido" se muestra junto a su nombre.
+ * - La fila completa de la empresa se torna de color rojo.
+ * - Las funciones de alta y baja manipulan el localStorage y recargan la tabla.
+ */
+document.addEventListener('DOMContentLoaded', function () {
 
-// Mueve la función viewPdf al ámbito global explícitamente
-window.viewPdf = function(pdfUrl) {
-    const pdfViewerFrame = document.getElementById('pdfViewerFrame');
-    const openPdfInNewTabBtn = document.getElementById('openPdfInNewTabBtn');
-    const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
-    const viewPdfModalElement = document.getElementById('viewPdfModal');
-
-    // Registra la URL del PDF para depuración
-    console.log('Intentando cargar contenido desde URL:', pdfUrl);
-
-    // Mostrar mensaje de carga y ocultar iframe mientras se carga
-    pdfLoadingMessage.innerText = 'Cargando contenido... Si no se muestra aquí, por favor, usa el botón "Abrir en otra pestaña".';
-    pdfLoadingMessage.style.display = 'block';
-    pdfViewerFrame.style.display = 'none';
-    pdfViewerFrame.src = ''; // Limpiar src anterior
-
-    // Asignar la URL del PDF/imagen al iframe.
-    // Aunque sea una imagen, la modal se usa para "visualizar" contenido.
-    // El navegador mostrará la imagen directamente si la URL apunta a una imagen.
-    pdfViewerFrame.src = pdfUrl;
-
-    // Actualizar el enlace del botón "Abrir en otra pestaña"
-    openPdfInNewTabBtn.href = pdfUrl;
-
-    // Manejar la carga del iframe
-    pdfViewerFrame.onload = function() {
-        pdfLoadingMessage.style.display = 'none'; // Ocultar mensaje de carga
-        pdfViewerFrame.style.display = 'block'; // Mostrar iframe
-        console.log('Contenido cargado exitosamente en el iframe (o el navegador lo maneja).');
-    };
-
-    pdfViewerFrame.onerror = function() {
-        pdfLoadingMessage.innerText = 'Error al cargar el contenido en la ventana. Esto puede deberse a restricciones de seguridad del navegador o un formato no compatible. Por favor, haz clic en "Abrir en otra pestaña".';
-        pdfLoadingMessage.style.display = 'block';
-        pdfViewerFrame.style.display = 'none';
-        console.error('Error al cargar el contenido en el iframe. URL:', pdfUrl);
-    };
-
-    // Mostrar la modal
-    const viewPdfModal = new bootstrap.Modal(viewPdfModalElement);
-    viewPdfModal.show();
-};
-
-// Limpiar el iframe cuando la modal se cierra para liberar recursos
-document.getElementById('viewPdfModal').addEventListener('hidden.bs.modal', function (event) {
-    document.getElementById('pdfViewerFrame').src = ''; // Limpiar el src del iframe
-    document.getElementById('pdfLoadingMessage').style.display = 'none'; // Asegurarse de ocultar el mensaje
-});
-
-
-$(function() {
-    // Comprobar si dataTableAjaxUrl y totalEmpresasUrl están definidas
+    // Comprobaciones iniciales para evitar errores
     if (typeof dataTableAjaxUrl === 'undefined') {
         console.error("Error: 'dataTableAjaxUrl' no está definida. Asegúrate de definirla en tu vista Blade.");
         return;
     }
 
-    // Asegúrate de que esta URL esté definida en tu vista Blade, por ejemplo:
-    // <script> var totalEmpresasUrl = "{{ route('empresas.count') }}"; </script>
     if (typeof totalEmpresasUrl === 'undefined') {
         console.error("Error: 'totalEmpresasUrl' no está definida. Necesaria para actualizar el contador de empresas.");
-        // No retornamos aquí para permitir que el resto de la tabla funcione, pero el contador no se actualizará.
     }
 
-    // Inicialización de la tabla de datos de historial de clientes
-    var table = $('#tablaHistorial').DataTable({
-        language: {
-            url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json', // Idioma español
-        },
-        processing: true, // Mostrar indicador de procesamiento
-        serverSide: true, // Procesamiento en el lado del servidor
-        responsive: false, // Desactivar responsividad por defecto (ajuste manual si es necesario)
-        ajax: {
-            url: dataTableAjaxUrl, // URL para obtener los datos de la tabla
-            type: "GET",
-            data: function(d) {
-                // Parámetros adicionales para la solicitud AJAX si son necesarios
+    // Definición de elementos y variables principales
+    const formAgregarContacto = document.getElementById('formAgregarContacto');
+    const agregarEmpresaModalElement = document.getElementById('agregarEmpresa');
+    const agregarEmpresaModal = new bootstrap.Modal(agregarEmpresaModalElement);
+    const modalContentContainer = document.getElementById('editHistorialModalContent');
+    const viewModalContentContainer = document.getElementById('viewHistorialModalContent');
+    const editHistorialModal = new bootstrap.Modal(document.getElementById('editHistorialModal'));
+    const viewHistorialModal = new bootstrap.Modal(document.getElementById('viewHistorialModal'));
+
+    let contactIndex = 0;
+    let table = null;
+
+    // --- Funciones Auxiliares ---
+
+    /**
+     * Limpia los mensajes de error de validación y las clases 'is-invalid' de un formulario.
+     * @param {HTMLElement} formElement - El elemento del formulario.
+     */
+    function clearValidationErrors(formElement) {
+        formElement.querySelectorAll('.is-invalid').forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        $(formElement).find('.select2-container').find('.select2-selection--single').removeClass('is-invalid');
+        $(formElement).find('select').each(function() {
+            $(this).next('.select2-container').find('.select2-selection--single').removeClass('is-invalid');
+        });
+        formElement.querySelectorAll('.invalid-feedback').forEach(feedback => {
+            feedback.innerHTML = '';
+        });
+    }
+
+    /**
+     * Muestra los errores de validación en el formulario.
+     * @param {object} errors - Objeto con los errores de validación (campo: [mensajes]).
+     * @param {HTMLElement} formElement - El elemento del formulario.
+     */
+    function displayValidationErrors(errors, formElement) {
+        clearValidationErrors(formElement);
+        console.log('Mostrando errores de validación:', errors);
+
+        for (const fieldName in errors) {
+            if (errors.hasOwnProperty(fieldName)) {
+                let htmlFieldName = fieldName;
+                if (fieldName === 'noext') {
+                    htmlFieldName = 'no_exterior';
+                } else if (fieldName.startsWith('contactos.')) {
+                    const parts = fieldName.split('.');
+                    if (parts.length === 3) {
+                        const index = parts[1];
+                        const field = parts[2];
+                        htmlFieldName = `contactos[${index}][${field}]`;
+                    }
+                }
+                const inputElement = formElement.querySelector(`[name="${htmlFieldName}"]`);
+
+                if (inputElement) {
+                    inputElement.classList.add('is-invalid');
+                    if ($(inputElement).hasClass('select2') || $(inputElement).is('select')) {
+                        $(inputElement).next('.select2-container').find('.select2-selection--single').addClass('is-invalid');
+                    }
+                    let feedbackElement = inputElement.nextElementSibling;
+                    if (!feedbackElement || !feedbackElement.classList.contains('invalid-feedback')) {
+                        feedbackElement = document.createElement('div');
+                        feedbackElement.classList.add('invalid-feedback');
+                        inputElement.parentNode.insertBefore(feedbackElement, inputElement.nextElementSibling);
+                    }
+                    feedbackElement.innerHTML = errors[fieldName].join('<br>');
+                } else {
+                    console.warn(`Elemento HTML con name="${htmlFieldName}" no encontrado para el error de campo: ${fieldName}`);
+                }
             }
+        }
+    }
+
+    /**
+     * Añade una nueva fila de contacto al formulario.
+     * @param {string} containerId - El ID del contenedor donde se añadirá la fila.
+     * @param {object} data - Objeto con datos predefinidos para la fila.
+     * @param {boolean} isViewMode - Si la fila es para modo de visualización.
+     */
+    function addContactRow(containerId, data = {}, isViewMode = false) {
+        const template = document.getElementById('contact-row-template');
+        const clone = template.content.cloneNode(true);
+        const newRow = clone.querySelector('.contact-row');
+
+        $(newRow).find('[name^="contactos[INDEX]"]').each(function() {
+            $(this).attr('name', $(this).attr('name').replace('INDEX', contactIndex));
+        });
+
+        if (data.contacto) newRow.querySelector('[name$="[contacto]"]').value = data.contacto;
+        if (data.celular) newRow.querySelector('[name$="[celular]"]').value = data.celular;
+        if (data.correo) newRow.querySelector('[name$="[correo]"]').value = data.correo;
+        const statusField = newRow.querySelector('[name$="[status]"]');
+        if (statusField) statusField.value = data.status !== undefined ? data.status.toString() : '0';
+        const observacionesField = newRow.querySelector('[name$="[observaciones]"]');
+        if (observacionesField) observacionesField.value = data.observaciones || '';
+
+        if (isViewMode) {
+            $(newRow).find('input, select, textarea').prop('disabled', true);
+            $(newRow).find('.remove-contact-row').closest('td').remove();
+        } else {
+            newRow.querySelector('.remove-contact-row').addEventListener('click', function() {
+                this.closest('.contact-row').remove();
+            });
+        }
+
+        document.getElementById(containerId).appendChild(newRow);
+
+        const newSelect = $(newRow).find('select');
+        if (newSelect.length) {
+            newSelect.select2({
+                minimumResultsForSearch: Infinity,
+                dropdownParent: newSelect.closest('td')
+            });
+        }
+        contactIndex++;
+    }
+
+    /**
+     * Función para actualizar el contador de empresas.
+     */
+    function updateCompanyCount() {
+        if (typeof totalEmpresasUrl === 'undefined') {
+            console.warn("totalEmpresasUrl no está definida. No se puede actualizar el contador de empresas.");
+            return;
+        }
+
+        fetch(totalEmpresasUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Error al obtener el conteo de empresas.');
+                return response.json();
+            })
+            .then(data => {
+                const companyCountElement = document.getElementById('totalEmpresasCount');
+                if (companyCountElement) {
+                    const inactiveClients = JSON.parse(localStorage.getItem('inactive_clients')) || [];
+                    const totalActivos = data.total - inactiveClients.length;
+
+                    companyCountElement.innerText = totalActivos;
+                    console.log('Contador de empresas actualizado a:', totalActivos);
+                } else {
+                    console.warn("Elemento con ID 'totalEmpresasCount' no encontrado.");
+                }
+            })
+            .catch(error => {
+                console.error('Error al actualizar el contador de empresas:', error);
+            });
+    }
+
+    /**
+     * Muestra un PDF en un modal.
+     * @param {string} pdfUrl - La URL del archivo PDF a mostrar.
+     */
+    window.viewPdf = function(pdfUrl) {
+        const pdfViewerFrame = document.getElementById('pdfViewerFrame');
+        const openPdfInNewTabBtn = document.getElementById('openPdfInNewTabBtn');
+        const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
+        const viewPdfModalElement = document.getElementById('viewPdfModal');
+
+        console.log('Intentando cargar contenido desde URL:', pdfUrl);
+
+        pdfLoadingMessage.innerText = 'Cargando contenido... Si no se muestra aquí, por favor, usa el botón "Abrir en otra pestaña".';
+        pdfLoadingMessage.style.display = 'block';
+        pdfViewerFrame.style.display = 'none';
+        pdfViewerFrame.src = '';
+        pdfViewerFrame.src = pdfUrl;
+        openPdfInNewTabBtn.href = pdfUrl;
+
+        pdfViewerFrame.onload = function() {
+            pdfLoadingMessage.style.display = 'none';
+            pdfViewerFrame.style.display = 'block';
+            console.log('Contenido cargado exitosamente en el iframe.');
+        };
+
+        pdfViewerFrame.onerror = function() {
+            pdfLoadingMessage.innerText = 'Error al cargar el contenido en la ventana. Por favor, haz clic en "Abrir en otra pestaña".';
+            pdfLoadingMessage.style.display = 'block';
+            pdfViewerFrame.style.display = 'none';
+            console.error('Error al cargar el contenido en el iframe. URL:', pdfUrl);
+        };
+
+        const viewPdfModal = new bootstrap.Modal(viewPdfModalElement);
+        viewPdfModal.show();
+    };
+
+    /**
+     * Aplica la clase 'table-danger' a la fila si el ID está en la lista de clientes inactivos.
+     * @param {HTMLTableRowElement} row - La fila de la tabla.
+     * @param {object} data - Los datos de la fila.
+     */
+    function applyInactiveClass(row, data) {
+        const inactiveClients = JSON.parse(localStorage.getItem('inactive_clients')) || [];
+        if (inactiveClients.includes(data.id)) {
+            $(row).addClass('table-danger');
+        } else {
+            $(row).removeClass('table-danger');
+        }
+    }
+
+    // --- Lógica del CRUD y Event Listeners ---
+
+    // Inicializar DataTables
+    table = $('#tablaHistorial').DataTable({
+        language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+        processing: true,
+        serverSide: true,
+        responsive: false,
+        ajax: {
+            url: dataTableAjaxUrl,
+            type: "GET",
         },
         columns: [
-            // Definición de columnas para DataTables
             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '25px', className: 'text-center' },
-            { data: 'nombre', name: 'nombre', width: '100px', className: 'text-wrap' },
+            {
+                data: 'nombre',
+                name: 'nombre',
+                width: '100px',
+                className: 'text-wrap',
+                render: function(data, type, row) {
+                    const inactiveClients = JSON.parse(localStorage.getItem('inactive_clients')) || [];
+                    const isInactive = inactiveClients.includes(row.id);
+                    let iconHtml = '';
+                    if (isInactive) {
+                        iconHtml = `<i class="ri-user-forbid-line text-danger me-2"></i>`;
+                    }
+                    return `${iconHtml}${data}`;
+                }
+            },
             { data: 'rfc', name: 'rfc', width: '80px', className: 'text-center' },
             { data: 'calle', name: 'calle', width: '100px', className: 'text-wrap' },
             { data: 'colonia', name: 'colonia', width: '80px', className: 'text-wrap' },
@@ -94,161 +257,227 @@ $(function() {
                 width: '120px',
                 className: 'text-wrap text-center',
                 render: function(data, type, row) {
-                    // Ruta de la imagen para el icono de PDF subido
                     const pdfIconUrl = '/assets/img/icons/misc/pdf.png';
-                    // Ruta de la imagen para cuando no hay PDF
                     const missingPdfImageUrl = '/img_pdf/FaltaPDF.png';
-
-                    // Si 'data' tiene un valor (se asume que es la URL del PDF real)
-                    if (data) {
-                        // Usar la imagen pdf.png para los PDFs subidos
-                        // Se quita 'btn-outline-secondary' y se añade 'btn-no-border' (se requiere CSS adicional)
-                        return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn btn-no-border" data-pdf-url="${data}">
-                                    <img src="${pdfIconUrl}" alt="Ver PDF" style="width: 40px; height: auto;">
-                                </button>`;
-                    } else {
-                        // Si 'data' es null (no hay PDF), muestra la imagen de "FaltaPDF.png"
-                        // Se quita 'btn-outline-secondary' y se añade 'btn-no-border' (se requiere CSS adicional)
-                        return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn btn-no-border" data-pdf-url="${missingPdfImageUrl}">
-                                    <img src="${missingPdfImageUrl}" alt="PDF no disponible" style="width: 40px; height: auto;">
-                                </button>`;
-                    }
+                    const imageUrl = data ? data : missingPdfImageUrl;
+                    return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn btn-no-border" data-pdf-url="${imageUrl}">
+                                <img src="${imageUrl === missingPdfImageUrl ? missingPdfImageUrl : pdfIconUrl}" alt="Ver PDF" style="width: 40px; height: auto;">
+                            </button>`;
                 }
             },
-            { data: 'action', name: 'action', orderable: false, searchable: false, width: '80px', className: 'text-center' }
+            {
+                data: null,
+                name: 'action',
+                orderable: false,
+                searchable: false,
+                width: '140px',
+                className: 'text-center',
+                render: function(data, type, row) {
+                    const inactiveClients = JSON.parse(localStorage.getItem('inactive_clients')) || [];
+                    const isInactive = inactiveClients.includes(row.id);
+
+                    let statusItemHtml = '';
+                    if (isInactive) {
+                        statusItemHtml = `<li><a href="javascript:void(0)" class="dropdown-item text-success" onclick="darDeAltaUnidad(${row.id})"><i class="ri-check-line me-1"></i>Dar de alta</a></li>`;
+                    } else {
+                        statusItemHtml = `<li><a href="javascript:void(0)" class="dropdown-item text-danger" onclick="darDeBajaUnidad(${row.id})"><i class="ri-user-forbid-line me-1"></i>Dar de baja</a></li>`;
+                    }
+
+                    return `<div class="dropdown">
+                                <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a href="javascript:void(0)" class="dropdown-item" onclick="viewUnidad(${row.id})"><i class="ri-search-line me-1 text-muted"></i> Visualizar</a></li>
+                                    <li><a href="javascript:void(0)" class="dropdown-item" onclick="editUnidad(${row.id})"><i class="ri-edit-box-line me-1 text-info"></i> Editar</a></li>
+                                    <li class="dropdown-divider"></li>
+                                    ${statusItemHtml}
+                                </ul>
+                            </div>`;
+                }
+            }
         ],
-        autoWidth: false, // Desactivar ajuste automático del ancho de columna
+        autoWidth: false,
+        rowCallback: function(row, data) {
+            applyInactiveClass(row, data);
+        }
     });
 
-    // Función para actualizar el contador de empresas
-    function updateCompanyCount() {
-        if (typeof totalEmpresasUrl === 'undefined') {
-            console.warn("totalEmpresasUrl no está definida. No se puede actualizar el contador de empresas.");
-            return;
-        }
+    // Inicializar el contador de empresas al cargar la página
+    updateCompanyCount();
 
-        fetch(totalEmpresasUrl)
+    // Eventos para la modal de "Agregar Empresa"
+    if (agregarEmpresaModalElement) {
+        agregarEmpresaModalElement.addEventListener('shown.bs.modal', function () {
+            console.log('Modal Agregar mostrada. Inicializando Select2 y Contactos.');
+            $('#agregarEmpresa .select2').select2({ dropdownParent: $('#agregarEmpresa') });
+            contactIndex = 0;
+            $('#contact-rows-container-agregar').empty();
+            addContactRow('contact-rows-container-agregar');
+        });
+
+        agregarEmpresaModalElement.addEventListener('hidden.bs.modal', function () {
+            console.log('Modal Agregar oculta. Limpiando formulario y errores.');
+            if (formAgregarContacto) {
+                clearValidationErrors(formAgregarContacto);
+                formAgregarContacto.reset();
+                $('#agregarEmpresa .select2').select2('destroy');
+            }
+        });
+    }
+
+    // Listener para el botón "Agregar Contacto" en la modal de agregar
+    if (document.getElementById('add-contact-row-agregar')) {
+        document.getElementById('add-contact-row-agregar').addEventListener('click', function() {
+            addContactRow('contact-rows-container-agregar');
+        });
+    }
+
+    // Manejar el envío del formulario de agregar contacto/empresa
+    if (formAgregarContacto) {
+        formAgregarContacto.addEventListener('submit', function(event) {
+            event.preventDefault();
+            clearValidationErrors(this);
+
+            const formData = new FormData(this);
+            const storeUrl = this.action;
+            const submitButton = document.getElementById('agregar-empresa-btn');
+
+            if (submitButton) {
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+                submitButton.disabled = true;
+            }
+
+            fetch(storeUrl, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Error al obtener el conteo de empresas.');
+                    return response.json().then(errorData => {
+                        throw { status: response.status, data: errorData };
+                    });
                 }
                 return response.json();
             })
             .then(data => {
-                const companyCountElement = document.getElementById('totalEmpresasCount'); // ID del elemento donde se mostrará el conteo
-                if (companyCountElement) {
-                    companyCountElement.innerText = data.total; // Asume que la respuesta JSON tiene una propiedad 'total'
-                    console.log('Contador de empresas actualizado a:', data.total);
-                } else {
-                    console.warn("Elemento con ID 'totalEmpresasCount' no encontrado. Asegúrate de tenerlo en tu HTML.");
-                }
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message,
+                    customClass: { confirmButton: 'btn btn-success' }
+                });
+                agregarEmpresaModal.hide();
+                table.ajax.reload(null, false);
+                updateCompanyCount();
             })
             .catch(error => {
-                console.error('Error al actualizar el contador de empresas:', error);
+                let errorMessage = 'Hubo un error inesperado al agregar la empresa.';
+                if (error.status === 422 && error.data && error.data.errors) {
+                    displayValidationErrors(error.data.errors, formAgregarContacto);
+                } else if (error.data && error.data.message) {
+                    errorMessage = error.data.message;
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: '¡Error!',
+                    html: `${errorMessage}`,
+                    customClass: { confirmButton: 'btn btn-danger' }
+                });
+            })
+            .finally(() => {
+                if (submitButton) {
+                    submitButton.innerHTML = '<i class="ri-add-line"></i> Agregar Contacto';
+                    submitButton.disabled = false;
+                }
             });
+        });
     }
 
-    // Inicializar el contador al cargar la página
-    updateCompanyCount();
-
-    // Modales de Bootstrap
-    const editHistorialModal = new bootstrap.Modal(document.getElementById('editHistorialModal'));
-    const modalContentContainer = document.getElementById('editHistorialModalContent');
-
-    const viewHistorialModalElement = document.getElementById('viewHistorialModal');
-    const viewHistorialModal = new bootstrap.Modal(viewHistorialModalElement);
-    const viewModalContentContainer = document.getElementById('viewHistorialModalContent');
-
-    const agregarEmpresaModal = new bootstrap.Modal(document.getElementById('agregarEmpresa'));
-    const formAgregarContacto = document.getElementById('formAgregarContacto');
-
-    let contactIndex = 0; // Índice para los campos de contacto dinámicos
-
-    /**
-     * Añade una nueva fila de contacto al formulario.
-     * @param {string} containerId - El ID del contenedor donde se añadirá la fila.
-     * @param {object} data - Objeto con datos predefinidos para la fila (contacto, celular, correo, status, observaciones).
-     * @param {boolean} isViewMode - Si la fila es para modo de visualización (deshabilita campos y elimina botón de remover).
-     */
-    function addContactRow(containerId, data = {}, isViewMode = false) {
-        const template = document.getElementById('contact-row-template');
-        const clone = template.content.cloneNode(true);
-        const newRow = clone.querySelector('.contact-row');
-
-        // Renombrar atributos 'name' para que sean únicos y compatibles con arrays PHP (contactos[INDEX][campo])
-        $(newRow).find('[name^="contactos[INDEX]"]').each(function() {
-            $(this).attr('name', $(this).attr('name').replace('INDEX', contactIndex));
+    // Función para "dar de baja" (ahora 100% en el frontend con cambio de color)
+    window.darDeBajaUnidad = function(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se marcará visualmente esta empresa como inactiva (la fila se tornará roja y aparecerá un ícono).",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, dar de baja',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'btn btn-warning me-3',
+                cancelButton: 'btn btn-label-secondary'
+            },
+            buttonsStyling: false
+        }).then(function (result) {
+            if (result.value) {
+                const inactiveClients = JSON.parse(localStorage.getItem('inactive_clients')) || [];
+                if (!inactiveClients.includes(id)) {
+                    inactiveClients.push(id);
+                    localStorage.setItem('inactive_clients', JSON.stringify(inactiveClients));
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Dado de baja!',
+                        text: 'El cliente se ha marcado como inactivo.',
+                        customClass: { confirmButton: 'btn btn-success' }
+                    });
+                    table.ajax.reload(null, false); // Recargar la tabla para aplicar los cambios visuales
+                    updateCompanyCount();
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Ya está inactivo',
+                        text: 'El cliente ya está marcado como inactivo.',
+                        customClass: { confirmButton: 'btn btn-info' }
+                    });
+                }
+            }
         });
+    };
 
-        // Rellenar campos con datos si se proporcionan
-        if (data.contacto) {
-            newRow.querySelector('[name$="[contacto]"]').value = data.contacto;
-        }
-        if (data.celular) {
-            newRow.querySelector('[name$="[celular]"]').value = data.celular;
-        }
-        if (data.correo) {
-            newRow.querySelector('[name$="[correo]"]').value = data.correo;
-        }
-        const statusField = newRow.querySelector('[name$="[status]"]');
-        if (statusField) {
-            statusField.value = data.status !== undefined ? data.status.toString() : '0';
-        }
-        const observacionesField = newRow.querySelector('[name$="[observaciones]"]');
-        if (observacionesField) {
-            observacionesField.value = data.observaciones || '';
-        }
-
-        // Configurar modo de visualización o edición
-        if (isViewMode) {
-            $(newRow).find('input, select, textarea').prop('disabled', true); // Deshabilitar todos los campos
-            $(newRow).find('.remove-contact-row').closest('td').remove(); // Remover el botón de eliminar
-        } else {
-            // Añadir listener para remover fila en modo edición/creación
-            newRow.querySelector('.remove-contact-row').addEventListener('click', function() {
-                this.closest('.contact-row').remove();
-            });
-        }
-
-        document.getElementById(containerId).appendChild(newRow); // Añadir la nueva fila al DOM
-
-        // Inicializar Select2 para el campo de estado si existe
-        const newSelect = $(newRow).find('select[name$="[status]"]');
-        if (newSelect.length) {
-            newSelect.select2({
-                minimumResultsForSearch: Infinity, // No mostrar campo de búsqueda
-                dropdownParent: newSelect.closest('td') // Asegurar que el dropdown se muestre correctamente
-            });
-        }
-
-        contactIndex++; // Incrementar el índice para la próxima fila
-    }
-
-    // Eventos para la modal de "Agregar Empresa"
-    $('#agregarEmpresa').on('shown.bs.modal', function () {
-        console.log('Modal Agregar mostrada. Inicializando Select2 y Contactos.');
-        // Inicializar Select2 para todos los selects dentro de la modal
-        $('#agregarEmpresa .select2').select2({
-            dropdownParent: $('#agregarEmpresa') // Asegurar que el dropdown se muestre correctamente
+    // Función para "dar de alta" (100% en el frontend con eliminación del color rojo)
+    window.darDeAltaUnidad = function(id) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "Se quitará la marca visual de inactividad.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, dar de alta',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'btn btn-success me-3',
+                cancelButton: 'btn btn-label-secondary'
+            },
+            buttonsStyling: false
+        }).then(function (result) {
+            if (result.value) {
+                let inactiveClients = JSON.parse(localStorage.getItem('inactive_clients')) || [];
+                const index = inactiveClients.indexOf(id);
+                if (index > -1) {
+                    inactiveClients.splice(index, 1);
+                    localStorage.setItem('inactive_clients', JSON.stringify(inactiveClients));
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Dado de alta!',
+                        text: 'Se ha quitado la marca de inactividad del cliente.',
+                        customClass: { confirmButton: 'btn btn-success' }
+                    });
+                    table.ajax.reload(null, false); // Recargar la tabla para quitar los cambios visuales
+                    updateCompanyCount();
+                } else {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Ya está activo',
+                        text: 'El cliente ya está en su estado activo.',
+                        customClass: { confirmButton: 'btn btn-info' }
+                    });
+                }
+            }
         });
-        contactIndex = 0; // Reiniciar índice de contacto
-        $('#contact-rows-container-agregar').empty(); // Limpiar contactos anteriores
-        addContactRow('contact-rows-container-agregar'); // Añadir una fila de contacto inicial
-    });
-
-    $('#agregarEmpresa').on('hidden.bs.modal', function () {
-        console.log('Modal Agregar oculta. Limpiando formulario y errores.');
-        if (formAgregarContacto) {
-            clearValidationErrors(formAgregarContacto); // Limpiar errores de validación
-            formAgregarContacto.reset(); // Resetear el formulario
-            $('#agregarEmpresa .select2').select2('destroy'); // Destruir instancias de Select2
-        }
-    });
-
-    // Listener para el botón "Agregar Contacto" en la modal de agregar
-    document.getElementById('add-contact-row-agregar').addEventListener('click', function() {
-        addContactRow('contact-rows-container-agregar');
-    });
+    };
 
     /**
      * Función global para editar una unidad (empresa).
@@ -256,166 +485,76 @@ $(function() {
      */
     window.editUnidad = function(id) {
         console.log('Función editar llamada para ID:', id);
-
-        // Mostrar un spinner de carga mientras se carga el formulario
         if (modalContentContainer) {
-            modalContentContainer.innerHTML = `
-                <div class="modal-body text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2">Cargando formulario de edición...</p>
-                </div>
-            `;
+            modalContentContainer.innerHTML = `<div class="modal-body text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2">Cargando formulario de edición...</p>
+                            </div>`;
         }
-        editHistorialModal.show(); // Mostrar la modal
-
-        // Realizar una solicitud AJAX para obtener el formulario de edición
-        fetch(`/empresas/${id}/edit-modal`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest', // Indica que es una solicitud AJAX
-                'Accept': 'text/html' // Espera HTML como respuesta
-            }
-        })
+        editHistorialModal.show();
+        fetch(`/empresas/${id}/edit-modal`, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
         .then(response => {
-            console.log('Respuesta de carga de modal de edición (raw):', response);
-            if (!response.ok) {
-                // Si la respuesta no es OK, intenta leer el error
-                return response.text().then(text => { throw new Error(text || response.statusText); });
-            }
-            return response.text(); // Devuelve el HTML del formulario
+            if (!response.ok) return response.text().then(text => { throw new Error(text || response.statusText); });
+            return response.text();
         })
         .then(html => {
             if (modalContentContainer) {
-                modalContentContainer.innerHTML = html; // Cargar el HTML en el contenedor de la modal
-                console.log('Contenido de modal de edición cargado. Adjuntando listeners.');
-
-                // Establecer el contactIndex basado en las filas ya existentes
+                modalContentContainer.innerHTML = html;
                 contactIndex = $('#contact-rows-container-editar').children().length;
-
-                // Si no hay contactos preexistentes, añadir uno vacío
-                if (contactIndex === 0) {
-                    addContactRow('contact-rows-container-editar');
-                } else {
-                    // Si ya hay contactos, adjuntar listeners de eliminación a los existentes
-                    $('#contact-rows-container-editar .remove-contact-row').each(function() {
-                        this.addEventListener('click', function() {
-                            this.closest('.contact-row').remove();
-                        });
-                    });
-                }
-
-                // Inicializar Select2 para campos dentro del formulario de edición
-                $('#editarhistorial .select2').select2({
-                    dropdownParent: $('#editHistorialModal')
+                if (contactIndex === 0) { addContactRow('contact-rows-container-editar'); }
+                $('#contact-rows-container-editar .remove-contact-row').each(function() {
+                    this.addEventListener('click', function() { this.closest('.contact-row').remove(); });
                 });
-
-                // Inicializar Select2 específicamente para los selectores de status de contacto
-                $('#contact-rows-container-editar select[name$="[status]"]').each(function() {
-                    $(this).select2({
-                        minimumResultsForSearch: Infinity,
-                        dropdownParent: $(this).closest('td')
-                    });
+                $('#editarhistorial .select2').select2({ dropdownParent: $('#editHistorialModal') });
+                $('#contact-rows-container-editar select').each(function() {
+                    $(this).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(this).closest('td') });
                 });
-
-                // Listener para el botón "Agregar Contacto" en la modal de edición
                 document.getElementById('add-contact-row-editar').addEventListener('click', function() {
                     addContactRow('contact-rows-container-editar');
                 });
-
-                // Manejar el envío del formulario de edición
                 const form = document.getElementById('editarhistorial');
                 if (form) {
-                    console.log('Formulario de edición encontrado. Adjuntando listener.');
                     form.addEventListener('submit', function(event) {
-                        console.log('Evento submit del formulario de edición disparado.');
-                        event.preventDefault(); // Prevenir el envío tradicional del formulario
-                        clearValidationErrors(this); // Limpiar errores de validación anteriores
-
-                        const formData = new FormData(this); // Crear FormData del formulario
-                        formData.append('_method', 'PUT'); // Simular el método PUT para Laravel
-
+                        event.preventDefault();
+                        clearValidationErrors(this);
+                        const formData = new FormData(this);
+                        formData.append('_method', 'PUT');
                         const empresaId = document.getElementById('idHistorial').value;
                         const updateUrl = `/empresas/${empresaId}`;
-
-                        console.log('URL de actualización (updateUrl):', updateUrl);
-                        // Loguear los datos del FormData para depuración
-                        for (let [key, value] of formData.entries()) {
-                            console.log(`${key}: ${value}`);
-                        }
-
-                        // Deshabilitar el botón de envío y mostrar spinner
                         const submitButton = form.querySelector('button[type="submit"]');
                         if (submitButton) {
                             submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
                             submitButton.disabled = true;
                         }
-
-                        // Enviar datos del formulario a través de AJAX
                         fetch(updateUrl, {
-                            method: 'POST', // Usar POST con _method PUT
+                            method: 'POST',
                             body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'), // Token CSRF para seguridad
-                            }
+                            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
                         })
                         .then(response => {
-                            console.log('Respuesta de la API (raw):', response);
-                            if (!response.ok) {
-                                // Si hay errores, parsear el JSON de errores
-                                return response.json().then(errorData => {
-                                    console.error('Error de respuesta (JSON):', errorData);
-                                    throw { status: response.status, data: errorData };
-                                });
-                            }
-                            return response.json(); // Si es exitoso, parsear el JSON de respuesta
+                            if (!response.ok) return response.json().then(errorData => { throw { status: response.status, data: errorData }; });
+                            return response.json();
                         })
                         .then(data => {
-                            console.log('Éxito al actualizar empresa:', data);
-                            // Mostrar mensaje de éxito con SweetAlert2
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Éxito!',
-                                text: data.message,
-                                customClass: {
-                                    confirmButton: 'btn btn-success'
-                                }
-                            });
-                            editHistorialModal.hide(); // Ocultar la modal de edición
-                            table.ajax.reload(null, false); // Recargar la tabla de datos
-                            updateCompanyCount(); // <--- LLAMADA AGREGADA PARA ACTUALIZAR EL CONTADOR
+                            Swal.fire({ icon: 'success', title: '¡Éxito!', text: data.message, customClass: { confirmButton: 'btn btn-success' } });
+                            editHistorialModal.hide();
+                            table.ajax.reload(null, false);
+                            updateCompanyCount();
                         })
                         .catch(error => {
-                            console.error('Error en la solicitud AJAX (catch):', error);
                             let errorMessage = 'Hubo un error inesperado al actualizar la empresa.';
-
-                            // Manejar errores de validación de Laravel (estado 422)
                             if (error.status === 422 && error.data && error.data.errors) {
                                 displayValidationErrors(error.data.errors, form);
                             } else if (error.data && error.data.message) {
                                 errorMessage = error.data.message;
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: '¡Error!',
-                                    html: `${errorMessage}`,
-                                    customClass: {
-                                        confirmButton: 'btn btn-danger'
-                                    }
-                                });
-                            } else {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: '¡Error!',
-                                    html: `${errorMessage}`,
-                                    customClass: {
-                                        confirmButton: 'btn btn-danger'
-                                    }
-                                });
+                            } else if (error.message) {
+                                errorMessage = error.message;
                             }
-                        }) //fin error
+                            Swal.fire({ icon: 'error', title: '¡Error!', html: `${errorMessage}`, customClass: { confirmButton: 'btn btn-danger' } });
+                        })
                         .finally(() => {
-                            // Revertir estado del botón de envío
                             if (submitButton) {
                                 submitButton.innerHTML = '<i class="ri-add-line"></i> Actualizar Empresa';
                                 submitButton.disabled = false;
@@ -439,68 +578,63 @@ $(function() {
      */
     window.viewUnidad = function(id) {
         console.log('Función visualizar llamada para ID:', id);
-
-        // Mostrar un spinner de carga mientras se carga la información
         if (viewModalContentContainer) {
-            viewModalContentContainer.innerHTML = `
-                <div class="modal-body text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <p class="mt-2">Cargando información de la empresa para visualización...</p>
-                </div>
-            `;
+            viewModalContentContainer.innerHTML = `<div class="modal-body text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <p class="mt-2">Cargando información de la empresa para visualización...</p>
+                            </div>`;
         }
-        viewHistorialModal.show(); // Mostrar la modal de visualización
-
-        // Realizar una solicitud AJAX para obtener el contenido de visualización
-        fetch(`/empresas/${id}/view-modal`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'text/html'
-            }
-        })
+        viewHistorialModal.show();
+        fetch(`/empresas/${id}/view-modal`, { method: 'GET', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } })
         .then(response => {
-            console.log('Respuesta de carga de modal de visualización (raw):', response);
-            if (!response.ok) {
-                return response.text().then(text => { throw new Error(text || response.statusText); });
-            }
+            if (!response.ok) return response.text().then(text => { throw new Error(text || response.statusText); });
             return response.text();
         })
         .then(html => {
             if (viewModalContentContainer) {
-                viewModalContentContainer.innerHTML = html; // Cargar el HTML en el contenedor
-                console.log('Contenido de modal de visualización cargado.');
-
-                // Inicializar Select2 para los selects en la modal de visualización
-                // Aunque estén deshabilitados, Select2 puede mejorar la apariencia si ya se usa en la aplicación
-                $('#visualizarhistorialForm .select2').select2({ // ID actualizado para el formulario de visualización
-                    dropdownParent: $('#viewHistorialModal')
-                });
-                $('#contact-rows-container-view select').each(function() {
-                    $(this).select2({
-                        minimumResultsForSearch: Infinity,
-                        dropdownParent: $(this).closest('td')
+                viewModalContentContainer.innerHTML = html;
+                const contactRows = document.getElementById('contact-rows-container-view');
+                if (contactRows) {
+                    $(contactRows).find('select').each(function() {
+                        $(this).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(this).closest('td') });
                     });
-                });
+                }
             }
         })
         .catch(error => {
-            console.error('Error al cargar el formulario de visualización:', error);
+            console.error('Error al cargar la vista del historial:', error);
             if (viewModalContentContainer) {
-                viewModalContentContainer.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar la información: ${error.message || 'Error desconocido'}</div></div>`;
+                viewModalContentContainer.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar los detalles: ${error.message || 'Error desconocido'}</div></div>`;
             }
         });
     };
+
+    // Listener para el clic en los botones de "Ver PDF"
+    $(document).on('click', '.view-pdf-btn', function(event) {
+        event.preventDefault();
+        const pdfUrl = $(this).data('pdf-url');
+        if (pdfUrl) {
+            window.viewPdf(pdfUrl);
+        } else {
+            console.warn('No se encontró la URL del contenido para este elemento.');
+        }
+    });
+
+    // Evento para limpiar el iframe cuando la modal de PDF se oculta
+    document.getElementById('viewPdfModal').addEventListener('hidden.bs.modal', function () {
+        document.getElementById('pdfViewerFrame').src = '';
+        document.getElementById('pdfLoadingMessage').style.display = 'none';
+    });
 
     // Evento cuando la modal de edición se oculta
     $('#editHistorialModal').on('hidden.bs.modal', function () {
         const form = document.getElementById('editarhistorial');
         if (form) {
             console.log('Modal Editar oculta. Limpiando errores y destruyendo Select2.');
-            clearValidationErrors(form); // Limpiar errores de validación
-            const motivoEdicionField = form.querySelector('#motivoEdicion'); // Campo específico para motivo de edición
+            clearValidationErrors(form);
+            const motivoEdicionField = form.querySelector('#motivoEdicion');
             if (motivoEdicionField) {
                 motivoEdicionField.value = '';
                 motivoEdicionField.classList.remove('is-invalid');
@@ -509,289 +643,23 @@ $(function() {
                     feedback.innerHTML = '';
                 }
             }
-            $(form).find('.select2').select2('destroy'); // Destruir instancias de Select2 generales
-            $(form).find('select[name$="[status]"]').select2('destroy'); // Destruir instancias de Select2 para estados
+            $(form).find('.select2').select2('destroy');
+            $(form).find('select').each(function() {
+                $(this).select2('destroy');
+            });
         }
     });
 
     // Evento cuando la modal de visualización se oculta
     $('#viewHistorialModal').on('hidden.bs.modal', function () {
-        const form = document.getElementById('visualizarhistorialForm'); // ID actualizado
+        const form = document.getElementById('visualizarhistorialForm');
         if (form) {
             console.log('Modal Visualizar oculta. Destruyendo Select2.');
-            $(form).find('.select2').select2('destroy'); // Destruir instancias de Select2 generales
-            $(form).find('select').select2('destroy'); // Destruir todas las instancias de Select2 restantes
-        }
-    });
-
-    /**
-     * Muestra los errores de validación en el formulario.
-     * @param {object} errors - Objeto con los errores de validación (campo: [mensajes]).
-     * @param {HTMLElement} formElement - El elemento del formulario.
-     */
-    function displayValidationErrors(errors, formElement) {
-        clearValidationErrors(formElement); // Limpiar errores anteriores
-        console.log('Mostrando errores de validación:', errors);
-
-        for (const fieldName in errors) {
-            if (errors.hasOwnProperty(fieldName)) {
-                let htmlFieldName = fieldName;
-                // Mapear nombres de campo de la validación a los nombres HTML si son diferentes
-                if (fieldName === 'noext') {
-                    htmlFieldName = 'no_exterior';
-                } else if (fieldName === 'regimen') {
-                    htmlFieldName = 'regimen'; // Confirmar si 'regimen' se mapea a sí mismo o a otro
-                } else if (fieldName === 'municipio') {
-                    htmlFieldName = 'municipio'; // Confirmar si 'municipio' se mapea a sí mismo o a otro
-                } else if (fieldName.startsWith('contactos.')) {
-                    // Manejar errores para campos de arrays dinámicos (contactos)
-                    const parts = fieldName.split('.');
-                    if (parts.length === 3) {
-                        const index = parts[1];
-                        const field = parts[2];
-                        htmlFieldName = `contactos[${index}][${field}]`;
-                    }
-                } else if (fieldName === 'motivo_edicion') {
-                    htmlFieldName = 'motivo_edicion';
-                }
-
-                const inputElement = formElement.querySelector(`[name="${htmlFieldName}"]`);
-                if (inputElement) {
-                    inputElement.classList.add('is-invalid'); // Añadir clase de Bootstrap para invalidación
-
-                    // Si es un Select2, añadir la clase 'is-invalid' al contenedor de Select2
-                    if ($(inputElement).hasClass('select2') || $(inputElement).is('select[name$="[status]"]')) {
-                        $(inputElement).next('.select2-container').find('.select2-selection--single').addClass('is-invalid');
-                    }
-
-                    // Encontrar y mostrar el mensaje de feedback
-                    let feedbackElement = inputElement.nextElementSibling;
-                    if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
-                        feedbackElement.innerHTML = errors[fieldName].join('<br>');
-                    } else {
-                        // Buscar el feedback si está en un contenedor diferente (ej. form-floating-outline)
-                        const parentDiv = inputElement.closest('.form-floating-outline');
-                        if (parentDiv) {
-                            feedbackElement = parentDiv.nextElementSibling;
-                            if (feedbackElement && feedbackElement.classList.contains('invalid-feedback')) {
-                                feedbackElement.innerHTML = errors[fieldName].join('<br>');
-                            }
-                        } else {
-                            // Buscar el feedback si está dentro de un <td> (para filas de contacto)
-                            const tdElement = inputElement.closest('td');
-                            if (tdElement) {
-                                feedbackElement = tdElement.querySelector('.invalid-feedback');
-                                if (feedbackElement) {
-                                    feedbackElement.innerHTML = errors[fieldName].join('<br>');
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    console.warn(`Elemento HTML con name="${htmlFieldName}" no encontrado para el error de campo: ${fieldName}`);
-                }
-            }
-        }
-    }
-
-    /**
-     * Limpia todos los errores de validación de un formulario.
-     * @param {HTMLElement} formElement - El elemento del formulario.
-     */
-    function clearValidationErrors(formElement) {
-        console.log('Limpiando errores de validación del formulario.');
-        // Remover clase 'is-invalid' de todos los inputs
-        formElement.querySelectorAll('.is-invalid').forEach(input => {
-            input.classList.remove('is-invalid');
-        });
-
-        // Remover clase 'is-invalid' de los contenedores de Select2
-        $(formElement).find('.select2-container').find('.select2-selection--single').removeClass('is-invalid');
-        $(formElement).find('select[name$="[status]"]').each(function() {
-            $(this).next('.select2-container').find('.select2-selection--single').removeClass('is-invalid');
-        });
-
-        // Limpiar el contenido de los mensajes de feedback
-        formElement.querySelectorAll('.invalid-feedback').forEach(feedback => {
-            feedback.innerHTML = '';
-        });
-    }
-
-    // Manejar el envío del formulario de agregar contacto/empresa
-    if (formAgregarContacto) {
-        formAgregarContacto.addEventListener('submit', function(event) {
-            event.preventDefault(); // Prevenir el envío tradicional
-            clearValidationErrors(this); // Limpiar errores anteriores
-
-            const formData = new FormData(this);
-            const storeUrl = this.action; // Obtener la URL de la acción del formulario
-
-            // Deshabilitar botón de envío y mostrar spinner
-            const submitButton = document.getElementById('agregar-empresa-btn');
-            if (submitButton) {
-                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
-                submitButton.disabled = true;
-            }
-
-            // Enviar datos vía AJAX
-            fetch(storeUrl, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'), // Token CSRF
-                    'X-Requested-With': 'XMLHttpRequest' // Indica solicitud AJAX
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(errorData => {
-                        throw { status: response.status, data: errorData };
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Mostrar éxito y recargar tabla
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
-                    text: data.message,
-                    customClass: {
-                        confirmButton: 'btn btn-success'
-                    }
-                });
-                agregarEmpresaModal.hide(); // Ocultar modal
-                table.ajax.reload(null, false); // Recargar DataTables
-                updateCompanyCount(); // <--- LLAMADA AGREGADA PARA ACTUALIZAR EL CONTADOR
-            })
-            .catch(error => {
-                let errorMessage = 'Hubo un error inesperado al agregar la empresa.';
-
-                // Manejar errores de validación y otros errores
-                if (error.status === 422 && error.data && error.data.errors) {
-                    displayValidationErrors(error.data.errors, formAgregarContacto);
-                } else if (error.data && error.data.message) {
-                    errorMessage = error.data.message;
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        html: `${errorMessage}`,
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        }
-                    });
-                } else if (error.message) {
-                    errorMessage = error.message;
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        html: `${errorMessage}`,
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        }
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        html: `${errorMessage}`,
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        }
-                    });
-                }
-            })
-            .finally(() => {
-                // Revertir estado del botón de envío
-                if (submitButton) {
-                    submitButton.innerHTML = '<i class="ri-add-line"></i> Agregar Contacto';
-                    submitButton.disabled = false;
-                }
+            $(form).find('.select2').select2('destroy');
+            $(form).find('select').each(function() {
+                $(this).select2('destroy');
             });
-        });
-    }
-
-    /**
-     * Función global para eliminar una unidad (empresa).
-     * @param {number} id - El ID de la empresa a eliminar.
-     */
-    window.deleteUnidad = function(id) {
-        console.log('Función eliminar llamada para ID:', id);
-        // Mostrar confirmación con SweetAlert2
-        Swal.fire({
-            title: '¿Estás seguro?',
-            text: "¡No podrás revertir esto!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar',
-            customClass: {
-                confirmButton: 'btn btn-danger me-3',
-                cancelButton: 'btn btn-label-secondary'
-            },
-            buttonsStyling: false // Deshabilitar estilos por defecto de SweetAlert2 para usar customClass
-        }).then(function (result) {
-            if (result.value) { // Si el usuario confirma
-                console.log('Confirmado eliminar unidad con ID:', id);
-                fetch(`/empresas/${id}`, {
-                    method: 'DELETE', // Método DELETE
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'), // Token CSRF
-                        'X-Requested-With': 'XMLHttpRequest' // Indica solicitud AJAX
-                    }
-                })
-                .then(response => {
-                    console.log('Respuesta de la API (raw) para eliminar:', response);
-                    if (!response.ok) {
-                        return response.json().then(errorData => {
-                            console.error('Error de respuesta (JSON):', errorData);
-                            throw { status: response.status, data: errorData };
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Mostrar éxito y recargar tabla
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Eliminado!',
-                        text: data.message,
-                        customClass: {
-                            confirmButton: 'btn btn-success'
-                        }
-                    });
-                    table.ajax.reload(null, false); // Recargar DataTables
-                    updateCompanyCount(); // <--- LLAMADA AGREGADA PARA ACTUALIZAR EL CONTADOR
-                })
-                .catch(error => {
-                    console.error('Error en la solicitud AJAX (catch) para eliminar:', error);
-                    let errorMessage = 'Hubo un error al eliminar la empresa.';
-                    if (error.data && error.data.message) {
-                        errorMessage = error.data.message;
-                    } else if (error.message) {
-                        errorMessage = error.message;
-                    }
-                    Swal.fire({
-                        icon: 'error',
-                        title: '¡Error!',
-                        html: `${errorMessage}`,
-                        customClass: {
-                            confirmButton: 'btn btn-danger'
-                        }
-                    });
-                });
-            }
-        });
-    };
-
-    // Listener para el clic en los botones de "Ver PDF" (y ahora también las imágenes "FaltaPDF")
-    $(document).on('click', '.view-pdf-btn', function(event) {
-        event.preventDefault(); // Prevenir el comportamiento por defecto del enlace
-        const pdfUrl = $(this).data('pdf-url'); // Obtener la URL del PDF/imagen del atributo data-pdf-url
-        if (pdfUrl) {
-            window.viewPdf(pdfUrl); // Llamar a la función global para ver el contenido
-        } else {
-            console.warn('No se encontró la URL del contenido para este elemento.');
         }
     });
+
 });

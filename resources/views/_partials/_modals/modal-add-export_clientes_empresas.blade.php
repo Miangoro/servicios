@@ -1,37 +1,21 @@
-{{-- resources/views/clientes/export_clientes_empresas_view.blade.php --}}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exportar Clientes/Empresas</title>
-    <link rel="stylesheet" href="{{ asset('assets/vendor/libs/bootstrap/bootstrap.css') }}" />
-    {{-- @extends('layouts/layoutMaster') --}}
-    {{-- @section('content') --}}
-</head>
-<body>
-    <div class="container mt-5">
-        <h1>Opciones de Exportación de Clientes</h1>
-        <p>Selecciona el formato en el que deseas exportar los datos de tus clientes.</p>
-
-        <div class="d-flex gap-3 mt-4">
-            {{-- Ejemplo de botón para exportar a Excel (Necesitarás una ruta y función en el controlador para esto) --}}
-            <a href="#" class="btn btn-success">
-                <i class="ri-file-excel-line me-2"></i> Exportar a Excel
-            </a>
-
-            {{-- Ejemplo de botón para exportar a PDF (Necesitarás una ruta y función en el controlador para esto) --}}
-            <a href="#" class="btn btn-danger">
-                <i class="ri-file-pdf-line me-2"></i> Exportar a PDF
-            </a>
-
-            {{-- Puedes añadir más opciones aquí, como un formulario para filtrar fechas, etc. --}}
+<div class="modal fade" id="modalExportarEmpresas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white p-3">
+                <h5 class="modal-title">
+                    <i class="ri-file-excel-line me-2"></i>
+                    Exportar Empresas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div id="exportarModalContent" class="modal-body p-4">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando opciones de exportación...</p>
+                </div>
+            </div>
         </div>
-
-        <p class="mt-5">Aquí podrías añadir un previsualizador de datos o más controles de filtro.</p>
     </div>
-
-    <script src="{{ asset('assets/vendor/libs/bootstrap/bootstrap.js') }}"></script>
-    {{-- @endsection --}}
-</body>
-</html>
+</div>
