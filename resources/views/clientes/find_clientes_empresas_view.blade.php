@@ -3,6 +3,7 @@
 @section('title', 'ClientesEmpresas')
 
 @section('vendor-style')
+    {{-- Animacion "loading" --}}
     @vite([
         'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
         'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
@@ -11,7 +12,6 @@
         'resources/assets/vendor/libs/@form-validation/form-validation.scss',
         'resources/assets/vendor/libs/animate-css/animate.scss',
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-        //Animacion "loading"
         'resources/assets/vendor/libs/spinkit/spinkit.scss',
     ])
     {{-- Agregado de la biblioteca de iconos Remixicon --}}
@@ -209,7 +209,6 @@
                             </div>
                             <div class="mt-2">
                                 <h3 class="card-text fw-bold mb-0" style="font-size: 1.5rem; display: inline;">63</h3>
-                                <span class="text-danger" style="font-size: 0.8rem; margin-left: 0.5rem;">17.12%</span>
                             </div>
                         </div>
                     </div>
@@ -229,11 +228,11 @@
                                     <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                                     <span class="d-none d-sm-inline-block">Agregar Cliente</span>
                                 </button>
-                                {{-- Nuevo Botón Exportar con el icono actualizado --}}
-                                <a href="{{ route('clientes.empresas.export.view') }}" target="_blank" class="btn btn-info mt-2">
-                                    <i class="ri-file-upload-line ri-16px me-0 me-sm-2 align-baseline"></i> {{-- ICONO ACTUALIZADO --}}
+                                {{-- Botón modificado para abrir el modal --}}
+                                <button type="button" class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#exportarVentasModal">
+                                    <i class="ri-file-upload-line ri-16px me-0 me-sm-2 align-baseline"></i>
                                     <span class="d-none d-sm-inline-block">Exportar</span>
-                                </a>
+                                </button>
                             </div>
                         </div>
                         <div class="col-6 text-right">
@@ -273,6 +272,7 @@
 </div>
 
 @include('_partials/_modals/modal-add-historialClientes')
+{{-- Eliminado el include que causaba el error --}}
 
 <div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-add-new-role">
@@ -293,6 +293,9 @@
             </div>
     </div>
 </div>
+
+{{-- Incluyendo la vista parcial del modal de exportación --}}
+@include('_partials/_modals/modal-add-export_clientes_empresas')
 
 @include('_partials/_modals/modal-add-view-pdf')
 
