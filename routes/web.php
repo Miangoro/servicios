@@ -226,6 +226,15 @@ Route::middleware('auth')->controller(CatalogoProveedores::class)->group(functio
     Route::get('/add_catalogo_proveedores', 'add_catalogo_proveedores')->name('add_catalogo_proveedores');
 });
 
+// Rutas para Encuestas
+Route::middleware('auth')->controller(App\Http\Controllers\EncuestasController::class)->group(function () {
+    Route::get('/encuestas', 'index')->name('encuestas.index');
+    Route::get('/encuestas/create', 'create')->name('encuestas.create');
+    Route::post('/encuestas', 'store')->name('encuestas.store');
+    Route::get('/encuestas/{id}/edit', [App\Http\Controllers\EncuestasController::class, 'getEncuesta'])->name('encuestas.edit');
+    Route::put('/encuestas/{id}', [App\Http\Controllers\EncuestasController::class, 'update'])->name('encuestas.update');
+});
+
 //Para documentos
 Route::get('files/{filename}', [FileController::class, 'show'])
     ->name('file.show')

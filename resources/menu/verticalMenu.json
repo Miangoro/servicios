@@ -129,6 +129,11 @@
           "url": "catalogos/proveedores",
           "name": "Proveedores",
           "slug": "proveedores"
+        },
+        {
+          "url": "/encuestas",
+          "name": "Encuestas",
+          "slug": "encuestas"
         }
        
       ]
