@@ -1,8 +1,8 @@
 <div class="modal fade" id="exportarVentasModal" tabindex="-1" aria-labelledby="exportarVentasModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered"> {{-- Cambiado a modal-xl para una vista más grande --}}
         <div class="modal-content">
-            {{-- Encabezado del modal con diseño verde --}}
-            <div class="modal-header bg-success text-white py-3 px-4 rounded-top">
+            {{-- Encabezado del modal con diseño primario --}}
+            <div class="modal-header bg-primary pb-4">
                 <h5 class="modal-title text-white" id="exportarVentasModalLabel">
                     <i class="ri-file-excel-2-line me-2"></i> Exportar Clientes
                 </h5>
@@ -10,6 +10,14 @@
             </div>
             <form id="formExportarClientes" action="{{ route('clientes.empresas.exportExcel') }}" method="GET">
                 <div class="modal-body p-4">
+                    {{-- Mensaje de error para la exportación --}}
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     <h6 class="mb-4 text-muted">Filtros de Exportación</h6>
                     <div class="row g-4"> {{-- Usando g-4 para un mayor espaciado entre filas y columnas --}}
                         
@@ -18,13 +26,14 @@
                             <div class="form-group">
                                 <label for="filtroCliente" class="form-label">Cliente</label>
                                 <select class="form-select" id="filtroCliente" name="cliente">
-                                    <option value="todos">Todos los clientes</option>
-                                    @isset($clientes)
-                                        @foreach($clientes as $cliente)
-                                            <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                                        @endforeach
-                                    @endisset
+                                <option value="todos">Todos los clientes</option>
+                                @isset($clientes)
+                                    @foreach($clientes as $cliente)
+                                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
+                                    @endforeach
+                                @endisset
                                 </select>
+
                             </div>
                         </div>
 
@@ -32,7 +41,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label for="filtroRegimen" class="form-label mb-0">Régimen Fiscal</label>
+                                    
                                     <div class="form-check m-0"> {{-- Eliminamos márgenes para un control más preciso --}}
                                         <input class="form-check-input" type="checkbox" id="enableFiltroRegimen" name="enableFiltroRegimen">
                                         <label class="form-check-label" for="enableFiltroRegimen">Habilitar filtro de Régimen Fiscal</label>
@@ -56,7 +65,7 @@
                                 <label class="form-check-label" for="enableFiltroCredito">Habilitar filtro de Crédito</label>
                             </div>
                             <div class="form-group">
-                                <label for="filtroCredito" class="form-label">Crédito</label>
+                                
                                 <select class="form-select" id="filtroCredito" name="credito" disabled> {{-- Inicialmente deshabilitado --}}
                                     <option value="todos">Todos los créditos</option>
                                     <option value="con_credito">Con crédito</option>
@@ -119,7 +128,7 @@
                                 </label>
                                 <select class="form-select" id="filtroAnio" name="anio"> {{-- Ya no está deshabilitado por defecto --}}
                                     <option value="todos">Todos los años</option>
-                                    @for ($i = date('Y'); $i >= 2000; $i--)
+                                    @for ($i = date('Y'); $i >= 2020; $i--)
                                         <option value="{{ $i }}">{{ $i }}</option>
                                     @endfor
                                 </select>
@@ -168,18 +177,30 @@
         // Configurar el toggle para cada filtro con checkbox
         setupFilterToggle('enableFiltroRegimen', 'filtroRegimen');
         setupFilterToggle('enableFiltroCredito', 'filtroCredito');
-        // El filtro de Año ya no tiene checkbox, por lo que no necesita un toggle aquí.
 
         // Escucha el evento 'submit' del formulario
         formExportarClientes.addEventListener('submit', function (event) {
             // No es necesario prevenir el default si el método es GET y quieres la descarga
             // event.preventDefault(); 
-
-            // Opcional: Cerrar el modal después de enviar el formulario
-            const modal = bootstrap.Modal.getInstance(exportarVentasModal);
-            if (modal) {
-                modal.hide();
-            }
         });
+
+        // Lógica para reabrir el modal y mostrar el mensaje de error
+        // Esto se ejecutará solo si hay un mensaje de error en la sesión
+        @if(session('error'))
+            console.log('Mensaje de error en sesión detectado. Intentando abrir modal.');
+            // Asegúrate de que Bootstrap esté cargado y disponible
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                // Obtener la instancia del modal, o crear una nueva si no existe
+                var exportModal = bootstrap.Modal.getInstance(exportarVentasModal) || new bootstrap.Modal(exportarVentasModal);
+                exportModal.show();
+                console.log('Modal de exportación intentado abrir.');
+                
+                // Opcional: Desplazarse a la parte superior del modal para ver el mensaje
+                exportarVentasModal.querySelector('.modal-body').scrollTop = 0;
+
+            } else {
+                console.error('Bootstrap Modal no está definido. Asegúrate de que Bootstrap JS esté cargado.');
+            }
+        @endif
     });
 </script>

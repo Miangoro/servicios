@@ -44,15 +44,19 @@ class historialClienteController extends Controller
     }
 
     public function exportView()
+{
+    $regimenes = catalogos_regimenes::all();
+    $clientes = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
+    return view('_partials._modals.modal-add-export_clientes_empresas', compact('regimenes', 'clientes'));
+}
+
+ public function getClientes()
     {
-        $regimenes = catalogos_regimenes::all();
-        $clientes = empresas_clientes::select('id', 'nombre')->get();
-
-        // Eliminamos dd($clientes) ya que el problema es la vista incorrecta o el include
-        // dd($clientes); 
-
-        // CAMBIO IMPORTANTE AQUÍ: Apuntamos al archivo modal-export-clientes.blade.php
-        return view('_partials._modals.modal-export-clientes', compact('regimenes', 'clientes'));
+        // Obtener solo el 'id' y el 'nombre' de los clientes y ordenarlos alfabéticamente
+        $clientes = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
+        
+        // Devolver la colección de clientes como una respuesta JSON
+        return response()->json($clientes);
     }
 
     public function store(Request $request)
@@ -203,7 +207,7 @@ class historialClienteController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            Log::error('Error al actualizar empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
+            Log::error('Error al actualizar empresa: . ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
             return response()->json(['message' => 'Error interno del servidor al actualizar la empresa: ' . $e->getMessage()], 500);
         }
     }
@@ -234,7 +238,7 @@ class historialClienteController extends Controller
             Log::info('Empresa ' . $empresa->id . ' ha sido dada de alta.');
             return response()->json(['message' => 'Empresa dada de alta con éxito.'], 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error('Empresa no encontrada para dar de alta: ' . $id);
+            Log::error('Empresa no encontrada para dar de alta: . ' . $id);
             return response()->json(['message' => 'Empresa no encontrada.'], 404);
         } catch (\Exception $e) {
             Log::error('Error al dar de alta la empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
@@ -279,38 +283,40 @@ class historialClienteController extends Controller
                 ->addColumn('action', function($row){
                     if ($row->estatus === 0) {
                         return '<span class="badge bg-danger-light text-danger">Dado de baja</span>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
-                                        <i class="ri-check-line me-1"></i>
-                                        Dar de alta
-                                    </button>
-                                </div>';
+                                 <div class="btn-group">
+                                     <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
+                                         <i class="ri-check-line me-1"></i>
+                                         Dar de alta
+                                     </button>
+                                 </div>';
                     }
 
                     $btn = '<div class="dropdown">
-                                <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
-                                    <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
-                                            <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
-                                            <i class="ri-edit-box-line ri-20px text-info"></i>Editar
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
-                                                <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
-                                            </a>
-                                        </li>
-                                    </ul>
-                                </div>';
-                        return $btn;
-                    })
-                    ->rawColumns(['constancia', 'action'])
-                    ->make(true);
+                                 <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
+                                     <li>
+                                         <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
+                                             <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
+                                         </a>
+                                     </li>
+                                     <li>
+                                         <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
+                                             <i class="ri-edit-box-line ri-20px text-info"></i>Editar
+                                             </a>
+                                     </li>
+                                     <li>
+                                         <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
+                                             <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
+                                         </a>
+                                     </li>
+                                 </ul>
+                             </div>';
+                    return $btn;
+                })
+                ->rawColumns(['constancia', 'action'])
+                ->make(true);
+
+                
             }
 
             $totalClientes = empresas_clientes::count();
@@ -376,16 +382,44 @@ class historialClienteController extends Controller
                     Log::info('Filtro por régimen no aplicado o es "todos" o checkbox no marcado.');
                 }
 
-                // Se elimina el filtro de Estado de Pago
                 Log::info('Filtro por estado de pago eliminado por solicitud del usuario.');
 
+                // Lógica del filtro de crédito actualizada
                 if ($request->has('enableFiltroCredito') && $request->input('enableFiltroCredito') === 'on' && $request->filled('credito') && $request->input('credito') !== 'todos') {
-                    Log::info('Aplicando filtro por crédito:', ['credito_valor' => $request->input('credito')]);
-                    $query->where('credito', $request->input('credito'));
+                    $creditoValue = $request->input('credito');
+                    if ($creditoValue === 'con_credito') {
+                        // Basado en la imagen de la BD, el valor es 'Con Crédito' (con mayúscula y espacio)
+                        $query->where('credito', 'Con Crédito'); 
+                        Log::info('Aplicando filtro por crédito: Con Crédito (valor DB: "Con Crédito")');
+                    } elseif ($creditoValue === 'sin_credito') {
+                        // Basado en la imagen de la BD, el valor es 'Sin crédito' (con mayúscula y espacio) o '0'
+                        // Usamos whereIn para cubrir ambos casos si ambos significan "Sin crédito"
+                        $query->whereIn('credito', ['Sin crédito', '0']);
+                        Log::info('Aplicando filtro por crédito: Sin crédito (valores DB: "Sin crédito" o "0")');
+                    } else {
+                        Log::warning('Valor de crédito desconocido en la solicitud: ' . $creditoValue);
+                    }
                 } else {
                     Log::info('Filtro por crédito no aplicado o es "todos" o checkbox no marcado.');
                 }
 
+                // Obtener los valores de fecha para el mensaje de error
+                $dia = $request->input('dia');
+                $mes = $request->input('mes');
+                $anio = $request->input('anio');
+
+                $fechaSeleccionada = '';
+                // Solo construye la fecha si al menos uno de los campos de fecha no es 'todos'
+                if (($request->filled('dia') && $dia !== 'todos') || ($request->filled('mes') && $mes !== 'todos') || ($request->filled('anio') && $anio !== 'todos')) {
+                    $fechaParts = [];
+                    if ($request->filled('dia') && $dia !== 'todos') $fechaParts[] = str_pad($dia, 2, '0', STR_PAD_LEFT);
+                    if ($request->filled('mes') && $mes !== 'todos') $fechaParts[] = str_pad($mes, 2, '0', STR_PAD_LEFT);
+                    if ($request->filled('anio') && $anio !== 'todos') $fechaParts[] = $anio;
+                    $fechaSeleccionada = implode('/', $fechaParts);
+                }
+
+
+                // Filtros por fecha
                 if ($request->filled('dia') && $request->input('dia') !== 'todos') {
                     Log::info('Aplicando filtro por día:', ['dia' => $request->input('dia')]);
                     $query->whereDay('created_at', $request->input('dia'));
@@ -405,9 +439,17 @@ class historialClienteController extends Controller
                     Log::info('Filtro por año no aplicado o es "todos".');
                 }
 
-                $clientes = $query->get();
+                $clientes = $query->get(); // Se obtiene la colección de clientes aquí
 
-                // dd($clientes); 
+                // Verificar si no se encontraron clientes con los filtros aplicados
+                if ($clientes->isEmpty()) {
+                    $errorMessage = 'No se encontraron empresas registradas';
+                    if (!empty($fechaSeleccionada)) {
+                        $errorMessage .= ' en la fecha ' . $fechaSeleccionada;
+                    }
+                    $errorMessage .= '.';
+                    return redirect()->back()->with('error', $errorMessage);
+                }
 
                 $filenameParts = ['clientes_export'];
 
@@ -427,10 +469,9 @@ class historialClienteController extends Controller
                     }
                 }
 
-                // Se elimina la parte del nombre del archivo para el filtro de Estado de Pago
-
                 if ($request->has('enableFiltroCredito') && $request->input('enableFiltroCredito') === 'on' && $request->filled('credito') && $request->input('credito') !== 'todos') {
-                    $filenameParts[] = 'credito_' . str_replace(' ', '_', $request->input('credito'));
+                    $creditoParaNombre = $request->input('credito') === 'con_credito' ? 'con_credito' : 'sin_credito';
+                    $filenameParts[] = 'credito_' . str_replace(' ', '_', $creditoParaNombre);
                 }
 
                 if ($request->filled('dia') || $request->filled('mes') || $request->filled('anio')) {
@@ -449,7 +490,7 @@ class historialClienteController extends Controller
 
             } catch (\Exception $e) {
                 Log::error('Error al exportar clientes a Excel: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
-                return response()->json(['message' => 'Error al exportar clientes: ' . $e->getMessage()], 500);
+                return redirect()->back()->with('error', 'Error al exportar clientes: ' . $e->getMessage());
             }
         }
     }
