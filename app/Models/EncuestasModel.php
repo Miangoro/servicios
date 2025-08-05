@@ -13,9 +13,13 @@ class EncuestasModel extends Model
         'id_encuesta',
         'encuesta',
         'tipo',
-        'id_encuesta',
+        'id_usuario',
         'created_at',
         'updated_at',
     ];
     
+    public function preguntas()
+    {
+        return $this->hasMany(PreguntasModel::class, 'id_encuesta', 'id_encuesta');
+    }
 }
