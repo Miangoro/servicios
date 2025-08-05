@@ -40,7 +40,7 @@
                     <option value="Con Crédito" {{ old('credito', $empresa->credito) == 'Con Crédito' ? 'selected' : '' }}>Con Crédito</option>
                     <option value="Sin Crédito" {{ old('credito', $empresa->credito) == 'Sin Crédito' ? 'selected' : '' }}>Sin Crédito</option>
                 </select>
-                <label for="modalAddressCredito">Crédito *</label>
+                <label for="modalAddressCredito">Crédito </label>
             </div>
             <div class="invalid-feedback"></div>
         </div>
@@ -55,7 +55,7 @@
         <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
                 <input type="text" id="modalAddressRFC" name="rfc" class="form-control" placeholder=" " value="{{ old('rfc', $empresa->rfc) }}" />
-                <label for="modalAddressRFC">RFC *</label>
+                <label for="modalAddressRFC">RFC </label>
             </div>
             <div class="invalid-feedback"></div>
         </div>

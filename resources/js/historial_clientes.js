@@ -17,6 +17,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (typeof totalEmpresasUrl === 'undefined') {
         console.error("Error: 'totalEmpresasUrl' no está definida. Necesaria para actualizar el contador de empresas.");
     }
+    
+    // =========================================================================
+    // MODIFICACIÓN: AÑADIR URL para obtener los clientes del select del modal de exportación
+    // =========================================================================
+    if (typeof clientesAjaxUrl === 'undefined') {
+        console.error("Error: 'clientesAjaxUrl' no está definida. Asegúrate de definirla para cargar los clientes en el modal de exportación.");
+    }
+
 
     // Definición de elementos y variables principales
     const formAgregarContacto = document.getElementById('formAgregarContacto');
@@ -26,6 +34,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const viewModalContentContainer = document.getElementById('viewHistorialModalContent');
     const editHistorialModal = new bootstrap.Modal(document.getElementById('editHistorialModal'));
     const viewHistorialModal = new bootstrap.Modal(document.getElementById('viewHistorialModal'));
+    
+    // =========================================================================
+    // MODIFICACIÓN: Definir el modal de exportación
+    // =========================================================================
+    const exportModalElement = document.getElementById('modal-add-export_clientes_empresas');
+    const exportModal = exportModalElement ? new bootstrap.Modal(exportModalElement) : null;
+    
 
     let contactIndex = 0;
     let table = null;
@@ -216,6 +231,51 @@ document.addEventListener('DOMContentLoaded', function () {
             $(row).removeClass('table-danger');
         }
     }
+    
+    // =========================================================================
+    // MODIFICACIÓN: Nueva función para cargar los clientes en el modal de exportación
+    // =========================================================================
+    function loadClientesForExportModal() {
+        if (typeof clientesAjaxUrl === 'undefined') {
+            console.warn("'clientesAjaxUrl' no está definida. No se pueden cargar los clientes.");
+            return;
+        }
+
+        const selectElement = document.getElementById('filtroCliente');
+        if (!selectElement) {
+            console.error("No se encontró el elemento select con ID 'filtroCliente'.");
+            return;
+        }
+
+        // Limpiar opciones existentes (manteniendo la primera, "Todos los clientes")
+        $(selectElement).find('option:not(:first)').remove();
+        
+        fetch(clientesAjaxUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Error al obtener la lista de clientes.');
+                return response.json();
+            })
+            .then(data => {
+                console.log('Clientes obtenidos para el modal de exportación:', data);
+                if (data && data.length > 0) {
+                    data.forEach(cliente => {
+                        const option = document.createElement('option');
+                        option.value = cliente.id;
+                        option.textContent = cliente.nombre;
+                        selectElement.appendChild(option);
+                    });
+                } else {
+                    console.warn('No se encontraron clientes para cargar.');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar los clientes en el modal de exportación:', error);
+                // Opcional: mostrar un mensaje de error en el select
+                const option = document.createElement('option');
+                option.textContent = 'Error al cargar clientes';
+                selectElement.appendChild(option);
+            });
+    }
 
     // --- Lógica del CRUD y Event Listeners ---
 
@@ -321,6 +381,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 formAgregarContacto.reset();
                 $('#agregarEmpresa .select2').select2('destroy');
             }
+        });
+    }
+    
+    // =========================================================================
+    // MODIFICACIÓN: Nuevo evento para la modal de exportación
+    // =========================================================================
+    if (exportModalElement) {
+        exportModalElement.addEventListener('shown.bs.modal', function () {
+            console.log('Modal de Exportación mostrada. Cargando clientes...');
+            loadClientesForExportModal();
         });
     }
 
@@ -661,5 +731,4 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
-
 });

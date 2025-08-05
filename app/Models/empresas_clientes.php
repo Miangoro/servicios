@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class empresas_clientes extends Model
 {
     use HasFactory;
-
+    protected $primaryKey = 'id';
     protected $table = 'empresas_clientes'; // Asegúrate de que el nombre de tu tabla sea correcto
 
     protected $fillable = [
@@ -26,8 +26,7 @@ class empresas_clientes extends Model
         'telefono',
         'correo',
         'constancia',
-        'tipo',
-        'estatus', // Asegúrate de que esta columna exista para dar de baja/alta
+        'tipo',// Asegúrate de que esta columna exista para dar de baja/alta
         // ... otras columnas ...
     ];
 
