@@ -20,34 +20,23 @@
 
                     <h6 class="mb-4 text-muted">Filtros de Exportación</h6>
                     <div class="row g-4"> {{-- Usando g-4 para un mayor espaciado entre filas y columnas --}}
-                        
-                        {{-- Filtro por Cliente --}}
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="filtroCliente" class="form-label">Cliente</label>
-                                <select class="form-select" id="filtroCliente" name="cliente">
-                                <option value="todos">Todos los clientes</option>
-                                @isset($clientes)
-                                    @foreach($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                                    @endforeach
-                                @endisset
-                                </select>
 
-                            </div>
+
+                        <!-- Filtro de Empresas -->
+                        <div class="form-group">
+                            
                         </div>
-
-                        {{-- Filtro por Régimen Fiscal con Checkbox - AJUSTADO PARA ALINEACIÓN --}}
+                        
+                        {{-- Filtro por Régimen Fiscal con Checkbox --}}
                         <div class="col-md-6">
                             <div class="form-group">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    
-                                    <div class="form-check m-0"> {{-- Eliminamos márgenes para un control más preciso --}}
+                                    <div class="form-check m-0">
                                         <input class="form-check-input" type="checkbox" id="enableFiltroRegimen" name="enableFiltroRegimen">
                                         <label class="form-check-label" for="enableFiltroRegimen">Habilitar filtro de Régimen Fiscal</label>
                                     </div>
                                 </div>
-                                <select class="form-select" id="filtroRegimen" name="regimen_fiscal" disabled> {{-- Inicialmente deshabilitado --}}
+                                <select class="form-select" id="filtroRegimen" name="regimen_fiscal" disabled>
                                     <option value="todos">Todos los regímenes</option>
                                     @isset($regimenes)
                                         @foreach($regimenes as $regimen)
@@ -65,17 +54,13 @@
                                 <label class="form-check-label" for="enableFiltroCredito">Habilitar filtro de Crédito</label>
                             </div>
                             <div class="form-group">
-                                
-                                <select class="form-select" id="filtroCredito" name="credito" disabled> {{-- Inicialmente deshabilitado --}}
+                                <select class="form-select" id="filtroCredito" name="credito" disabled>
                                     <option value="todos">Todos los créditos</option>
                                     <option value="con_credito">Con crédito</option>
                                     <option value="sin_credito">Sin crédito</option>
                                 </select>
                             </div>
                         </div>
-
-                        {{-- Espacio para que el filtro de crédito ocupe la mitad si el de pago no está --}}
-                        <div class="col-md-6"></div> 
 
                     </div> {{-- Fin de row g-4 --}}
 
@@ -126,7 +111,7 @@
                                 <label for="filtroAnio" class="form-label">
                                     <i class="ri-calendar-check-line me-1"></i> Año
                                 </label>
-                                <select class="form-select" id="filtroAnio" name="anio"> {{-- Ya no está deshabilitado por defecto --}}
+                                <select class="form-select" id="filtroAnio" name="anio">
                                     <option value="todos">Todos los años</option>
                                     @for ($i = date('Y'); $i >= 2020; $i--)
                                         <option value="{{ $i }}">{{ $i }}</option>
@@ -134,8 +119,7 @@
                                 </select>
                             </div>
                         </div>
-
-                    </div> {{-- Fin de row g-4 para fechas --}}
+                    </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-center">
                     {{-- Botón Cancelar con estilo rojo --}}

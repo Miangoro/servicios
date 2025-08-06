@@ -546,11 +546,12 @@ Route::put('/empresas/{id}/dar-de-baja', [historialClienteController::class, 'da
 Route::get('/empresas/{id}/view-modal', [historialClienteController::class, 'viewModal'])->name('empresas.viewModal');
 Route::get('/empresas/count', [historialClienteController::class, 'countCompanies'])->name('empresas.count');
 
-
+Route::get('/clientes/exportar', [historialClienteController::class, 'exportarClientes'])->name('clientes.export');
 Route::get('/clientes/exportar-excel', [historialClienteController::class, 'exportExcel'])->name('clientes.empresas.exportExcel');
 Route::get('/export-clientes', [historialClienteController::class, 'exportView']);
 Route::get('/clientes/totales', [historialClienteController::class, 'obtenerTotalesClientes'])->name('clientes.totales');
 Route::get('/clientes/data', [historialClienteController::class, 'getClientes'])->name('clientes.data');
+
 });
 
 

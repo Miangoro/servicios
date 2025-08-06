@@ -719,7 +719,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
-
+document.getElementById('habilitar_filtro_empresa').addEventListener('change', function() {
+    document.getElementById('empresa_id').disabled = !this.checked;
+});
     // Evento cuando la modal de visualización se oculta
     $('#viewHistorialModal').on('hidden.bs.modal', function () {
         const form = document.getElementById('visualizarhistorialForm');
