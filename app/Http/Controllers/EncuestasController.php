@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EncuestasModel;
+use App\Models\OpcionesModel;
 use App\Models\PreguntasModel;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
@@ -58,9 +59,9 @@ class EncuestasController extends Controller
 
     public function store(Request $request)
     {
+        // Validar los datos de la solicitud
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
             'target_type' => 'required|in:personal,clientes,proveedores',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
@@ -69,31 +70,41 @@ class EncuestasController extends Controller
         ]);
 
         DB::transaction(function () use ($request) {
+            // Crear la encuesta
             $survey = EncuestasModel::create([
-                'title' => $request->title,
-                'description' => $request->description,
-                'target_type' => $request->target_type,
-                'status' => 'draft'
+                'encuesta' => $request->title,
+                'tipo' => $request->target_type,
+                'id_usuario' => Auth::id(),
             ]);
 
+            // Recorrer las preguntas y guardarlas
             foreach ($request->questions as $index => $questionData) {
-                PreguntasModel::create([
-                    'survey_id' => $survey->id,
-                    'question_text' => $questionData['question_text'],
-                    'question_type' => $questionData['question_type'],
-                    'options' => $questionData['options'] ?? [],
-                    'order' => $index + 1
+                $pregunta = PreguntasModel::create([
+                    'id_encuesta' => $survey->id_encuesta,
+                    'pregunta' => $questionData['question_text'],
+                    'tipo_pregunta' => $questionData['question_type'],
                 ]);
+                
+                // Si la pregunta tiene opciones, guardarlas
+                if ($questionData['question_type'] !== 'open' && isset($questionData['options'])) {
+                    foreach ($questionData['options'] as $optionText) {
+                        OpcionesModel::create([
+                            'id_pregunta' => $pregunta->id_pregunta,
+                            'opcion' => $optionText,
+                        ]);
+                    }
+                }
             }
         });
 
         return redirect()->route('encuestas.index')->with('success', 'Encuesta creada exitosamente');
     }
 
+
     public function show(EncuestasModel $encuesta)
     {
         $encuesta->load('questions');
-        return view('encuestas.crear_encuesta', [
+        return view('catalogo.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'view'
         ]);
@@ -102,7 +113,7 @@ class EncuestasController extends Controller
     public function edit(EncuestasModel $encuesta)
     {
         $encuesta->load('questions');
-        return view('encuestas.crear_encuesta', [
+        return view('catalogo.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'edit'
         ]);
