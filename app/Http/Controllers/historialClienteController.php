@@ -17,12 +17,18 @@ use App\Exports\ClientesExport;
 
 class historialClienteController extends Controller
 {
+    /**
+     * Muestra el modal de edición para una empresa específica.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View
+     */
     public function editModal($id)
     {
         try {
             $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
             $regimenes = catalogos_regimenes::all();
-
+            $empresas = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
             return view('_partials._modals.modal-add-edit-Historial', compact('empresa', 'regimenes'));
         } catch (\Exception $e) {
             Log::error('Error al cargar modal de edición de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
@@ -30,6 +36,12 @@ class historialClienteController extends Controller
         }
     }
 
+    /**
+     * Muestra el modal de visualización para una empresa específica.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View
+     */
     public function viewModal($id)
     {
         try {
@@ -43,22 +55,38 @@ class historialClienteController extends Controller
         }
     }
 
+    /**
+     * Muestra la vista para el modal de exportación.
+     *
+     * @return \Illuminate\View\View
+     */
     public function exportView()
-{
-    $regimenes = catalogos_regimenes::all();
-    $clientes = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
-    return view('_partials._modals.modal-add-export_clientes_empresas', compact('regimenes', 'clientes'));
-}
-
- public function getClientes()
     {
-        // Obtener solo el 'id' y el 'nombre' de los clientes y ordenarlos alfabéticamente
+        $regimenes = catalogos_regimenes::all();
+        // Obtiene los datos una única vez y los asigna a $empresas.
+        $empresas = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
+
+        // Pasa las variables a la vista.
+        return view('_partials._modals.modal-add-export_clientes_empresas', compact('regimenes', 'empresas'));
+    }
+
+    /**
+     * Obtiene una lista de clientes para ser utilizada en select boxes.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getClientes()
+    {
         $clientes = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
-        
-        // Devolver la colección de clientes como una respuesta JSON
         return response()->json($clientes);
     }
 
+    /**
+     * Almacena una nueva empresa en la base de datos.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         try {
@@ -128,6 +156,13 @@ class historialClienteController extends Controller
         }
     }
 
+    /**
+     * Actualiza una empresa existente.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request, $id)
     {
         try {
@@ -212,6 +247,13 @@ class historialClienteController extends Controller
         }
     }
     
+    /**
+     * Cambia el estatus de una empresa a 'dada de baja' (estatus = 0).
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function darDeBaja(Request $request, $id)
     {
         try {
@@ -229,6 +271,13 @@ class historialClienteController extends Controller
         }
     }
 
+    /**
+     * Cambia el estatus de una empresa a 'dada de alta' (estatus = 1).
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function darDeAlta(Request $request, $id)
     {
         try {
@@ -246,6 +295,12 @@ class historialClienteController extends Controller
         }
     }
 
+    /**
+     * Elimina una empresa y sus contactos asociados.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy($id)
     {
         try {
@@ -268,6 +323,12 @@ class historialClienteController extends Controller
         }
     }
 
+    /**
+     * Procesa la tabla de datos para la vista.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\View\View
+     */
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -283,40 +344,40 @@ class historialClienteController extends Controller
                 ->addColumn('action', function($row){
                     if ($row->estatus === 0) {
                         return '<span class="badge bg-danger-light text-danger">Dado de baja</span>
-                                 <div class="btn-group">
-                                     <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
-                                         <i class="ri-check-line me-1"></i>
-                                         Dar de alta
-                                     </button>
-                                 </div>';
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
+                                        <i class="ri-check-line me-1"></i>
+                                        Dar de alta
+                                    </button>
+                                </div>';
                     }
 
                     $btn = '<div class="dropdown">
-                                 <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
-                                     <li>
-                                         <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
-                                             <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
-                                         </a>
-                                     </li>
-                                     <li>
-                                         <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
-                                             <i class="ri-edit-box-line ri-20px text-info"></i>Editar
-                                             </a>
-                                     </li>
-                                     <li>
-                                         <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
-                                             <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
-                                         </a>
-                                     </li>
-                                 </ul>
-                             </div>';
+                                <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad('.$row->id.')">
+                                            <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad('.$row->id.')">
+                                            <i class="ri-edit-box-line ri-20px text-info"></i>Editar
+                                            </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
+                                            <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>';
                     return $btn;
                 })
                 ->rawColumns(['constancia', 'action'])
                 ->make(true);
 
-                
+            
             }
 
             $totalClientes = empresas_clientes::count();
@@ -338,6 +399,11 @@ class historialClienteController extends Controller
             ));
         }
 
+        /**
+         * Obtiene el conteo y porcentajes de los tipos de empresas.
+         *
+         * @return \Illuminate\Http\JsonResponse
+         */
         public function countCompanies()
         {
             try {
@@ -361,115 +427,118 @@ class historialClienteController extends Controller
             }
         }
 
+        /**
+         * Exporta clientes a un archivo Excel con filtros.
+         *
+         * @param \Illuminate\Http\Request $request
+         * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+         */
         public function exportExcel(Request $request)
         {
             try {
                 Log::info('Solicitud de exportación recibida:', $request->all());
 
+                // Inicia la consulta y carga la relación 'catalogoRegimen' de forma ansiosa
                 $query = empresas_clientes::query()->with('catalogoRegimen');
 
+                // Filtro por cliente (ID de la empresa)
                 if ($request->filled('cliente') && $request->input('cliente') !== 'todos') {
                     Log::info('Aplicando filtro por cliente ID:', ['cliente_id' => $request->input('cliente')]);
                     $query->where('id', $request->input('cliente')); 
                 } else {
-                    Log::info('Filtro por cliente no aplicado o es "todos".');
+                    Log::info('No se aplicó filtro por cliente.');
                 }
-
-                if ($request->has('enableFiltroRegimen') && $request->input('enableFiltroRegimen') === 'on' && $request->filled('regimen_fiscal') && $request->input('regimen_fiscal') !== 'todos') {
+                
+                // Filtro por empresa (ID de la empresa) - Lógica redundante con el filtro de cliente,
+                // pero se mantiene para respetar la estructura original.
+                if ($request->filled('empresa') && $request->input('empresa') !== 'todos') {
+                    Log::info('Aplicando filtro por empresa ID:', ['empresa_id' => $request->input('empresa')]);
+                    $query->where('id', $request->input('empresa'));
+                } else {
+                    Log::info('No se aplicó filtro por empresa.');
+                }
+                
+                // Filtro por régimen fiscal
+                // Se usa request->boolean() para una validación más robusta del checkbox
+                if ($request->boolean('enableFiltroRegimen') && $request->filled('regimen_fiscal') && $request->input('regimen_fiscal') !== 'todos') {
                     Log::info('Aplicando filtro por régimen:', ['regimen_valor' => $request->input('regimen_fiscal')]);
                     $query->where('regimen', $request->input('regimen_fiscal')); 
                 } else {
-                    Log::info('Filtro por régimen no aplicado o es "todos" o checkbox no marcado.');
+                    Log::info('Filtro por régimen no aplicado.');
                 }
 
-                Log::info('Filtro por estado de pago eliminado por solicitud del usuario.');
-
-                // Lógica del filtro de crédito actualizada
-                if ($request->has('enableFiltroCredito') && $request->input('enableFiltroCredito') === 'on' && $request->filled('credito') && $request->input('credito') !== 'todos') {
+                // Filtro por estado de crédito
+                // Se usa request->boolean() para el checkbox y se valida el valor
+                if ($request->boolean('enableFiltroCredito') && $request->filled('credito') && $request->input('credito') !== 'todos') {
                     $creditoValue = $request->input('credito');
                     if ($creditoValue === 'con_credito') {
-                        // Basado en la imagen de la BD, el valor es 'Con Crédito' (con mayúscula y espacio)
                         $query->where('credito', 'Con Crédito'); 
-                        Log::info('Aplicando filtro por crédito: Con Crédito (valor DB: "Con Crédito")');
+                        Log::info('Aplicando filtro por crédito: Con Crédito');
                     } elseif ($creditoValue === 'sin_credito') {
-                        // Basado en la imagen de la BD, el valor es 'Sin crédito' (con mayúscula y espacio) o '0'
-                        // Usamos whereIn para cubrir ambos casos si ambos significan "Sin crédito"
                         $query->whereIn('credito', ['Sin crédito', '0']);
-                        Log::info('Aplicando filtro por crédito: Sin crédito (valores DB: "Sin crédito" o "0")');
+                        Log::info('Aplicando filtro por crédito: Sin crédito');
                     } else {
                         Log::warning('Valor de crédito desconocido en la solicitud: ' . $creditoValue);
                     }
                 } else {
-                    Log::info('Filtro por crédito no aplicado o es "todos" o checkbox no marcado.');
+                    Log::info('Filtro por crédito no aplicado.');
                 }
-
-                // Obtener los valores de fecha para el mensaje de error
-                $dia = $request->input('dia');
-                $mes = $request->input('mes');
-                $anio = $request->input('anio');
-
-                $fechaSeleccionada = '';
-                // Solo construye la fecha si al menos uno de los campos de fecha no es 'todos'
-                if (($request->filled('dia') && $dia !== 'todos') || ($request->filled('mes') && $mes !== 'todos') || ($request->filled('anio') && $anio !== 'todos')) {
-                    $fechaParts = [];
-                    if ($request->filled('dia') && $dia !== 'todos') $fechaParts[] = str_pad($dia, 2, '0', STR_PAD_LEFT);
-                    if ($request->filled('mes') && $mes !== 'todos') $fechaParts[] = str_pad($mes, 2, '0', STR_PAD_LEFT);
-                    if ($request->filled('anio') && $anio !== 'todos') $fechaParts[] = $anio;
-                    $fechaSeleccionada = implode('/', $fechaParts);
-                }
-
 
                 // Filtros por fecha
+                // Se usan request->filled() para asegurar que los campos no estén vacíos
                 if ($request->filled('dia') && $request->input('dia') !== 'todos') {
                     Log::info('Aplicando filtro por día:', ['dia' => $request->input('dia')]);
                     $query->whereDay('created_at', $request->input('dia'));
                 } else {
-                    Log::info('Filtro por día no aplicado o es "todos".');
+                    Log::info('Filtro por día no aplicado.');
                 }
                 if ($request->filled('mes') && $request->input('mes') !== 'todos') {
                     Log::info('Aplicando filtro por mes:', ['mes' => $request->input('mes')]);
                     $query->whereMonth('created_at', $request->input('mes'));
                 } else {
-                    Log::info('Filtro por mes no aplicado o es "todos".');
+                    Log::info('Filtro por mes no aplicado.');
                 }
                 if ($request->filled('anio') && $request->input('anio') !== 'todos') {
                     Log::info('Aplicando filtro por año:', ['anio' => $request->input('anio')]);
                     $query->whereYear('created_at', $request->input('anio'));
                 } else {
-                    Log::info('Filtro por año no aplicado o es "todos".');
+                    Log::info('Filtro por año no aplicado.');
                 }
 
-                $clientes = $query->get(); // Se obtiene la colección de clientes aquí
+                // Se obtiene la colección de clientes aquí, después de todos los filtros
+                $clientes = $query->get();
 
                 // Verificar si no se encontraron clientes con los filtros aplicados
                 if ($clientes->isEmpty()) {
-                    $errorMessage = 'No se encontraron empresas registradas';
-                    if (!empty($fechaSeleccionada)) {
-                        $errorMessage .= ' en la fecha ' . $fechaSeleccionada;
-                    }
-                    $errorMessage .= '.';
+                    $errorMessage = 'No se encontraron empresas registradas.';
                     return redirect()->back()->with('error', $errorMessage);
                 }
 
+                // Lógica para generar el nombre del archivo
                 $filenameParts = ['clientes_export'];
 
                 if ($request->filled('cliente') && $request->input('cliente') !== 'todos') {
                     $clienteSeleccionado = empresas_clientes::find($request->input('cliente'));
                     if ($clienteSeleccionado) {
                         $filenameParts[] = 'cliente_' . str_replace(' ', '_', $clienteSeleccionado->nombre);
-                    } else {
-                        $filenameParts[] = 'cliente_ID_' . $request->input('cliente');
+                    }
+                }
+                
+                if ($request->filled('empresa') && $request->input('empresa') !== 'todos') {
+                    $empresaSeleccionada = empresas_clientes::find($request->input('empresa'));
+                    if ($empresaSeleccionada) {
+                        $filenameParts[] = 'empresa_' . str_replace(' ', '_', $empresaSeleccionada->nombre);
                     }
                 }
 
-                if ($request->has('enableFiltroRegimen') && $request->input('enableFiltroRegimen') === 'on' && $request->filled('regimen_fiscal') && $request->input('regimen_fiscal') !== 'todos') {
+                if ($request->boolean('enableFiltroRegimen') && $request->filled('regimen_fiscal') && $request->input('regimen_fiscal') !== 'todos') {
                     $regimen = catalogos_regimenes::find($request->input('regimen_fiscal'));
                     if ($regimen) {
-                        $filenameParts[] = 'regimen_' . str_replace(' ', '_', $regimen->regimen);
+                        $filenameParts[] = 'regimen_' . str_replace(' ', '_', $regimen->nombre); // Usar $regimen->nombre
                     }
                 }
 
-                if ($request->has('enableFiltroCredito') && $request->input('enableFiltroCredito') === 'on' && $request->filled('credito') && $request->input('credito') !== 'todos') {
+                if ($request->boolean('enableFiltroCredito') && $request->filled('credito') && $request->input('credito') !== 'todos') {
                     $creditoParaNombre = $request->input('credito') === 'con_credito' ? 'con_credito' : 'sin_credito';
                     $filenameParts[] = 'credito_' . str_replace(' ', '_', $creditoParaNombre);
                 }
@@ -486,6 +555,7 @@ class historialClienteController extends Controller
 
                 $filename = implode('_', $filenameParts) . '.xlsx';
 
+                // Llama a la clase de exportación con la colección de clientes y el objeto Request
                 return Excel::download(new ClientesExport($clientes, $request), $filename);
 
             } catch (\Exception $e) {
