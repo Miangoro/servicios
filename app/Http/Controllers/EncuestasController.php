@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\EncuestasModel;
 use App\Models\OpcionesModel;
 use App\Models\PreguntasModel;
+use App\Models\User;
+use App\Models\CatalogoProveedor;;
+
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +23,16 @@ class EncuestasController extends Controller
         if ($request->ajax()) {
             $sql = EncuestasModel::orderBy('id_encuesta', 'desc')->get();
             return DataTables::of($sql)->addIndexColumn()
+                ->addColumn('tipo', function ($row) {
+                    if ($row->tipo === 1) {
+                        return 'Evaluación de Personal';
+                    } elseif ($row->tipo === 2) {
+                        return 'Evaluación de Clientes';
+                    } elseif ($row->tipo === 3) {
+                        return 'Evaluación de Proveedores';
+                    }
+                    return 'Sin tipo de evaluación';
+                })
                 ->addColumn('action', function ($row) {
 
                     $btn = '
@@ -27,12 +40,17 @@ class EncuestasController extends Controller
                         <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_encuesta . '">' .
                         '<li>
-                                <a class="dropdown-item" href="javascript:void(0);" onclick="viewEnc(' . $row->id_encuesta . ')">' .
+                            <a class="dropdown-item" href="' . route('encuestas.answer', $row->id_encuesta) . '">' .
+                        '<i class="ri-file-check-fill ri-20px text-primary"></i> Responder' .
+                        '</a>
+                        </li>' .
+                        '<li>
+                            <a class="dropdown-item" href="' . route('encuestas.show', $row->id_encuesta) . '">' .
                         '<i class="ri-search-fill ri-20px text-normal"></i> Ver' .
                         '</a>
-                            </li>
+                        </li>
                             <li>
-                                <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="editEnc(' . $row->id_encuesta . ')">' .
+                                <a class="dropdown-item text-normal" href="' . route('encuestas.edit', $row->id_encuesta) . '">' .
                         '<i class="ri-file-edit-fill ri-20px text-info"></i> Editar' .
                         '</a>
                             </li>'
@@ -59,32 +77,24 @@ class EncuestasController extends Controller
 
     public function store(Request $request)
     {
-        // Validar los datos de la solicitud
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'target_type' => 'required|in:personal,clientes,proveedores',
-            'questions' => 'required|array|min:1',
-            'questions.*.question_text' => 'required|string',
-            'questions.*.question_type' => 'required|in:open,closed,multiple',
-            'questions.*.options' => 'nullable|array'
-        ]);
 
         DB::transaction(function () use ($request) {
             // Crear la encuesta
-            $survey = EncuestasModel::create([
+            $encuesta = EncuestasModel::create([
                 'encuesta' => $request->title,
                 'tipo' => $request->target_type,
                 'id_usuario' => Auth::id(),
+                'created_at' => now()
             ]);
 
             // Recorrer las preguntas y guardarlas
             foreach ($request->questions as $index => $questionData) {
                 $pregunta = PreguntasModel::create([
-                    'id_encuesta' => $survey->id_encuesta,
+                    'id_encuesta' => $encuesta->id_encuesta,
                     'pregunta' => $questionData['question_text'],
                     'tipo_pregunta' => $questionData['question_type'],
                 ]);
-                
+
                 // Si la pregunta tiene opciones, guardarlas
                 if ($questionData['question_type'] !== 'open' && isset($questionData['options'])) {
                     foreach ($questionData['options'] as $optionText) {
@@ -103,7 +113,7 @@ class EncuestasController extends Controller
 
     public function show(EncuestasModel $encuesta)
     {
-        $encuesta->load('questions');
+        $encuesta->load('preguntas');
         return view('catalogo.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'view'
@@ -112,47 +122,98 @@ class EncuestasController extends Controller
 
     public function edit(EncuestasModel $encuesta)
     {
-        $encuesta->load('questions');
+        $encuesta->load('preguntas');
         return view('catalogo.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'edit'
         ]);
     }
 
-    public function update(Request $request, EncuestasModel $survey)
+    public function update(Request $request, EncuestasModel $encuesta)
     {
+        // Validación de datos
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'target_type' => 'required|in:personal,clientes,proveedores',
+            'target_type' => 'required|in:1,2,3',
             'questions' => 'required|array|min:1',
             'questions.*.question_text' => 'required|string',
-            'questions.*.question_type' => 'required|in:open,closed,multiple',
+            'questions.*.question_type' => 'required|in:1,2,3',
             'questions.*.options' => 'nullable|array'
         ]);
 
-        DB::transaction(function () use ($request, $survey) {
-            $survey->update([
-                'title' => $request->title,
-                'description' => $request->description,
-                'target_type' => $request->target_type
+        DB::transaction(function () use ($request, $encuesta) {
+            $encuesta->update([
+                'encuesta' => $request->title,
+                'tipo' => $request->target_type,
+                'updated_at' => now()
             ]);
 
-            // Eliminar preguntas existentes
-            $survey->questions()->delete();
+            $encuesta->preguntas()->each(function ($pregunta) {
+                $pregunta->opciones()->delete();
+                $pregunta->delete();
+            });
 
-            // Crear nuevas preguntas
             foreach ($request->questions as $index => $questionData) {
-                PreguntasModel::create([
-                    'survey_id' => $survey->id,
-                    'question_text' => $questionData['question_text'],
-                    'question_type' => $questionData['question_type'],
-                    'options' => $questionData['options'] ?? [],
-                    'order' => $index + 1
+                $nuevaPregunta = PreguntasModel::create([
+                    'id_encuesta' => $encuesta->id_encuesta,
+                    'pregunta' => $questionData['question_text'],
+                    'tipo_pregunta' => $questionData['question_type'],
                 ]);
+
+                if (isset($questionData['options']) && is_array($questionData['options'])) {
+                    foreach ($questionData['options'] as $opcionTexto) {
+                        OpcionesModel::create([
+                            'id_pregunta' => $nuevaPregunta->id_pregunta,
+                            'opcion' => $opcionTexto,
+                        ]);
+                    }
+                }
             }
         });
 
         return redirect()->route('encuestas.index')->with('success', 'Encuesta actualizada exitosamente');
+    }
+
+    public function answer($id)
+    {
+        $encuesta = EncuestasModel::with('preguntas.opciones')->findOrFail($id);
+
+        $evaluados = match ($encuesta->tipo) {
+            1 => User::where('tipo', 1)->get(),
+            2 => User::where('tipo', 3)->get(),
+            3 => CatalogoProveedor::all(),
+            default => collect(),
+        };
+
+        return view('catalogo.responder_encuesta', [
+            'encuesta' => $encuesta,
+            'evaluados' => $evaluados
+        ]);
+    }
+
+    public function storeRespuestas(Request $request)
+    {
+        $request->validate([
+            'id_encuesta' => 'required|exists:encuestas,id_encuesta',
+            'aEvaluar' => 'required',
+            'respuestas' => 'required|array',
+        ]);
+
+        foreach ($request->respuestas as $id_pregunta => $respuesta) {
+            if (is_array($respuesta)) {
+                $respuesta = implode(', ', $respuesta); // para checkboxes
+            }
+
+            DB::table('respuestas')->insert([
+                'id_encuesta' => $request->id_encuesta,
+                'id_pregunta' => $id_pregunta,
+                'respuesta' => $respuesta,
+                'id_usuario' => Auth::id(),
+                'evaluado' => $request->aEvaluar,
+                'created_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('encuestas.index')->with('success', 'Respuestas guardadas correctamente');
     }
 }
