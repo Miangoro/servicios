@@ -1,7 +1,6 @@
 <div class="modal fade" id="exportarVentasModal" tabindex="-1" aria-labelledby="exportarVentasModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered"> {{-- Cambiado a modal-xl para una vista más grande --}}
+    <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            {{-- Encabezado del modal con diseño primario --}}
             <div class="modal-header bg-primary pb-4">
                 <h5 class="modal-title text-white" id="exportarVentasModalLabel">
                     <i class="ri-file-excel-2-line me-2"></i> Exportar Clientes
@@ -10,7 +9,6 @@
             </div>
             <form id="formExportarClientes" action="{{ route('clientes.empresas.exportExcel') }}" method="GET">
                 <div class="modal-body p-4">
-                    {{-- Mensaje de error para la exportación --}}
                     @if(session('error'))
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             {{ session('error') }}
@@ -19,14 +17,21 @@
                     @endif
 
                     <h6 class="mb-4 text-muted">Filtros de Exportación</h6>
-                    <div class="row g-4"> {{-- Usando g-4 para un mayor espaciado entre filas y columnas --}}
+                    <div class="row g-4">
 
-
-                        <!-- Filtro de Empresas -->
-                        <div class="form-group">
-                            
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label class="form-check-label mb-2" for="filtroEmpresa">Filtro por Empresa</label>
+                                <select class="form-select" id="filtroEmpresa" name="empresa_id">
+                                <option value="todos">Todas las empresas</option>
+                                @isset($empresas)
+                                    @foreach($empresas as $empresa)
+                                        <option value="{{ $empresa->id }}">{{ $empresa->nombre }}</option>
+                                    @endforeach
+                                @endisset
+                            </select>
+                            </div>
                         </div>
-                        
                         {{-- Filtro por Régimen Fiscal con Checkbox --}}
                         <div class="col-md-6">
                             <div class="form-group">
@@ -62,9 +67,9 @@
                             </div>
                         </div>
 
-                    </div> {{-- Fin de row g-4 --}}
+                    </div>
 
-                    <hr class="my-4"> {{-- Separador visual --}}
+                    <hr class="my-4">
 
                     <h6 class="mb-4 text-muted">Filtros por Fecha de Registro</h6>
                     <div class="row g-4">
@@ -105,7 +110,7 @@
                             </div>
                         </div>
 
-                        {{-- Filtro por Año (Registro) - Sin Checkbox --}}
+                        {{-- Filtro por Año (Registro) --}}
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="filtroAnio" class="form-label">
@@ -122,12 +127,10 @@
                     </div>
                 </div>
                 <div class="modal-footer d-flex justify-content-center">
-                    {{-- Botón Cancelar con estilo rojo --}}
                     <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
                         <i class="ri-close-line me-1"></i> Cancelar
                     </button>
-                    {{-- Botón de exportar con estilo verde --}}
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
                         <i class="ri-file-excel-2-line me-1"></i> Exportar a Excel
                     </button>
                 </div>
@@ -141,49 +144,34 @@
         const formExportarClientes = document.getElementById('formExportarClientes');
         const exportarVentasModal = document.getElementById('exportarVentasModal');
 
-        // Función para habilitar/deshabilitar un selector basado en un checkbox
         function setupFilterToggle(checkboxId, selectId) {
             const checkbox = document.getElementById(checkboxId);
             const select = document.getElementById(selectId);
+            
+            if (!checkbox || !select) return;
 
-            // Estado inicial: el selector está deshabilitado si el checkbox no está marcado
             select.disabled = !checkbox.checked;
 
             checkbox.addEventListener('change', function() {
                 select.disabled = !this.checked;
-                // Opcional: restablecer el valor del selector a 'todos' cuando se deshabilita
                 if (select.disabled) {
                     select.value = 'todos';
                 }
             });
         }
 
-        // Configurar el toggle para cada filtro con checkbox
+        
         setupFilterToggle('enableFiltroRegimen', 'filtroRegimen');
         setupFilterToggle('enableFiltroCredito', 'filtroCredito');
 
-        // Escucha el evento 'submit' del formulario
         formExportarClientes.addEventListener('submit', function (event) {
-            // No es necesario prevenir el default si el método es GET y quieres la descarga
-            // event.preventDefault(); 
         });
 
-        // Lógica para reabrir el modal y mostrar el mensaje de error
-        // Esto se ejecutará solo si hay un mensaje de error en la sesión
         @if(session('error'))
-            console.log('Mensaje de error en sesión detectado. Intentando abrir modal.');
-            // Asegúrate de que Bootstrap esté cargado y disponible
             if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                // Obtener la instancia del modal, o crear una nueva si no existe
                 var exportModal = bootstrap.Modal.getInstance(exportarVentasModal) || new bootstrap.Modal(exportarVentasModal);
                 exportModal.show();
-                console.log('Modal de exportación intentado abrir.');
-                
-                // Opcional: Desplazarse a la parte superior del modal para ver el mensaje
                 exportarVentasModal.querySelector('.modal-body').scrollTop = 0;
-
-            } else {
-                console.error('Bootstrap Modal no está definido. Asegúrate de que Bootstrap JS esté cargado.');
             }
         @endif
     });
