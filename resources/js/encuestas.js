@@ -63,16 +63,13 @@ window.addQuestion = function() {
     }
 
     const questionTemplate = document.getElementById('question-template').innerHTML;
-    // Reemplazamos el marcador de posición con el nuevo índice del contador
     const newQuestion = questionTemplate.replace(/QUESTION_INDEX/g, questionCounter);
     
-    // Convertimos la cadena de HTML en un elemento del DOM
     const div = document.createElement('div');
     div.innerHTML = newQuestion.trim();
     
-    // Obtenemos el elemento de la plantilla y le asignamos las clases y el índice
     const newQuestionElement = div.firstChild;
-    newQuestionElement.className = 'question-item border border-primary rounded m-2 position-relative p-5';
+    newQuestionElement.className = 'question-item border card  rounded m-2 position-relative p-5';
     newQuestionElement.setAttribute('data-question-index', questionCounter);
     
     questionsContainer.appendChild(newQuestionElement);
@@ -133,10 +130,10 @@ window.changeQuestionType = function(select) {
                         <h5 class="">Opciones de Respuesta</h5>
                     </div>
                     <div class="options-list d-flex flex-column col-md-12"></div>
-                    <div class="col-md-12 d-flex flex-row align-items-center justify-content-center">
+                    <div class="col-md-12 d-flex flex-row">
                         <button type="button" 
                                 onclick="addOption(this.closest('.question-item'))"
-                                class="add-new btn rounded-pill btn-outline-primary waves-effect waves-light">
+                                class="add-new btn btn-text-info waves-effect">
                             <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                             Agregar Opción
                         </button>
@@ -168,8 +165,8 @@ window.addOption = function(questionItem) {
     const optionIndex = optionsList.children.length;
 
     const optionTemplate = `
-        <div class="d-flex align-items-center gap-2 option-item">
-            <input type="text" 
+        <div class="d-flex justify-content-center gap-2 m-2 option-item">
+            <input type="text"
                     name="questions[${questionIndex}][options][]" 
                     placeholder="Opción ${optionIndex + 1}"
                     class="form-control"
@@ -177,7 +174,7 @@ window.addOption = function(questionItem) {
             <button type="button" 
                     onclick="removeOption(this)"
                     class="btn btn-icon btn-danger">
-                <i class="ri-close-line"></i>
+                <i class="ri-delete-bin-2-fill"></i>
             </button>
         </div>
     `;
@@ -247,4 +244,70 @@ document.addEventListener('DOMContentLoaded', function () {
     updateQuestionNumbers();
     document.querySelectorAll('.question-item').forEach(updatePreview);
 
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  const form = document.getElementById('encuestaForm');
+
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      const errors = [];
+
+      // Validar título y tipo de encuesta
+      const title = form.querySelector('#title');
+      const type = form.querySelector('#target_type');
+
+      if (!title.value.trim()) {
+        errors.push('El título de la encuesta es obligatorio.');
+      }
+
+      if (!type.value) {
+        errors.push('Debe seleccionar un tipo de evaluación.');
+      }
+
+      // Validar preguntas
+      const questions = form.querySelectorAll('.question-item');
+      if (questions.length === 0) {
+        errors.push('Debe agregar al menos una pregunta.');
+      }
+
+      questions.forEach((question, index) => {
+        const questionText = question.querySelector('textarea[name*="[question_text]"]');
+        const questionType = question.querySelector('select[name*="[question_type]"]');
+        
+        if (!questionText || !questionText.value.trim()) {
+          errors.push(`La Pregunta ${index + 1} no debe estar vacía.`);
+        }
+
+        // Validar opciones si aplica
+        if (questionType && questionType.value !== '1') {
+          const options = question.querySelectorAll('input[name*="[options][]"]');
+          if (options.length === 0) {
+            errors.push(`La Pregunta ${index + 1} debe tener al menos una opción.`);
+          } else {
+            options.forEach((opt, i) => {
+              if (!opt.value.trim()) {
+                errors.push(`La opción ${i + 1} de la Pregunta ${index + 1} está vacía.`);
+              }
+            });
+          }
+        }
+      });
+
+      if (errors.length > 0) {
+        e.preventDefault();
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Errores en el formulario',
+          html: `<ul style="text-align:left;">${errors.map(e => `<li>${e}</li>`).join('')}</ul>`,
+          confirmButtonText: 'Corregir',
+          customClass: {
+            popup: 'text-start',
+            confirmButton: 'btn btn-primary me-3',
+          }
+        });
+      }
+    });
+  }
 });

@@ -104,14 +104,11 @@
                     </div>
                 </div>
 
-                <div class="border rounded">
-                    <div class="px-6 py-4 border-b flex justify-between items-center">
-                        <h4 class="text-lg font-semibold">Preguntas</h4>
-                    </div>
+                <div class="">
                     <div class="p-6">
                         <div id="questions-container" class="">
                             @forelse($encuesta->preguntas ?? [] as $index => $question)
-                                <div class="question-item border border-primary rounded m-2 position-relative p-5" data-question-index="{{ $index }}">
+                                <div class="question-item border card rounded m-2 position-relative p-5" data-question-index="{{ $index }}">
                                     <div>
                                         <div>
                                             <div class="d-flex flex-column col-md-12">
@@ -160,9 +157,9 @@
                                                                 Opciones de Respuesta
                                                             </h5>
                                                         </div>
-                                                        <div class="options-list d-flex flex-column col-md-12">
+                                                        <div class="options-list d-flex flex-column col-md-11">
                                                             @forelse($question->opciones as $optionIndex => $option)
-                                                                <div class="d-flex align-items-center gap-2 option-item">
+                                                                <div class="d-flex align-items-center gap-2 m-2 option-item">
                                                                     <input type="text"
                                                                            name="questions[{{ $index }}][options][]"
                                                                            value="{{ old("questions.{$index}.options.{$optionIndex}", $option->opcion ?? '') }}"
@@ -174,7 +171,7 @@
                                                                         <button type="button"
                                                                                 onclick="removeOption(this)"
                                                                                 class="btn btn-icon btn-danger">
-                                                                            <i class="ri-close-line"></i>
+                                                                            <i class="ri-delete-bin-2-fill"></i>
                                                                         </button>
                                                                     @endif
                                                                 </div>
@@ -182,10 +179,10 @@
                                                                 @endforelse
                                                         </div>
                                                         @if($mode !== 'view')
-                                                            <div class="col-md-12 d-flex flex-row align-items-center justify-content-center">
+                                                            <div class="col-md-12 m-2 d-flex flex-row">
                                                                 <button type="button"
                                                                     onclick="addOption(this.closest('.question-item'))"
-                                                                    class="add-new btn btn-outline-primary waves-effect waves-light">
+                                                                    class="add-new btn btn-text-info waves-effect">
                                                                     <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                                                                     Agregar Opción
                                                                 </button>
@@ -199,8 +196,8 @@
                                     @if($mode !== 'view')
                                         <button type="button"
                                                 onclick="removeQuestion(this)"
-                                                class="btn rounded-pill btn-icon btn-danger position-absolute top-0 end-0 m-2">
-                                            <i class="ri-close-line"></i>
+                                                class="btn rounded-pill btn-icon position-absolute top-0 end-0 m-2">
+                                                <i class="ri-close-line ri-30px"></i>
                                         </button>
                                     @endif
                                 </div>
@@ -216,10 +213,10 @@
                     </div>
 
                     @if($mode !== 'view')
-                        <div class="col-md-12 d-flex flex-row align-items-center justify-content-center m-2">
+                        <div class="col-md-12 d-flex flex-row align-items-center justify-content-center m-8">
                             <button type="button"
                                 onclick="addQuestion()"
-                                class="add-new btn btn-label-primary waves-effect waves-light">
+                                class="add-new btn btn-text-primary waves-effect waves-light">
                                 <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                                 <span class="d-none d-sm-inline-block">Agregar Pregunta</span>
                             </button>
@@ -251,7 +248,7 @@
             </form>
 
             <template id="question-template">
-                <div class="question-item  border border-primary rounded m-2 position-relative p-5" data-question-index="QUESTION_INDEX">
+                <div class="question-item border card rounded m-2 position-relative p-5" data-question-index="QUESTION_INDEX">
                 <div class="">
                     <div class="">
                     <div class="d-flex flex-column col-md-12">
@@ -290,11 +287,11 @@
                                     Opciones de Respuesta
                                 </h5>
                             </div>
-                            <div class="options-list d-flex flex-column col-md-12"></div>
-                            <div class="col-md-12 d-flex flex-row align-items-center justify-content-center">
+                            <div class="options-list d-flex flex-column justify-content-center col-md-11"></div>
+                            <div class="col-md-12 d-flex flex-row">
                                 <button type="button"
                                     onclick="addOption(this.closest('.question-item'))"
-                                    class="add-new btn btn-outline-primary waves-effect waves-light">
+                                    class="add-new btn btn-text-info waves-effect">
                                     <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                                     Agregar Opción
                                 </button>
@@ -306,8 +303,8 @@
                 </div>
                 <button type="button"
                         onclick="removeQuestion(this)"
-                        class="btn rounded-pill btn-icon btn-danger position-absolute top-0 end-0 m-2">
-                    <i class="ri-close-line"></i>
+                        class="btn rounded-pill btn-icon position-absolute top-0 end-0 m-2">
+                    <i class="ri-close-line ri-30px"></i>
                 </button>
                 </div>
             </template>

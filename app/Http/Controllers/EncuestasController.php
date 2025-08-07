@@ -20,6 +20,16 @@ class EncuestasController extends Controller
         if ($request->ajax()) {
             $sql = EncuestasModel::orderBy('id_encuesta', 'desc')->get();
             return DataTables::of($sql)->addIndexColumn()
+                ->addColumn('tipo', function ($row) {
+                    if ($row->tipo === 1) {
+                        return 'Evaluación de Personal';
+                    } elseif ($row->tipo === 2) {
+                        return 'Evaluación de Clientes';
+                    } elseif ($row->tipo === 3) {
+                        return 'Evaluación de Proveedores';
+                    }
+                    return 'Sin tipo de evaluación';
+                })
                 ->addColumn('action', function ($row) {
 
                     $btn = '
@@ -124,25 +134,20 @@ class EncuestasController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $encuesta) {
-            // Paso 1: Actualizar la información básica de la encuesta
             $encuesta->update([
                 'encuesta' => $request->title,
                 'tipo' => $request->target_type,
                 'updated_at' => now()
             ]);
 
-            // Paso 2: Eliminar preguntas y sus opciones existentes
-            // Se elimina todo lo relacionado con esta encuesta para luego crearlo de nuevo.
             $encuesta->preguntas()->each(function ($pregunta) {
                 $pregunta->opciones()->delete();
                 $pregunta->delete();
             });
 
-            // Paso 3: Crear las nuevas preguntas y sus opciones
             foreach ($request->questions as $index => $questionData) {
-                // Aquí se crea la pregunta con el ID de la encuesta, solucionando el error
                 $nuevaPregunta = PreguntasModel::create([
-                    'id_encuesta' => $encuesta->id_encuesta, // <-- ¡Este es el cambio clave!
+                    'id_encuesta' => $encuesta->id_encuesta,
                     'pregunta' => $questionData['question_text'],
                     'tipo_pregunta' => $questionData['question_type'],
                 ]);
