@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\EncuestasModel;
 use App\Models\OpcionesModel;
 use App\Models\PreguntasModel;
+use App\Models\User;
+use App\Models\CatalogoProveedor;;
+
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
@@ -37,10 +40,15 @@ class EncuestasController extends Controller
                         <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_encuesta . '">' .
                         '<li>
-                                <a class="dropdown-item" href="' . route('encuestas.show', $row->id_encuesta) . '">' .
+                            <a class="dropdown-item" href="' . route('encuestas.answer', $row->id_encuesta) . '">' .
+                        '<i class="ri-file-check-fill ri-20px text-primary"></i> Responder' .
+                        '</a>
+                        </li>' .
+                        '<li>
+                            <a class="dropdown-item" href="' . route('encuestas.show', $row->id_encuesta) . '">' .
                         '<i class="ri-search-fill ri-20px text-normal"></i> Ver' .
                         '</a>
-                            </li>
+                        </li>
                             <li>
                                 <a class="dropdown-item text-normal" href="' . route('encuestas.edit', $row->id_encuesta) . '">' .
                         '<i class="ri-file-edit-fill ri-20px text-info"></i> Editar' .
@@ -86,7 +94,7 @@ class EncuestasController extends Controller
                     'pregunta' => $questionData['question_text'],
                     'tipo_pregunta' => $questionData['question_type'],
                 ]);
-                
+
                 // Si la pregunta tiene opciones, guardarlas
                 if ($questionData['question_type'] !== 'open' && isset($questionData['options'])) {
                     foreach ($questionData['options'] as $optionText) {
@@ -121,7 +129,7 @@ class EncuestasController extends Controller
         ]);
     }
 
- public function update(Request $request, EncuestasModel $encuesta)
+    public function update(Request $request, EncuestasModel $encuesta)
     {
         // Validación de datos
         $request->validate([
@@ -164,5 +172,48 @@ class EncuestasController extends Controller
         });
 
         return redirect()->route('encuestas.index')->with('success', 'Encuesta actualizada exitosamente');
+    }
+
+    public function answer($id)
+    {
+        $encuesta = EncuestasModel::with('preguntas.opciones')->findOrFail($id);
+
+        $evaluados = match ($encuesta->tipo) {
+            1 => User::where('tipo', 1)->get(),
+            2 => User::where('tipo', 3)->get(),
+            3 => CatalogoProveedor::all(),
+            default => collect(),
+        };
+
+        return view('catalogo.responder_encuesta', [
+            'encuesta' => $encuesta,
+            'evaluados' => $evaluados
+        ]);
+    }
+
+    public function storeRespuestas(Request $request)
+    {
+        $request->validate([
+            'id_encuesta' => 'required|exists:encuestas,id_encuesta',
+            'aEvaluar' => 'required',
+            'respuestas' => 'required|array',
+        ]);
+
+        foreach ($request->respuestas as $id_pregunta => $respuesta) {
+            if (is_array($respuesta)) {
+                $respuesta = implode(', ', $respuesta); // para checkboxes
+            }
+
+            DB::table('respuestas')->insert([
+                'id_encuesta' => $request->id_encuesta,
+                'id_pregunta' => $id_pregunta,
+                'respuesta' => $respuesta,
+                'id_usuario' => Auth::id(),
+                'evaluado' => $request->aEvaluar,
+                'created_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('encuestas.index')->with('success', 'Respuestas guardadas correctamente');
     }
 }
