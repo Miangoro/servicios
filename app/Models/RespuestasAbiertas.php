@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 class RespuestasAbiertas extends Model
 {
     public $timestamps = false;
-    protected $table = 'respuestas_cerrada';
-    protected $primaryKey = 'id_respuesta';
+    protected $table = 'respuesta_abierta';
+    protected $primaryKey = 'id_respuesta_abierta';
     protected $fillable = [
-        'id_respuesta',
-        'id_opcion',
+        'id_respuesta_abierta',
+        'id_pregunta',
+        'respuesta',
         'id_evaluado',
         'id_usuario',
         'created_at'

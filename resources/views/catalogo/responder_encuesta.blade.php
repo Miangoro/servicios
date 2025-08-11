@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', "Responder Encuesta")
+@section('title', $modoLectura ? 'Ver Respuestas' : 'Responder Encuesta')
 
 @section('vendor-style')
     @vite([
@@ -37,93 +37,99 @@
 @endsection
 
 @section('page-script')
-    @vite(['resources/js/encuestas.js',
-    'resources/assets/js/forms-selects.js',
-  'resources/assets/js/forms-tagify.js',
-  'resources/assets/js/forms-typeahead.js'])
-    
+    @vite(['resources/js/responder_encuesta.js',
+            'resources/assets/js/forms-selects.js',
+            'resources/assets/js/forms-tagify.js',
+            'resources/assets/js/forms-typeahead.js'])
 @endsection
 
 @section('content')
 <div class="container-fluid mt--7">
     <div class="card shadow">
         <div class="card-body">
-            <form method="POST" action="{{ route('respuestas.store') }}">
+            <form id="formResponderEncuesta" method="POST" action="{{ route('respuestas.store') }}">
                 @csrf
-            <div class="row">
-                <div class="col">
-                    <label for="title" class="">
-                        Título de la Encuesta
-                    </label>
-                    <h3 id="titulo_encuesta" name="tituloEncuesta">{{ old('title', $encuesta->encuesta ?? '') }}</h3>
-                </div>
-                
-                <div class="col">
-                    <label for="aEvaluar" class="">
-                        @if($encuesta->tipo === 1)
-                            Empleado a evaluar
-                        @elseif ($encuesta->tipo === 1)
-                            Cliente a evaluar
+                <input type="hidden" name="id_encuesta" value="{{ $encuesta->id_encuesta }}">
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label>Título de la Encuesta</label>
+                        <h3>{{ $encuesta->encuesta ?? '' }}</h3>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        
+                        @if ($modoLectura)
+                            <label>
+                                @if($encuesta->tipo === 1)
+                                    Empleado evaluado
+                                @elseif ($encuesta->tipo === 2)
+                                    Cliente evaluado
+                                @else
+                                    Proveedor evaluado
+                                @endif
+                            </label>
+                            <p><strong>{{ $evaluadoNombre ?? 'N/A' }}</strong></p>
                         @else
-                            Proveedor a evaluar
+                            <label>
+                                @if($encuesta->tipo === 1)
+                                    Empleado a evaluar
+                                @elseif ($encuesta->tipo === 2)
+                                    Cliente a evaluar
+                                @else
+                                    Proveedor a evaluar
+                                @endif
+                            </label>
+                            <select id="a_Evaluar" name="aEvaluar" required class="select2 form-select form-select-lg">
+                                <option value="">Seleccione</option>
+                                @foreach($evaluados as $evaluado)
+                                    <option value="{{ $encuesta->tipo == 3 ? $evaluado->id_proveedor : $evaluado->id }}">
+                                        {{ $encuesta->tipo == 3 ? $evaluado->razon_social : $evaluado->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         @endif
-                    </label>
-                    <select id="a_Evaluar" name="aEvaluar" required class="select2 form-select form-select-lg"
-                        data-allow-clear="true">
-                        <option value="">Seleccione a quien evaluar</option>
-                        @foreach($evaluados as $evaluado)
-                            <option value="{{ $evaluado->id }}">
-                                {{ $encuesta->tipo == 3 ? $evaluado->nombre_fiscal : $evaluado->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('aEvaluar')
-                        <p class="text-danger text-sm">{{ $message }}</p>
-                    @enderror
+                    </div>
                 </div>
-            </div>
-            <input type="hidden" name="id_encuesta" value="{{ $encuesta->id_encuesta }}">
+
+                <hr>
 
                 <div class="mt-4">
-                    @foreach ($encuesta->preguntas as $index => $pregunta)
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">
-                                {{ $index + 1 }}. {{ $pregunta->pregunta }}
-                            </label>
+                    @foreach($encuesta->preguntas as $pregunta)
+                        <div class="pregunta-item mb-4 m-4" data-tipo="{{ $pregunta->tipo_pregunta }}">
+                            <h4>{{ $pregunta->pregunta }}</h4>
 
-                            @if ($pregunta->tipo_pregunta == 1)
-                                {{-- Pregunta abierta: Textarea --}}
-                                <textarea name="respuestas[{{ $pregunta->id_pregunta }}]"
-                                        class="form-control" rows="3"
-                                        placeholder="Escriba su respuesta aquí..."></textarea>
-
-                            @elseif ($pregunta->tipo_pregunta == 2)
-                                {{-- Pregunta de opción única: Radio buttons --}}
-                                @foreach ($pregunta->opciones as $opcion)
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                            type="radio"
-                                            name="respuestas[{{ $pregunta->id_pregunta }}]"
-                                            id="radio_{{ $opcion->id_opcion }}"
-                                            value="{{ $opcion->opcion }}">
-                                        <label class="form-check-label" for="radio_{{ $opcion->id_opcion }}">
-                                            {{ $opcion->opcion }}
-                                        </label>
+                            @if($pregunta->tipo_pregunta == 1)
+                                <textarea 
+                                    name="respuestas[{{ $pregunta->id_pregunta }}]" 
+                                    class="form-control" 
+                                    rows="3"
+                                    {{ $modoLectura ? 'disabled' : '' }}
+                                >{{ $respuestasUsuario[$pregunta->id_pregunta] ?? '' }}</textarea>
+                            @elseif($pregunta->tipo_pregunta == 2)
+                                @foreach($pregunta->opciones as $opcion)
+                                    <div class="m-4">
+                                        <input type="radio"
+                                            class="form-check-input"
+                                            name="respuestas[{{ $pregunta->id_pregunta }}]" 
+                                            value="{{ $opcion->id_opcion }}" 
+                                            {{ $modoLectura ? 'disabled' : '' }}
+                                            {{ isset($respuestasUsuario[$pregunta->id_pregunta]) && $respuestasUsuario[$pregunta->id_pregunta] == $opcion->id_opcion ? 'checked' : '' }}
+                                        >
+                                        {{ $opcion->opcion }}
                                     </div>
                                 @endforeach
-
-                            @elseif ($pregunta->tipo_pregunta == 3)
-                                {{-- Pregunta de opción múltiple: Checkboxes --}}
-                                @foreach ($pregunta->opciones as $opcion)
-                                    <div class="form-check">
-                                        <input class="form-check-input"
-                                            type="checkbox"
-                                            name="respuestas[{{ $pregunta->id_pregunta }}][]"
-                                            id="check_{{ $opcion->id_opcion }}"
-                                            value="{{ $opcion->opcion }}">
-                                        <label class="form-check-label" for="check_{{ $opcion->id_opcion }}">
-                                            {{ $opcion->opcion }}
-                                        </label>
+                            @elseif($pregunta->tipo_pregunta == 3)
+                                @foreach($pregunta->opciones as $opcion)
+                                    <div class="m-4">
+                                        <input type="checkbox" 
+                                            class="form-check-input"
+                                            name="respuestas[{{ $pregunta->id_pregunta }}][]" 
+                                            value="{{ $opcion->id_opcion }}" 
+                                            {{ $modoLectura ? 'disabled' : '' }}
+                                            {{ isset($respuestasUsuario[$pregunta->id_pregunta]) && in_array($opcion->id_opcion, $respuestasUsuario[$pregunta->id_pregunta]) ? 'checked' : '' }}
+                                        >
+                                        {{ $opcion->opcion }}
                                     </div>
                                 @endforeach
                             @endif
@@ -131,13 +137,26 @@
                     @endforeach
                 </div>
 
-                <div class="d-flex flex-row align-items-center justify-content-center">
-                    <button type="submit" class="btn btn-text-info waves-effect">
-                        <i class="ri-save-fill ri-16px me-0 me-sm-2 align-baseline"></i>
-                        Guardar Respuestas
-                    </button>
+                <hr>
+
+                <div class="d-flex justify-content-center mt-4">
+                    @if ($modoLectura)
+                        <a href="{{ route('encuestas.index') }}" class="btn btn-secondary">
+                            <i class="ri-arrow-left-fill"></i>
+                        Volver</a>
+                    @else
+                        <a href="{{ route('encuestas.index') }}" class="btn btn-danger m-2">
+                            <i class="ri-close-line"></i>
+                            Cancelar</a>
+                        <button type="submit" class="btn btn-primary m-2">
+                            <i class="ri-save-fill"></i>
+                        Guardar Respuestas</button>
+                    @endif
                 </div>
+
             </form>
+
+        </div>
     </div>
 </div>
 @endsection
