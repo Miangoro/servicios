@@ -6,7 +6,9 @@ use App\Models\EncuestasModel;
 use App\Models\OpcionesModel;
 use App\Models\PreguntasModel;
 use App\Models\User;
-use App\Models\CatalogoProveedor;;
+use App\Models\CatalogoProveedor;
+use App\Models\RespuestasAbiertas;
+use App\Models\RespuestasCerradas;;
 
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
@@ -34,31 +36,62 @@ class EncuestasController extends Controller
                     return 'Sin tipo de evaluación';
                 })
                 ->addColumn('action', function ($row) {
+                    $idUsuario = Auth::id();
 
-                    $btn = '
-                    <div class="dropdown d-flex justify-content-center">
-                        <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_encuesta . '">' .
-                        '<li>
-                            <a class="dropdown-item" href="' . route('encuestas.answer', $row->id_encuesta) . '">' .
-                        '<i class="ri-file-check-fill ri-20px text-primary"></i> Responder' .
-                        '</a>
-                        </li>' .
-                        '<li>
-                            <a class="dropdown-item" href="' . route('encuestas.show', $row->id_encuesta) . '">' .
-                        '<i class="ri-search-fill ri-20px text-normal"></i> Ver' .
-                        '</a>
-                        </li>
-                            <li>
-                                <a class="dropdown-item text-normal" href="' . route('encuestas.edit', $row->id_encuesta) . '">' .
-                        '<i class="ri-file-edit-fill ri-20px text-info"></i> Editar' .
-                        '</a>
-                            </li>'
-                        . '</ul>
-                          
-                    </div>';
+                    // Verificar si ya respondió (buscando en RespuestasAbiertas o RespuestasCerradas)
+                    $yaRespondio = RespuestasAbiertas::where('id_usuario', $idUsuario)
+                        ->whereIn('id_pregunta', function ($q) use ($row) {
+                            $q->select('id_pregunta')
+                                ->from('preguntas')
+                                ->where('id_encuesta', $row->id_encuesta);
+                        })
+                        ->exists()
+                        ||
+                        RespuestasCerradas::where('id_usuario', $idUsuario)
+                        ->whereIn('id_opcion', function ($q) use ($row) {
+                            $q->select('id_opcion')
+                                ->from('preguntas_opciones')
+                                ->whereIn('id_pregunta', function ($q2) use ($row) {
+                                    $q2->select('id_pregunta')
+                                        ->from('preguntas')
+                                        ->where('id_encuesta', $row->id_encuesta);
+                                });
+                        })
+                        ->exists();
+
+                    $btn = '<div class="dropdown d-flex justify-content-center">
+                    <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                        <i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_encuesta . '">';
+
+                    if ($yaRespondio) {
+                        // Mostrar opción de Ver respuestas
+                        $btn .= '<li>
+                            <a class="dropdown-item" href="' . route('encuestas.verRespuestas', $row->id_encuesta) . '">
+                                <i class="ri-search-fill ri-20px text-normal"></i> Ver respuestas
+                            </a>
+                        </li>';
+                    } else {
+                        // Mostrar opción de Responder
+                        $btn .= '<li>
+                            <a class="dropdown-item" href="' . route('encuestas.answer', $row->id_encuesta) . '">
+                                <i class="ri-file-check-fill ri-20px text-primary"></i> Responder
+                            </a>
+                        </li>';
+                    }
+
+                    // Siempre mostrar editar si aplica
+                    $btn .= '<li>
+                        <a class="dropdown-item text-normal" href="' . route('encuestas.edit', $row->id_encuesta) . '">
+                            <i class="ri-file-edit-fill ri-20px text-info"></i> Editar
+                        </a>
+                    </li>
+                    </ul></div>';
+
                     return $btn;
                 })
+
                 ->rawColumns(['action'])
                 ->make(true);
         }
@@ -174,7 +207,7 @@ class EncuestasController extends Controller
         return redirect()->route('encuestas.index')->with('success', 'Encuesta actualizada exitosamente');
     }
 
-    public function answer($id)
+ public function answer($id)
     {
         $encuesta = EncuestasModel::with('preguntas.opciones')->findOrFail($id);
 
@@ -187,7 +220,10 @@ class EncuestasController extends Controller
 
         return view('catalogo.responder_encuesta', [
             'encuesta' => $encuesta,
-            'evaluados' => $evaluados
+            'modoLectura' => false, // Modo responder
+            'respuestasUsuario' => [],
+            'evaluados' => $evaluados,
+            'evaluadoNombre' => null // No es necesario en este modo, pero se inicializa para evitar errores
         ]);
     }
 
@@ -199,21 +235,123 @@ class EncuestasController extends Controller
             'respuestas' => 'required|array',
         ]);
 
-        foreach ($request->respuestas as $id_pregunta => $respuesta) {
-            if (is_array($respuesta)) {
-                $respuesta = implode(', ', $respuesta); // para checkboxes
-            }
+        $idUsuario = Auth::id();
+        $idEvaluado = $request->aEvaluar;
 
-            DB::table('respuestas')->insert([
-                'id_encuesta' => $request->id_encuesta,
-                'id_pregunta' => $id_pregunta,
-                'respuesta' => $respuesta,
-                'id_usuario' => Auth::id(),
-                'evaluado' => $request->aEvaluar,
-                'created_at' => now(),
-            ]);
+        foreach ($request->respuestas as $id_pregunta => $respuesta) {
+            $pregunta = PreguntasModel::findOrFail($id_pregunta);
+            
+            // Usar el tipo de la pregunta para el modelo correcto
+            if ($pregunta->tipo_pregunta == 1) {
+                RespuestasAbiertas::create([
+                    'id_pregunta' => $id_pregunta,
+                    'respuesta' => $respuesta,
+                    'id_evaluado' => $idEvaluado,
+                    'id_usuario' => $idUsuario,
+                    'created_at' => now()
+                ]);
+
+            } elseif ($pregunta->tipo_pregunta == 2) {
+                 RespuestasCerradas::create([
+                    'id_opcion' => $respuesta,
+                    'id_evaluado' => $idEvaluado,
+                    'id_usuario' => $idUsuario,
+                    'created_at' => now()
+                ]);
+
+            } elseif ($pregunta->tipo_pregunta == 3) {
+                foreach ($respuesta as $id_opcion) {
+                    RespuestasCerradas::create([
+                        'id_opcion' => $id_opcion,
+                        'id_evaluado' => $idEvaluado,
+                        'id_usuario' => $idUsuario,
+                        'created_at' => now()
+                    ]);
+                }
+            }
         }
 
         return redirect()->route('encuestas.index')->with('success', 'Respuestas guardadas correctamente');
     }
+
+    public function verRespuestas($idEncuesta)
+    {
+        $encuesta = EncuestasModel::with(['preguntas.opciones'])->findOrFail($idEncuesta);
+        $idUsuario = Auth::id();
+
+        // Obtener la respuesta para obtener el id_evaluado
+        $primeraRespuesta = RespuestasAbiertas::where('id_usuario', $idUsuario)
+            ->whereIn('id_pregunta', $encuesta->preguntas->pluck('id_pregunta'))
+            ->first();
+
+        if (!$primeraRespuesta) {
+            $primeraRespuesta = RespuestasCerradas::where('id_usuario', $idUsuario)
+                ->whereIn('id_opcion', function($query) use ($encuesta) {
+                    $query->select('id_opcion')
+                          ->from('preguntas_opciones')
+                          ->whereIn('id_pregunta', $encuesta->preguntas->pluck('id_pregunta'));
+                })
+                ->first();
+        }
+
+        $evaluadoNombre = null;
+        if ($primeraRespuesta) {
+            switch ($encuesta->tipo) {
+                case 1:
+                case 2:
+                    $evaluado = User::find($primeraRespuesta->id_evaluado);
+                    $evaluadoNombre = $evaluado->name ?? 'N/A';
+                    break;
+                case 3:
+                    $evaluado = CatalogoProveedor::find($primeraRespuesta->id_evaluado);
+                    $evaluadoNombre = $evaluado->razon_social ?? 'N/A';
+                    break;
+            }
+        }
+
+        // respuestas del usuario
+        $respuestasAbiertas = RespuestasAbiertas::where('id_usuario', $idUsuario)
+            ->whereIn('id_pregunta', $encuesta->preguntas->where('tipo_pregunta', 1)->pluck('id_pregunta'))
+            ->get()
+            ->keyBy('id_pregunta');
+
+        $respuestasCerradas = RespuestasCerradas::where('id_usuario', $idUsuario)
+            ->whereIn('id_opcion', function ($q) use ($encuesta) {
+                $q->select('id_opcion')
+                  ->from('preguntas_opciones')
+                  ->whereIn('id_pregunta', $encuesta->preguntas->whereIn('tipo_pregunta', [2, 3])->pluck('id_pregunta'));
+            })
+            ->get();
+        
+        // Mapear en un formato que el blade pueda leer igual que en modo responder
+        $respuestasUsuario = [];
+        foreach ($encuesta->preguntas as $pregunta) {
+            if ($pregunta->tipo_pregunta == 1 && isset($respuestasAbiertas[$pregunta->id_pregunta])) {
+                $respuestasUsuario[$pregunta->id_pregunta] = $respuestasAbiertas[$pregunta->id_pregunta]->respuesta;
+            } elseif ($pregunta->tipo_pregunta == 2) {
+                $opcionSeleccionada = $respuestasCerradas->first(function ($r) use ($pregunta) {
+                    return OpcionesModel::find($r->id_opcion)->id_pregunta === $pregunta->id_pregunta;
+                });
+                if ($opcionSeleccionada) {
+                    $respuestasUsuario[$pregunta->id_pregunta] = $opcionSeleccionada->id_opcion;
+                }
+            } elseif ($pregunta->tipo_pregunta == 3) {
+                $opcionesSeleccionadas = $respuestasCerradas->filter(function ($r) use ($pregunta) {
+                    return OpcionesModel::find($r->id_opcion)->id_pregunta === $pregunta->id_pregunta;
+                })->pluck('id_opcion')->toArray();
+                if (!empty($opcionesSeleccionadas)) {
+                    $respuestasUsuario[$pregunta->id_pregunta] = $opcionesSeleccionadas;
+                }
+            }
+        }
+
+        return view('catalogo.responder_encuesta', [
+            'encuesta' => $encuesta,
+            'modoLectura' => true, // Modo solo lectura
+            'respuestasUsuario' => $respuestasUsuario,
+            'evaluadoNombre' => $evaluadoNombre,
+            'evaluados' => collect()
+        ]);
+    }
+
 }

@@ -236,7 +236,7 @@ Route::middleware('auth')->controller(App\Http\Controllers\EncuestasController::
     Route::put('/encuestas/{encuesta}',  'update')->name('encuestas.update');
     Route::get('/encuestas/responder/{encuesta}',  'answer')->name('encuestas.answer');
     Route::post('/respuestas/store',  'storeRespuestas')->name('respuestas.store');
-
+    Route::get('/encuestas/{id}/verRespuestas', 'verRespuestas')->name('encuestas.verRespuestas');
 });
 
 //Para documentos

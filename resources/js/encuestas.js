@@ -44,19 +44,12 @@ function reloadTableOrPage() {
   }
 }
 
-// Funciones JavaScript para manejo dinámico
 // Variable global para mantener un registro del número de preguntas
-// Es crucial inicializarla con el número de preguntas existentes en el DOM
 let questionCounter = document.querySelectorAll('.question-item').length;
 
-// Se ha movido aquí para que se inicialice con el valor correcto al cargar la página.
-// window.addQuestion = function() { ... }
-
-// Funciones JavaScript para manejo dinámico
 window.addQuestion = function() {
     const questionsContainer = document.getElementById('questions-container');
     
-    // Si existe el mensaje de "no hay preguntas", lo ocultamos
     const noQuestionsMessage = document.getElementById('no-questions-message');
     if (noQuestionsMessage) {
         noQuestionsMessage.style.display = 'none';
@@ -74,7 +67,7 @@ window.addQuestion = function() {
     
     questionsContainer.appendChild(newQuestionElement);
     
-    // Incrementamos el contador para la próxima pregunta
+    // contador para la próxima pregunta
     questionCounter++;
     
     updateQuestionNumbers();
@@ -89,13 +82,13 @@ window.removeQuestion = function (button) {
 function updateQuestionNumbers() {
     const questions = document.querySelectorAll('.question-item');
     questions.forEach((question, index) => {
-        // Actualizamos el número visible de la pregunta
+        // actualiza el número visible de la pregunta
         const label = question.querySelector('h3');
         if (label) {
             label.textContent = `Pregunta ${index + 1}`;
         }
         
-        // Actualizamos los atributos 'name' y 'data-question-index'
+        // actualiza los atributos 'name' y 'data-question-index'
         const inputs = question.querySelectorAll('input, select, textarea, button');
         inputs.forEach(input => {
             const name = input.getAttribute('name');
@@ -105,7 +98,7 @@ function updateQuestionNumbers() {
             }
         });
 
-        // Actualizamos el data-question-index en el contenedor
+        // actualiza el data-question-index en el contenedor
         question.setAttribute('data-question-index', index);
     });
 }
@@ -120,10 +113,10 @@ window.changeQuestionType = function(select) {
     } else {
         optionsContainer.style.display = 'block';
 
-        // Verificamos si el options-list existe antes de añadir opciones
+        // Verifica si el options-list existe antes de añadir opciones
         let optionsList = optionsContainer.querySelector('.options-list');
         if (!optionsList) {
-            // Si no existe, lo creamos
+            // Si no, lo crea
             const newOptionsListHtml = `
                 <div class="d-flex flex-column m-5 col-md-12">
                     <div class="row">
@@ -153,7 +146,7 @@ window.changeQuestionType = function(select) {
 }
 
 window.addOption = function(questionItem) {
-    // Verificamos que optionsList exista antes de continuar
+    // verifica que optionsList exista antes de continuar
     const optionsList = questionItem.querySelector('.options-list');
     if (!optionsList) {
         // En caso de que no exista, salimos de la función o mostramos un error
@@ -240,7 +233,7 @@ window.updatePreview = function (questionItem) {
 
 // Inicializar eventos cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function () {
-    // Es crucial que esto se ejecute al cargar la página para las preguntas ya existentes
+    // es importante que esto se ejecute al cargar la página para las preguntas ya existentes
     updateQuestionNumbers();
     document.querySelectorAll('.question-item').forEach(updatePreview);
 
