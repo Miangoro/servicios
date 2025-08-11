@@ -7,6 +7,8 @@
  * - La lógica de "dar de baja" y "dar de alta" ahora se comunica con el servidor
  * a través de peticiones AJAX para una gestión de estado persistente.
  * - Las tablas y los contadores se actualizan en tiempo real sin recargar la página.
+ * - Manejo de errores mejorado para peticiones que devuelven HTML en lugar de JSON.
+ * - Modificación del menú de opciones para mostrar "Dar de Alta" si el cliente está inactivo.
  */
 document.addEventListener('DOMContentLoaded', function () {
     // Definición de elementos y variables principales
@@ -15,16 +17,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const editHistorialModalElement = document.getElementById('editHistorialModal');
     const viewHistorialModalElement = document.getElementById('viewHistorialModal');
     const exportModalElement = document.getElementById('modal-add-export_clientes_empresas');
+    const viewPdfModalElement = document.getElementById('viewPdfModal');
+    const editHistorialModalContent = document.getElementById('editHistorialModalContent');
+    const viewHistorialModalContent = document.getElementById('viewHistorialModalContent');
 
     const agregarEmpresaModal = agregarEmpresaModalElement ? new bootstrap.Modal(agregarEmpresaModalElement) : null;
     const editHistorialModal = editHistorialModalElement ? new bootstrap.Modal(editHistorialModalElement) : null;
     const viewHistorialModal = viewHistorialModalElement ? new bootstrap.Modal(viewHistorialModalElement) : null;
     const exportModal = exportModalElement ? new bootstrap.Modal(exportModalElement) : null;
+    const viewPdfModal = viewPdfModalElement ? new bootstrap.Modal(viewPdfModalElement) : null;
 
     let contactIndex = 0;
     let dataTable;
 
-    // --- Funciones Auxiliares ---
+    // --- Funciones Auxiliares Centralizadas ---
 
     /**
      * Limpia los mensajes de error y las clases 'is-invalid' de un formulario.
@@ -65,6 +71,31 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
+     * Muestra un SweetAlert para errores.
+     * @param {string} title - El título del error.
+     * @param {string} message - El mensaje de error.
+     */
+    function showSweetAlertError(title, message) {
+        Swal.fire({
+            icon: 'error',
+            title: title,
+            html: message,
+            customClass: { confirmButton: 'btn btn-danger' }
+        });
+    }
+
+    /**
+     * Actualiza el contador de clientes y recarga la tabla.
+     * Esta función centraliza toda la lógica de actualización de la UI.
+     */
+    function updateUI() {
+        if (dataTable) {
+            dataTable.ajax.reload(null, false);
+        }
+        updateClientStats();
+    }
+
+    /**
      * Envía una petición de formulario mediante AJAX.
      * @param {HTMLFormElement} form - El formulario a enviar.
      * @param {string} url - La URL del endpoint.
@@ -72,7 +103,10 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     async function submitForm(form, url, options = {}) {
         const submitButton = form.querySelector('button[type="submit"]');
-        submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+        const originalButtonHtml = submitButton.innerHTML;
+        const loadingHtml = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
+
+        submitButton.innerHTML = loadingHtml;
         submitButton.disabled = true;
         clearValidationErrors(form);
 
@@ -86,10 +120,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     ...options.headers
                 }
             });
+
             const data = await response.json();
 
             if (!response.ok) {
-                if (response.status === 422) {
+                if (response.status === 422 && data.errors) {
                     displayValidationErrors(data.errors, form);
                 } else {
                     throw new Error(data.message || 'Error inesperado.');
@@ -105,14 +140,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (error) {
             console.error('Error en la petición:', error);
-            Swal.fire({
-                icon: 'error',
-                title: '¡Error!',
-                html: `${error.message}`,
-                customClass: { confirmButton: 'btn btn-danger' }
-            });
+            showSweetAlertError('¡Error!', `Hubo un problema al guardar los datos: ${error.message}`);
         } finally {
-            submitButton.innerHTML = options.successButtonText || '<i class="ri-add-line"></i> Guardar';
+            submitButton.innerHTML = originalButtonHtml;
             submitButton.disabled = false;
         }
         return false;
@@ -125,6 +155,12 @@ document.addEventListener('DOMContentLoaded', function () {
      * @param {boolean} [isViewMode=false] - Si la fila es de solo lectura.
      */
     function addContactRow(containerId, data = {}, isViewMode = false) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            console.error(`Contenedor con ID "${containerId}" no encontrado.`);
+            return;
+        }
+
         const template = document.getElementById('contact-row-template');
         const clone = template.content.cloneNode(true);
         const newRow = clone.querySelector('.contact-row');
@@ -148,10 +184,11 @@ document.addEventListener('DOMContentLoaded', function () {
             newRow.querySelector('.remove-contact-row').addEventListener('click', () => newRow.remove());
         }
 
-        document.getElementById(containerId).appendChild(newRow);
-        $(newRow).find('select').select2({
+        container.appendChild(newRow);
+        const selectElement = $(newRow).find('select');
+        selectElement.select2({
             minimumResultsForSearch: Infinity,
-            dropdownParent: $(newRow).find('select').closest('td')
+            dropdownParent: selectElement.closest('td')
         });
         contactIndex++;
     }
@@ -160,74 +197,212 @@ document.addEventListener('DOMContentLoaded', function () {
      * Actualiza el contador de clientes en los cuadros de estadísticas.
      */
     async function updateClientStats() {
-        if (typeof estadisticasUrl === 'undefined') {
-            console.warn("'estadisticasUrl' no está definida. No se pueden actualizar las estadísticas.");
+        if (typeof estadisticasClientesUrl === 'undefined') {
+            console.warn("'estadisticasClientesUrl' no está definida. No se pueden actualizar las estadísticas.");
             return;
         }
         try {
-            const response = await fetch(estadisticasUrl);
+            const response = await fetch(estadisticasClientesUrl);
             if (!response.ok) throw new Error('Error al obtener las estadísticas.');
             const data = await response.json();
             if (data) {
-                document.getElementById('clientesActivosCard').innerText = data.clientesActivos;
-                document.getElementById('clientesInactivosCard').innerText = data.clientesInactivos;
-                document.getElementById('totalClientesCard').innerText = data.total;
+                // Actualizar los contadores en las tarjetas
+                animateCounter('#clientesActivosCount', data.clientesActivos);
+                animateCounter('#personasFisicasCount', data.personasFisicas);
+                animateCounter('#otrosRegimenesCount', data.otrosRegimenes);
+                animateCounter('#clientesInactivosCount', data.clientesInactivos);
+                $('#totalEmpresasCount').text(data.total);
             }
         } catch (error) {
             console.error('Error al actualizar las estadísticas:', error);
         }
     }
     
-    // Función para dar de baja/alta con petición al servidor
-    async function changeClientStatus(id, newStatus, message) {
-        const actionUrl = newStatus === 0 ? `/dar-de-baja/${id}` : `/dar-de-alta/${id}`;
-        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+    // Función para animar el conteo de números (ya la tenías)
+    function animateCounter(selector, targetValue) {
+        // ... (Tu código de animación) ...
+        const element = $(selector);
+        const startValue = 0;
+        const duration = 1000;
+        const increment = targetValue / (duration / 16);
+        let currentValue = startValue;
 
-        const result = await Swal.fire({
-            title: '¿Estás seguro?',
-            text: message,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Sí, continuar',
-            cancelButtonText: 'Cancelar'
-        });
-
-        if (result.isConfirmed) {
-            try {
-                const response = await fetch(actionUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Error al cambiar el estado.');
-                }
-                
-                const data = await response.json();
-                Swal.fire('¡Éxito!', data.message, 'success');
-                dataTable.ajax.reload(null, false);
-                updateClientStats();
-            } catch (error) {
-                console.error('Error al actualizar el estado del cliente:', error);
-                Swal.fire('Error', error.message, 'error');
+        const timer = setInterval(function() {
+            currentValue += increment;
+            if (currentValue >= targetValue) {
+                currentValue = targetValue;
+                clearInterval(timer);
             }
+            element.text(Math.floor(currentValue));
+        }, 16);
+    }
+    
+    /**
+     * Muestra el modal con el formulario de edición cargado vía AJAX.
+     * @param {number} id - El ID del cliente a editar.
+     */
+    async function showEditModal(id) {
+        editHistorialModalContent.innerHTML = `<div class="modal-body text-center py-5">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+            <p class="mt-2">Cargando formulario de edición...</p>
+        </div>`;
+        editHistorialModal.show();
+
+        try {
+            const response = await fetch(`/empresas/${id}/edit-modal`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || `Error ${response.status}: ${response.statusText}`);
+            }
+
+            editHistorialModalContent.innerHTML = await response.text();
+            const form = document.getElementById('editarhistorial');
+            contactIndex = form.querySelectorAll('.contact-row').length;
+
+            form.querySelectorAll('.remove-contact-row').forEach(btn => btn.addEventListener('click', () => btn.closest('.contact-row').remove()));
+            $('#editarhistorial .select2').select2({ dropdownParent: editHistorialModalElement });
+            form.querySelectorAll('.contact-row select').forEach(select => $(select).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(select).closest('td') }));
+            document.getElementById('add-contact-row-editar').addEventListener('click', () => addContactRow('contact-rows-container-editar'));
+
+            // 🟢 Listener para el submit del formulario de edición.
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                // Realiza la petición AJAX para editar
+                const success = await submitForm(this, `/empresas/${id}`, {
+                    successButtonText: '<i class="ri-add-line"></i> Actualizar Empresa'
+                });
+                if (success) {
+                    editHistorialModal.hide();
+                    // 🟢 Si la edición fue exitosa, recarga la UI
+                    updateUI();
+                }
+            });
+        } catch (error) {
+            console.error('Error al cargar el formulario de edición:', error);
+            editHistorialModalContent.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar: ${error.message}</div></div>`;
         }
     }
 
-    window.darDeBajaUnidad = (id) => changeClientStatus(id, 0, "¡El cliente será dado de baja!");
-    window.darDeAltaUnidad = (id) => changeClientStatus(id, null, "¡El cliente será dado de alta!");
+    /**
+     * Muestra el modal con la información de visualización cargada vía AJAX.
+     * @param {number} id - El ID del cliente a visualizar.
+     */
+    async function showViewModal(id) {
+        viewHistorialModalContent.innerHTML = `<div class="modal-body text-center py-5">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+            <p class="mt-2">Cargando información de la empresa...</p>
+        </div>`;
+        viewHistorialModal.show();
+
+        try {
+            const response = await fetch(`/empresas/${id}/view-modal`, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } });
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText || response.statusText);
+            }
+
+            viewHistorialModalContent.innerHTML = await response.text();
+            const contactRows = document.getElementById('contact-rows-container-view');
+            if (contactRows) {
+                $(contactRows).find('select').each(function() {
+                    $(this).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(this).closest('td') });
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar la vista del historial:', error);
+            viewHistorialModalContent.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar los detalles: ${error.message || 'Error desconocido'}</div></div>`;
+        }
+    }
+
+    /**
+     * Muestra el modal del visor de PDF.
+     * @param {string} pdfUrl - La URL del PDF a mostrar.
+     */
+    function showPdfViewer(pdfUrl) {
+        const pdfViewerFrame = document.getElementById('pdfViewerFrame');
+        const openPdfInNewTabBtn = document.getElementById('openPdfInNewTabBtn');
+        const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
+
+        pdfLoadingMessage.innerText = 'Cargando contenido... Si no se muestra, usa "Abrir en otra pestaña".';
+        pdfLoadingMessage.style.display = 'block';
+        pdfViewerFrame.style.display = 'none';
+        pdfViewerFrame.src = pdfUrl;
+        openPdfInNewTabBtn.href = pdfUrl;
+
+        pdfViewerFrame.onload = () => {
+            pdfLoadingMessage.style.display = 'none';
+            pdfViewerFrame.style.display = 'block';
+        };
+        pdfViewerFrame.onerror = () => {
+            pdfLoadingMessage.innerText = 'Error al cargar el contenido. Por favor, haz clic en "Abrir en otra pestaña".';
+            pdfLoadingMessage.style.display = 'block';
+            pdfViewerFrame.style.display = 'none';
+        };
+
+        viewPdfModal.show();
+    }
+
+    /**
+     * Realiza una petición AJAX para cambiar el estado de un cliente (alta/baja).
+     * @param {number} id - El ID del cliente.
+     * @param {string} endpoint - El endpoint de la API ('baja' o 'alta').
+     * @param {string} title - El título de la confirmación.
+     * @param {string} text - El texto de la confirmación.
+     * @param {string} confirmText - El texto del botón de confirmación.
+     * @param {string} successTitle - El título del mensaje de éxito.
+     * @param {string} successIcon - El icono del mensaje de éxito.
+     */
+    async function toggleClientStatus(id, endpoint, title, text, confirmText, successTitle, successIcon) {
+        Swal.fire({
+            title: title,
+            text: text,
+            icon: successIcon,
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: confirmText,
+            cancelButtonText: 'Cancelar'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/empresas/${id}/${endpoint}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.message || `Error al realizar la operación de ${endpoint}.`);
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: successTitle,
+                        text: data.message,
+                        customClass: { confirmButton: 'btn btn-success' }
+                    });
+                    
+                    //  Recarga la UI después de cambiar el estado.
+                    updateUI();
+
+                } catch (error) {
+                    console.error(`Error en la petición de ${endpoint}:`, error);
+                    showSweetAlertError('¡Error!', `Hubo un problema: ${error.message}`);
+                }
+            }
+        });
+    }
 
     // --- Lógica del CRUD y Event Listeners ---
 
     // Inicializar DataTables
     dataTable = $('#tablaHistorial').DataTable({
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
         processing: true,
         serverSide: true,
         responsive: false,
@@ -255,10 +430,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 width: '120px',
                 className: 'text-wrap text-center',
                 render: (data) => {
-                    const pdfIconUrl = '/assets/img/icons/misc/pdf.png';
-                    const missingPdfImageUrl = '/img_pdf/FaltaPDF.png';
-                    const imageUrl = data ? pdfIconUrl : missingPdfImageUrl;
-                    return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn btn-no-border" data-pdf-url="${data || missingPdfImageUrl}">
+                    const imageUrl = data ? '/assets/img/icons/misc/pdf.png' : '/img_pdf/FaltaPDF.png';
+                    const buttonClass = data ? '' : 'btn-no-border';
+                    return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn ${buttonClass}" data-pdf-url="${data || '/img_pdf/FaltaPDF.png'}">
                                 <img src="${imageUrl}" alt="Ver PDF" style="width: 40px; height: auto;">
                             </button>`;
                 }
@@ -271,18 +445,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 width: '140px',
                 className: 'text-center',
                 render: (data) => {
-                    const isInactive = data.estado_cliente === 0;
-                    const statusItemHtml = isInactive
-                        ? `<li><a href="javascript:void(0)" class="dropdown-item text-success" onclick="darDeAltaUnidad(${data.id})"><i class="ri-check-line me-1"></i>Dar de alta</a></li>`
-                        : `<li><a href="javascript:void(0)" class="dropdown-item text-danger" onclick="darDeBajaUnidad(${data.id})"><i class="ri-user-forbid-line me-1"></i>Dar de baja</a></li>`;
+                    const actionButton = data.estado_cliente === 0
+                        ? `<li><a href="javascript:void(0)" class="dropdown-item text-success btn-dar-de-alta" data-id="${data.id}"><i class="ri-check-line me-1"></i> Dar de Alta</a></li>`
+                        : `<li><a href="javascript:void(0)" class="dropdown-item text-danger btn-dar-de-baja" data-id="${data.id}"><i class="ri-delete-bin-line me-1"></i> Dar de Baja</a></li>`;
 
                     return `<div class="dropdown">
                                 <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a href="javascript:void(0)" class="dropdown-item" onclick="viewUnidad(${data.id})"><i class="ri-search-line me-1 text-muted"></i> Visualizar</a></li>
-                                    <li><a href="javascript:void(0)" class="dropdown-item" onclick="editUnidad(${data.id})"><i class="ri-edit-box-line me-1 text-info"></i> Editar</a></li>
-                                    <li class="dropdown-divider"></li>
-                                    ${statusItemHtml}
+                                <ul class="dropdown-menu dropdown-menu-end p-0">
+                                    <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-view-unidad" data-id="${data.id}"><i class="ri-search-line me-1 text-muted"></i> Visualizar</a></li>
+                                    <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-edit-unidad" data-id="${data.id}"><i class="ri-edit-box-line me-1 text-info"></i> Editar</a></li>
+                                    ${actionButton}
                                 </ul>
                             </div>`;
                 }
@@ -305,13 +477,13 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             if (success) {
                 agregarEmpresaModal.hide();
-                dataTable.ajax.reload(null, false);
-                updateClientStats();
+                // Se llama a la función centralizada de actualización de la UI
+                updateUI();
             }
         });
     }
 
-    // Funciones de modales y botones
+    // Eventos de modales
     if (agregarEmpresaModalElement) {
         agregarEmpresaModalElement.addEventListener('shown.bs.modal', () => {
             $('#agregarEmpresa .select2').select2({ dropdownParent: $('#agregarEmpresa') });
@@ -327,33 +499,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('add-contact-row-agregar').addEventListener('click', () => addContactRow('contact-rows-container-agregar'));
     }
 
-    // PDF Viewer global
-    window.viewPdf = function(pdfUrl) {
-        const viewPdfModalElement = document.getElementById('viewPdfModal');
-        const pdfViewerFrame = document.getElementById('pdfViewerFrame');
-        const openPdfInNewTabBtn = document.getElementById('openPdfInNewTabBtn');
-        const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
-
-        pdfLoadingMessage.innerText = 'Cargando contenido... Si no se muestra, usa "Abrir en otra pestaña".';
-        pdfLoadingMessage.style.display = 'block';
-        pdfViewerFrame.style.display = 'none';
-        pdfViewerFrame.src = pdfUrl;
-        openPdfInNewTabBtn.href = pdfUrl;
-
-        pdfViewerFrame.onload = () => {
-            pdfLoadingMessage.style.display = 'none';
-            pdfViewerFrame.style.display = 'block';
-        };
-        pdfViewerFrame.onerror = () => {
-            pdfLoadingMessage.innerText = 'Error al cargar el contenido. Por favor, haz clic en "Abrir en otra pestaña".';
-            pdfLoadingMessage.style.display = 'block';
-            pdfViewerFrame.style.display = 'none';
-        };
-
-        (new bootstrap.Modal(viewPdfModalElement)).show();
-    };
-
-    // Nueva función para cargar clientes en el modal de exportación
+    // Evento para el modal de exportación
     async function loadClientesForExportModal() {
         if (!clientesAjaxUrl) {
             console.warn("'clientesAjaxUrl' no está definida.");
@@ -364,9 +510,7 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error("No se encontró el elemento 'filtroCliente'.");
             return;
         }
-
         $(selectElement).find('option:not(:first)').remove();
-
         try {
             const response = await fetch(clientesAjaxUrl);
             if (!response.ok) throw new Error('Error al obtener la lista de clientes.');
@@ -384,130 +528,74 @@ document.addEventListener('DOMContentLoaded', function () {
             selectElement.appendChild(option);
         }
     }
-
     if (exportModalElement) {
         exportModalElement.addEventListener('shown.bs.modal', loadClientesForExportModal);
     }
 
-    // Funciones globales para edición y visualización
-    window.editUnidad = async function(id) {
-        const url = `/empresas/${id}/edit-modal`;
-        const modalContentContainer = document.getElementById('editHistorialModalContent');
-        
-        modalContentContainer.innerHTML = `<div class="modal-body text-center py-5">
-                                             <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
-                                             <p class="mt-2">Cargando formulario de edición...</p>
-                                          </div>`;
-        editHistorialModal.show();
-        
-        try {
-            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } });
-            if (!response.ok) throw new Error(`Error ${response.status}: ${await response.text()}`);
-            
-            modalContentContainer.innerHTML = await response.text();
-            
-            const form = document.getElementById('editarhistorial');
-            contactIndex = form.querySelectorAll('.contact-row').length;
-            
-            form.querySelectorAll('.remove-contact-row').forEach(btn => btn.addEventListener('click', () => btn.closest('.contact-row').remove()));
-            
-            $('#editarhistorial .select2').select2({ dropdownParent: editHistorialModalElement });
-            form.querySelectorAll('.contact-row select').forEach(select => $(select).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(select).closest('td') }));
-            
-            document.getElementById('add-contact-row-editar').addEventListener('click', () => addContactRow('contact-rows-container-editar'));
-            
-            form.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const success = await submitForm(this, `/empresas/${id}`, {
-                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-                    successButtonText: '<i class="ri-add-line"></i> Actualizar Empresa'
-                });
-                if (success) {
-                    editHistorialModal.hide();
-                    dataTable.ajax.reload(null, false);
-                    updateClientStats();
-                }
-            });
-        } catch (error) {
-            console.error('Error al cargar el formulario de edición:', error);
-            modalContentContainer.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar: ${error.message}</div></div>`;
-        }
-    };
-    
-    window.viewUnidad = async function(id) {
-        console.log('Función visualizar llamada para ID:', id);
-        const viewModalContentContainer = document.getElementById('viewHistorialModalContent');
-        const viewHistorialModal = new bootstrap.Modal(document.getElementById('viewHistorialModal'));
-        const url = `/empresas/${id}/view-modal`;
-
-        viewModalContentContainer.innerHTML = `<div class="modal-body text-center py-5">
-                                                 <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
-                                                 <p class="mt-2">Cargando información de la empresa para visualización...</p>
-                                              </div>`;
-        viewHistorialModal.show();
-
-        try {
-            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' } });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || response.statusText);
-            }
-
-            viewModalContentContainer.innerHTML = await response.text();
-            const contactRows = document.getElementById('contact-rows-container-view');
-            if (contactRows) {
-                $(contactRows).find('select').each(function() {
-                    $(this).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(this).closest('td') });
-                });
-            }
-        } catch (error) {
-            console.error('Error al cargar la vista del historial:', error);
-            viewModalContentContainer.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar los detalles: ${error.message || 'Error desconocido'}</div></div>`;
-        }
-    };
-
-    // Listener para el clic en los botones de "Ver PDF"
+    // --- Listeners para botones generados dinámicamente (usando delegación de eventos) ---
     $(document).on('click', '.view-pdf-btn', function(event) {
         event.preventDefault();
         const pdfUrl = $(this).data('pdf-url');
         if (pdfUrl) {
-            window.viewPdf(pdfUrl);
+            showPdfViewer(pdfUrl);
         } else {
             console.warn('No se encontró la URL del contenido para este elemento.');
         }
     });
 
-    // Evento para limpiar el iframe cuando la modal de PDF se oculta
-    document.getElementById('viewPdfModal').addEventListener('hidden.bs.modal', function () {
-        document.getElementById('pdfViewerFrame').src = '';
-        document.getElementById('pdfLoadingMessage').style.display = 'none';
+    $(document).on('click', '.btn-dar-de-baja', function() {
+        const id = $(this).data('id');
+        toggleClientStatus(id, 'baja', '¿Estás seguro?', '¡El cliente será dado de baja!', 'Sí, ¡dar de baja!', '¡Cliente dado de baja!', 'warning');
     });
 
-    // Evento cuando la modal de edición se oculta
-    $('#editHistorialModal').on('hidden.bs.modal', function () {
-        const form = document.getElementById('editarhistorial');
-        if (form) {
-            console.log('Modal Editar oculta. Limpiando y destruyendo Select2.');
-            clearValidationErrors(form);
-            const motivoEdicionField = form.querySelector('#motivoEdicion');
-            if (motivoEdicionField) {
-                motivoEdicionField.value = '';
-            }
-            $(form).find('.select2, select').select2('destroy');
-        }
+    $(document).on('click', '.btn-dar-de-alta', function() {
+        const id = $(this).data('id');
+        toggleClientStatus(id, 'alta', '¿Estás seguro?', '¡El cliente será dado de alta de nuevo!', 'Sí, ¡dar de alta!', '¡Cliente dado de alta!', 'question');
     });
+
+    $(document).on('click', '.btn-edit-unidad', function() {
+        const id = $(this).data('id');
+        showEditModal(id);
+    });
+
+    $(document).on('click', '.btn-view-unidad', function() {
+        const id = $(this).data('id');
+        showViewModal(id);
+    });
+
+    // Eventos para limpiar modales al ocultarse
+    if (viewPdfModalElement) {
+        viewPdfModalElement.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('pdfViewerFrame').src = '';
+            document.getElementById('pdfLoadingMessage').style.display = 'none';
+        });
+    }
+
+    if (editHistorialModalElement) {
+        $('#editHistorialModal').on('hidden.bs.modal', function() {
+            const form = document.getElementById('editarhistorial');
+            if (form) {
+                clearValidationErrors(form);
+                const motivoEdicionField = form.querySelector('#motivoEdicion');
+                if (motivoEdicionField) {
+                    motivoEdicionField.value = '';
+                }
+                $(form).find('.select2, select').select2('destroy');
+            }
+        });
+    }
+
+    if (viewHistorialModalElement) {
+        $('#viewHistorialModal').on('hidden.bs.modal', function() {
+            const form = document.getElementById('visualizarhistorialForm');
+            if (form) {
+                $(form).find('.select2, select').select2('destroy');
+            }
+        });
+    }
 
     // Evento para habilitar/deshabilitar el filtro de empresa
     document.getElementById('habilitar_filtro_empresa').addEventListener('change', function() {
         document.getElementById('empresa_id').disabled = !this.checked;
-    });
-
-    // Evento cuando la modal de visualización se oculta
-    $('#viewHistorialModal').on('hidden.bs.modal', function () {
-        const form = document.getElementById('visualizarhistorialForm');
-        if (form) {
-            console.log('Modal Visualizar oculta. Destruyendo Select2.');
-            $(form).find('.select2, select').select2('destroy');
-        }
     });
 });

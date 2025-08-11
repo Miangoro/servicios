@@ -4,16 +4,16 @@
 
 @section('vendor-style')
     {{-- Animacion "loading" --}}
-   @vite([
-    'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
-    'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
-    'resources/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.scss',
-    'resources/assets/vendor/libs/select2/select2.scss',
-    'resources/assets/vendor/libs/form-validation/form-validation.scss',
-    'resources/assets/vendor/libs/animate-css/animate.scss',
-    'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-    'resources/assets/vendor/libs/spinkit/spinkit.scss'
-])
+    @vite([
+        'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
+        'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
+        'resources/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.scss',
+        'resources/assets/vendor/libs/select2/select2.scss',
+        'resources/assets/vendor/libs/form-validation/form-validation.scss',
+        'resources/assets/vendor/libs/animate-css/animate.scss',
+        'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
+        'resources/assets/vendor/libs/spinkit/spinkit.scss'
+    ])
     {{-- Agregado de la biblioteca de iconos Remixicon --}}
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 @endsection
@@ -45,7 +45,6 @@
      * Función para cargar las estadísticas de clientes
      */
     function cargarEstadisticasClientes() {
-        // Mostrar indicadores de carga
         $('.stats-card-loading').show();
         
         $.ajax({
@@ -54,7 +53,6 @@
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
-                    // Actualizar los contadores en las tarjetas con animación
                     animateCounter('#clientesActivosCount', response.clientesActivos);
                     animateCounter('#personasFisicasCount', response.personasFisicas);
                     animateCounter('#otrosRegimenesCount', response.otrosRegimenes);
@@ -72,7 +70,6 @@
                 mostrarValoresPorDefecto();
             },
             complete: function() {
-                // Ocultar indicadores de carga
                 $('.stats-card-loading').hide();
             }
         });
@@ -84,8 +81,8 @@
     function animateCounter(selector, targetValue) {
         const element = $(selector);
         const startValue = 0;
-        const duration = 1000; // 1 segundo
-        const increment = targetValue / (duration / 16); // 60 FPS
+        const duration = 1000;
+        const increment = targetValue / (duration / 16);
         let currentValue = startValue;
 
         const timer = setInterval(function() {
@@ -144,7 +141,6 @@
                         });
                         // Recargar todas las tablas y las estadísticas
                         $('#tablaHistorial').DataTable().ajax.reload(null, false);
-                        // Suponiendo que tienes una tabla de inactivos
                         if ($.fn.DataTable.isDataTable('#tablaInactivos')) {
                             $('#tablaInactivos').DataTable().ajax.reload(null, false);
                         }
@@ -200,7 +196,6 @@
                         });
                         // Recargar todas las tablas y las estadísticas
                         $('#tablaHistorial').DataTable().ajax.reload(null, false);
-                        // Suponiendo que tienes una tabla de inactivos
                         if ($.fn.DataTable.isDataTable('#tablaInactivos')) {
                             $('#tablaInactivos').DataTable().ajax.reload(null, false);
                         }
@@ -225,24 +220,39 @@
     $(document).ready(function() {
         cargarEstadisticasClientes();
         
-        // Inicializar la tabla de clientes activos
-        $('#tablaHistorial').DataTable({
-            // ... tus configuraciones de DataTables para clientes activos ...
-        });
-
-        // Inicializar la tabla de clientes inactivos (si la tienes)
-        // Puedes descomentar y adaptar esto si manejas una tabla separada para inactivos
-        /*
-        $('#tablaInactivos').DataTable({
+        // Inicializar la tabla de clientes activos con un filtro de búsqueda
+        var tablaHistorial = $('#tablaHistorial').DataTable({
             processing: true,
             serverSide: true,
-            ajax: dataTableInactivosAjaxUrl,
+            ajax: dataTableAjaxUrl,
             columns: [
-                // ... las columnas de tu tabla de inactivos ...
+                { data: 'id', name: 'id' },
+                { data: 'nombre_empresa', name: 'nombre_empresa' },
+                { data: 'rfc', name: 'rfc' },
+                { data: 'calle', name: 'calle' },
+                { data: 'colonia', name: 'colonia' },
+                { data: 'localidad', name: 'localidad' },
+                { data: 'municipio', name: 'municipio' },
+                { data: 'constancia_fiscal', name: 'constancia_fiscal' },
+                { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
             ],
-            // ... otras configuraciones
+            // Configuración del filtro de búsqueda
+            initComplete: function () {
+                this.api().columns().every(function () {
+                    var column = this;
+                    // Mover el filtro de búsqueda para la columna 'Empresa'
+                    if (column.index() === 1) { // 1 es el índice de la columna 'Empresa'
+                        var input = $('<input type="text" class="form-control" placeholder="Buscar por empresa">')
+                            .appendTo($(column.header()).empty())
+                            .on('keyup change clear', function () {
+                                if (column.search() !== this.value) {
+                                    column.search(this.value).draw();
+                                }
+                            });
+                    }
+                });
+            }
         });
-        */
     });
 </script>
 
@@ -453,7 +463,7 @@
                 <div class="stats-card-header">
                     <h6 class="stats-card-title">Clientes activos</h6>
                     <div class="stats-card-icon green">
-                        <i class="ri-user-check-line"></i>
+                        <i class="ri-user-follow-line"></i>
                     </div>
                 </div>
                 <div class="stats-card-content">
@@ -491,7 +501,7 @@
                 <div class="stats-card-header">
                     <h6 class="stats-card-title">Otros regímenes</h6>
                     <div class="stats-card-icon purple">
-                        <i class="ri-building-2-line"></i>
+                        <i class="ri-group-line"></i>
                     </div>
                 </div>
                 <div class="stats-card-content">

@@ -561,6 +561,9 @@ Route::get('/clientes/estadisticas', [historialClienteController::class, 'estadi
 Route::post('/clientes/dar-de-alta/{id}', [historialClienteController::class, 'darDeAlta'])->name('clientes.empresas.darAlta');
 Route::get('/clientes/empresas/inactivos', [historialClienteController::class, 'obtenerInactivos'])->name('clientes.empresas.inactivos');
 Route::get('/clientes/inactivos', [historialClienteController::class, 'obtenerInactivos'])->name('clientes.empresas.inactivos');
+
+Route::post('/empresas/{id}/baja', [historialClienteController::class, 'darDeBaja'])->name('empresas.darDeBaja');
+Route::post('/empresas/{id}/alta', [historialClienteController::class, 'darDeAlta'])->name('empresas.alta');
 });
 
 
