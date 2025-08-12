@@ -89,7 +89,7 @@
                     </div>
 
                     <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-                        <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
+                        <button id="add_Prov_btn" type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
                             <i class="ri-add-line"></i> Agregar
                         </button>
                         <button type="reset" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">

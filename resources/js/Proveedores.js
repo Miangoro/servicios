@@ -13,17 +13,36 @@ $(function () {
     dataType: 'json',
     columns: [
       { data: 'DT_RowIndex', name: 'num', orderable: true, searchable: false },
-      { data: 'razon_social', name: 'Razón Social', searchable: true },
-      { data: 'direccion', name: 'Dirección', searchable: true },
-      { data: 'rfc', name: 'RFC',  searchable: true  },
+      { data: 'razon_social', name: 'razon_social', searchable: true },
+      { data: 'direccion', name: 'direccion', searchable: true },
+      { data: 'rfc', name: 'rfc', searchable: true },
       { data: 'Datos Bancarios', name: 'Datos Bancarios', orderable: false, searchable: true },
       { data: 'Contacto', name: 'Contacto', orderable: false, searchable: true },
-      { data: 'tipo', name: 'Tipo de Compra', searchable: true  },
+      { data: 'tipo', name: 'tipo', searchable: true },
       { data: 'Evaluacion del Proveedor', name: 'Evaluación del Proveedor', orderable: false, searchable: true },
       { data: 'action', name: 'action', orderable: true, searchable: false }
     ]
+  }).on('init.dt', function () {
+    var boton = $('#agregarProveedorBtn').clone();
+
+    var searchDiv = $('.dataTables_filter');
+
+    // Contenedor con flexbox
+    searchDiv.css({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'right',
+      gap: '10px'
+    });
+
+    // Mover el botón a la derecha del input de búsqueda
+    searchDiv.append(boton);
+
+    // Eliminar el botón original para evitar duplicados
+    $('#agregarProveedorBtn').remove();
   });
 });
+
 
 function showAlert(message, type = 'success') {
   if (typeof Swal !== 'undefined') {
@@ -196,6 +215,11 @@ document.addEventListener('DOMContentLoaded', function () {
   const addRowBtn = document.getElementById('addContactRow');
   let fvAdd;
   const registeredFields = new Set();
+  const Span = document.createElement('span');
+  Span.className = 'spinner-border me-1 m-1';
+  Span.role = 'status';
+  Span.ariaHidden = 'true';
+  const addBtn = document.getElementById('add_Prov_btn');
 
   const editModalEl = document.getElementById('EditProv');
     if (editModalEl) {
@@ -304,6 +328,9 @@ document.addEventListener('DOMContentLoaded', function () {
   fvAdd.on('core.form.valid', function () {
     const formData = new FormData(form);
 
+    addBtn.appendChild(Span);
+    addBtn.disabled = true;
+
     fetch('/catalogos/proveedores', {
       method: 'POST',
       headers: { 'X-Requested-With': 'XMLHttpRequest' },
@@ -314,6 +341,8 @@ document.addEventListener('DOMContentLoaded', function () {
         return response.json();
       })
       .then(data => {
+        addBtn.disabled = false;
+        addBtn.removeChild(Span);
         showAlert('Proveedor agregado correctamente.', 'success');
         bootstrap.Modal.getInstance(document.getElementById('agregarProv'))?.hide();
 
@@ -324,6 +353,8 @@ document.addEventListener('DOMContentLoaded', function () {
         reloadTableOrPage();
       })
       .catch(error => {
+        addBtn.disabled = false;
+        addBtn.removeChild(Span);
         console.error('Error al guardar el proveedor:', error);
         let msg = 'Ocurrió un error inesperado.';
         if (typeof error.message === 'string' && error.message.startsWith('{')) {
@@ -482,11 +513,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    const editBtn = document.getElementById('EditProveedorSubmit');
+
     //LÓGICA DE ENVÍO DEL FORMULARIO DE EDICIÓN
     const editForm = document.getElementById('editarProveedorForm');
 
     if (editForm) {
         editForm.addEventListener('submit', function (e) {
+
+          editBtn.appendChild(Span);
+          editBtn.disabled = true;
+
+            //acciones
             e.preventDefault();
 
             const proveedorId = document.getElementById('id_proveedor_edit').value;
@@ -510,6 +548,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return response.json();
             })
             .then(data => {
+                editBtn.disabled = false;
+                editBtn.removeChild(Span);
                 showAlert('Proveedor actualizado correctamente.', 'success');
                 const editModal = bootstrap.Modal.getInstance(document.getElementById('EditProv'));
                 editModal.hide();
@@ -518,7 +558,8 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(error => {
                 console.error('Error al actualizar el proveedor:', error);
                 let errorMessage = 'No se pudo actualizar el proveedor. Intente de nuevo.';
-                
+                editBtn.disabled = false;
+                editBtn.removeChild(Span);
                  try {
                     const parsedError = JSON.parse(error.message);
                     if (parsedError.message) {
@@ -529,6 +570,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showAlert(errorMessage, 'error');
             });
         });
+        
     }
 
 

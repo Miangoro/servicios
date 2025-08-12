@@ -14,25 +14,39 @@
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
         //Animacion "loading"
         'resources/assets/vendor/libs/spinkit/spinkit.scss',
+          'resources/assets/vendor/libs/quill/typography.scss',
+  'resources/assets/vendor/libs/quill/katex.scss',
+  'resources/assets/vendor/libs/quill/editor.scss'
     ])
 @endsection
 
 <!-- Vendor Scripts -->
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/moment/moment.js', 'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js', 'resources/assets/vendor/libs/select2/select2.js', 'resources/assets/vendor/libs/@form-validation/popular.js', 'resources/assets/vendor/libs/@form-validation/bootstrap5.js', 'resources/assets/vendor/libs/@form-validation/auto-focus.js', 'resources/assets/vendor/libs/cleavejs/cleave.js', 'resources/assets/vendor/libs/cleavejs/cleave-phone.js', 'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
+    @vite(['resources/assets/vendor/libs/moment/moment.js',
+    'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js',
+    'resources/assets/vendor/libs/select2/select2.js',
+    'resources/assets/vendor/libs/@form-validation/popular.js',
+    'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
+    'resources/assets/vendor/libs/@form-validation/auto-focus.js',
+    'resources/assets/vendor/libs/cleavejs/cleave.js',
+    'resources/assets/vendor/libs/cleavejs/cleave-phone.js',
+    'resources/assets/vendor/libs/sweetalert2/sweetalert2.js',
+      'resources/assets/vendor/libs/quill/katex.js',
+  'resources/assets/vendor/libs/quill/quill.js'
+    ])
 @endsection
 
 @section('page-script')
-@vite(['resources/js/tipos.js'])
+@vite(['resources/js/tipos.js', 'resources/assets/js/forms-editors.js'])
 
 @endsection
 
 @section('content')
 <style>
 
-    .columna-descripcion {
+    .columna-num {
     width: auto;
-    max-width: 200px;
+    max-width: 100px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -46,12 +60,17 @@
             <div class="card shadow">
                 <div class="card-header border-0 pb-1">
                     <div class="row align-items-center">
-                        <div class="col-6">
-                            <h3 class="mb-0"><b>Catálogo de laboratorios</b></h3>
-                            <button type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarLab">
-                             <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                             <span class="d-none d-sm-inline-block">Nuevo Laboratorio</span>
-                            </button>
+                        <div class="col-md-12 d-flex flex-row">
+                            <div class="col-md-6">
+                                <h3 class="mb-0"><b>Catálogo de laboratorios</b></h3>
+                            </div>
+                            <div class="col-md-6 d-flex justify-content-end">
+                                <button id="addLabBtn" type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarLab">
+                                    <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                                    <span class="d-none d-sm-inline-block">Nuevo Laboratorio</span>
+                                </button>
+                            </div>
+
                         </div>
                         <div class="col-6 text-right">
                         </div>
@@ -64,10 +83,10 @@
                     <table id="tablaLaboratorios" class="table table-flush table-bordered lab_datatable table-striped table-sm">
                         <thead class="table-dark">
                             <tr>
-                                <th scope="col" class="text-white">No.</th>
+                                <th scope="col" class=" columna-num text-white">No.</th>
                                 <th scope="col" class="text-white">Clave</th>
                                 <th scope="col" class="text-white">Nombre de laboratorio</th>
-                                <th scope="col" class="columna-descripcion text-white">Descripción</th>
+                                <th scope="col" class="text-white">Descripción</th>
                                 <th scope="col" class="text-white">Acciones</th>
                             </tr>
                         </thead>

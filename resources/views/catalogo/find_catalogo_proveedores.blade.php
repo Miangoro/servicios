@@ -34,12 +34,18 @@
             <div class="card shadow">
                 <div class="card-header border-0 pb-1">
                     <div class="row align-items-center">
-                        <div class="col-6">
-                            <h3 class="mb-0"><b>Catálogo de proveedores</b></h3>
-                            <button type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarProv">
-                             <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                             <span class="d-none d-sm-inline-block">Agregar Proveedor</span>
-                            </button>
+                        <div class="col-md-12 d-flex flex-row">
+                            <div class="col-md-6">
+                                <h3 class="mb-0"><b>Catálogo de proveedores</b></h3>
+                            </div>
+
+                            <div class="col-md-6 d-flex justify-content-end">
+                                <button id="agregarProveedorBtn" type="button" class="add-new btn btn-primary waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarProv">
+                                    <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                                    <span class="d-none d-sm-inline-block">Agregar Proveedor</span>
+                                </button>
+                            </div>
+
                         </div>
                         <div class="col-6 text-right">
                         </div>

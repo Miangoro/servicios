@@ -13,10 +13,28 @@ $(function () {
     dataType: 'json',
     columns: [
       { data: 'DT_RowIndex', name: 'num', orderable: true, searchable: false },
-      { data: 'encuesta', name: 'Nombre de la encuesta', searchable: true },
-      { data: 'tipo', name: 'Tipo', searchable: true },
+      { data: 'encuesta', name: 'encuesta', searchable: true },
+      { data: 'tipo', name: 'tipo', searchable: true },
       { data: 'action', name: 'action', orderable: true, searchable: false }
     ]
+  }).on('init.dt', function () {
+    var boton = $('#addEncuestaBTN').clone();
+
+    var searchDiv = $('.dataTables_filter');
+
+    // Contenedor con flexbox
+    searchDiv.css({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'right',
+      gap: '10px'
+    });
+
+    // Mover el botón a la derecha del input de búsqueda
+    searchDiv.append(boton);
+
+    // Eliminar el botón original para evitar duplicados
+    $('#addEncuestaBTN').remove();
   });
 });
 
@@ -298,6 +316,33 @@ document.addEventListener('DOMContentLoaded', function () {
           customClass: {
             popup: 'text-start',
             confirmButton: 'btn btn-primary me-3',
+          }
+        });
+      }else{
+        var timerInterval;
+        Swal.fire({
+          title: 'Guardando encuesta',
+          html: '',
+          timer: 5000,
+        customClass: {
+          confirmButton: 'btn btn-primary waves-effect waves-light'
+        },
+        buttonsStyling: true,
+          willOpen: function () {
+            Swal.showLoading();
+            timerInterval = setInterval(function () {
+              Swal.getHtmlContainer().querySelector('strong').textContent = Swal.getTimerLeft();
+            }, 100);
+          },
+          willClose: function () {
+            clearInterval(timerInterval);
+          }
+        }).then(function (result) {
+          if (
+            // Read more about handling dismissals
+            result.dismiss === Swal.DismissReason.timer
+          ) {
+            console.log('I was closed by the timer');
           }
         });
       }

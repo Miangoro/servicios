@@ -38,7 +38,25 @@ $(function() {
             orderable: true,
             searchable: false
         }, ]
+    }).on('init.dt', function () {
+    var boton = $('#addLabBtn').clone();
+
+    var searchDiv = $('.dataTables_filter');
+
+    // Contenedor con flexbox
+    searchDiv.css({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'right',
+      gap: '10px'
     });
+
+    // Mover el botón a la derecha del input de búsqueda
+    searchDiv.append(boton);
+
+    // Eliminar el botón original para evitar duplicados
+    $('#addLabBtn').remove();
+  });
 });
 
 function showAlert(message, type = 'success') {
@@ -201,7 +219,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const editLaboratorioForm = document.getElementById('editLaboratorio');
     let fvAdd;
 
+    var quill = new Quill('#snow-editor', {
+    theme: 'snow',
+        modules: {
+            toolbar: '#snow-toolbar'
+        }
+    });
+
     if (agregarLaboratorioForm) {
+
+        document.getElementById('agregarLaboratorioForm').addEventListener('submit', function(e) {
+            document.getElementById('descripcion').value = quill.getText().trim();
+
+        });
+
         fvAdd = FormValidation.formValidation(agregarLaboratorioForm, {
             fields: {
                 nombre: {
@@ -215,10 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     validators: {
                         notEmpty: {
                             message: 'Por favor, introduce la clave.'
-                        },
-                        stringLength: {
-                            max: 50,
-                            message: 'La clave no debe exceder los 50 caracteres.'
                         }
                     }
                 }
@@ -258,6 +285,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error al obtener datos:', error));
 
         fvAdd.on('core.form.valid', function() {
+             document.getElementById('descripcion').value = quill.root.innerHTML;
             // El formulario de agregar es válido, procede con el envío AJAX
             const formData = new FormData(agregarLaboratorioForm);
 
