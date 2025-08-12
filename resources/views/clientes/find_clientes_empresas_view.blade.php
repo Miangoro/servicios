@@ -12,7 +12,11 @@
         'resources/assets/vendor/libs/form-validation/form-validation.scss',
         'resources/assets/vendor/libs/animate-css/animate.scss',
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-        'resources/assets/vendor/libs/spinkit/spinkit.scss'
+        'resources/assets/vendor/libs/spinkit/spinkit.scss',
+        'resources/assets/vendor/libs/select2/select2.scss',
+        'resources/assets/vendor/libs/tagify/tagify.scss',
+        'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss',
+        'resources/assets/vendor/libs/typeahead-js/typeahead.scss'
     ])
     {{-- Agregado de la biblioteca de iconos Remixicon --}}
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
@@ -28,11 +32,21 @@
         'resources/assets/vendor/libs/@form-validation/auto-focus.js',
         'resources/assets/vendor/libs/cleavejs/cleave.js',
         'resources/assets/vendor/libs/cleavejs/cleave-phone.js',
-        'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'
+        'resources/assets/vendor/libs/sweetalert2/sweetalert2.js',
+        'resources/assets/vendor/libs/select2/select2.js',
+        'resources/assets/vendor/libs/tagify/tagify.js',
+        'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.js',
+        'resources/assets/vendor/libs/typeahead-js/typeahead.js',
+        'resources/assets/vendor/libs/bloodhound/bloodhound.js'
     ])
 @endsection
 
 @section('page-script')
+@vite([
+  'resources/assets/js/forms-selects.js',
+  'resources/assets/js/forms-tagify.js',
+  'resources/assets/js/forms-typeahead.js'
+])
 <script>
     // Define variables JavaScript con las URLs de las rutas
     var dataTableAjaxUrl = "{{ route('clientes.empresas.index') }}";

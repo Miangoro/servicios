@@ -109,16 +109,15 @@ class historialClienteController extends Controller
 
     /**
      * Muestra la vista para el modal de exportación.
+     * Esta función ahora solo es llamada desde index o mediante AJAX.
      *
      * @return \Illuminate\View\View
      */
     public function exportView()
     {
-        // Se obtienen los datos de las empresas y los regímenes para la vista.
         $empresas = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
         $regimenes = catalogos_regimenes::all();
         
-        // Se pasan los datos a la vista para que el filtro se precargue.
         return view('_partials._modals.modal-add-export_clientes_empresas', compact('regimenes', 'empresas'));
     }
 
@@ -508,10 +507,14 @@ class historialClienteController extends Controller
                 ->rawColumns(['constancia', 'action'])
                 ->make(true);
         }
+        
+        // Obtiene todas las empresas, regímenes y estadísticas para pasarlas a la vista.
         $stats = $this->getDashboardStats();
         $regimenes = catalogos_regimenes::all();
-        
-        return view('clientes.find_clientes_empresas_view', array_merge(compact('regimenes'), $stats));
+        $empresas = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
+
+        // Combina los datos y los pasa a la vista principal.
+        return view('clientes.find_clientes_empresas_view', array_merge(compact('regimenes', 'empresas'), $stats));
     }
 
     /**
@@ -552,7 +555,7 @@ class historialClienteController extends Controller
         try {
             Log::info('Solicitud de exportación recibida:', $request->all());
             $query = empresas_clientes::query()->with('catalogoRegimen');
-                                            
+                                                
             $filtrosAplicados = [];
             
             if ($request->filled('empresa_id') && $request->input('empresa_id') !== 'todos') {

@@ -22,7 +22,7 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label class="form-check-label mb-2" for="filtroEmpresa">Filtro por Empresa</label>
-                                <select class="form-select" id="filtroEmpresa" name="empresa_id">
+                                <select class="select2 form-select form-select-lg" data-allow-clear="true" id="filtroEmpresa" name="empresa_id">
                                 <option value="todos">Todas las empresas</option>
                                 @isset($empresas)
                                     @foreach($empresas as $empresa)

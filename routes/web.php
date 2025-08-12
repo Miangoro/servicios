@@ -553,17 +553,19 @@ Route::get('/clientes/exportar', [historialClienteController::class, 'exportarCl
 Route::get('/clientes/exportar-excel', [historialClienteController::class, 'exportExcel'])->name('clientes.empresas.exportExcel');
 Route::get('/export-clientes', [historialClienteController::class, 'exportView']);
 Route::get('/clientes/totales', [historialClienteController::class, 'obtenerTotalesClientes'])->name('clientes.totales');
-Route::post('/dar-de-baja/{id}', [HistorialClienteController::class, 'darDeBajaUnidad'])->name('clientes.empresas.darDeBaja');
 
+Route::post('/dar-de-baja/{id}', [HistorialClienteController::class, 'darDeBajaUnidad'])->name('clientes.empresas.darDeBaja');
 Route::get('/clientes/data', [historialClienteController::class, 'getClientes'])->name('clientes.data');
 Route::get('clientes/get-clientes', [App\Http\Controllers\historialClienteController::class, 'getClientes'])->name('clientes.empresas.getClientes');
 Route::get('/clientes/estadisticas', [historialClienteController::class, 'estadisticas'])->name('clientes.empresas.estadisticas');
+
 Route::post('/clientes/dar-de-alta/{id}', [historialClienteController::class, 'darDeAlta'])->name('clientes.empresas.darAlta');
 Route::get('/clientes/empresas/inactivos', [historialClienteController::class, 'obtenerInactivos'])->name('clientes.empresas.inactivos');
 Route::get('/clientes/inactivos', [historialClienteController::class, 'obtenerInactivos'])->name('clientes.empresas.inactivos');
-
 Route::post('/empresas/{id}/baja', [historialClienteController::class, 'darDeBaja'])->name('empresas.darDeBaja');
+
 Route::post('/empresas/{id}/alta', [historialClienteController::class, 'darDeAlta'])->name('empresas.alta');
+
 });
 
 

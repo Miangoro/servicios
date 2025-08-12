@@ -35,7 +35,7 @@
                                 <option value="Con Crédito">Con Crédito</option>
                                 <option value="Sin Crédito">Sin Crédito</option>
                             </select>
-                            <label for="modalAddressCredito">Crédito *</label>
+                            <label for="modalAddressCredito">Crédito</label>
                         </div>
                         <div class="invalid-feedback"></div>
                     </div>
@@ -43,7 +43,7 @@
                     <div class="col-12 col-md-6">
                         <div class="form-floating form-floating-outline">
                             <input type="text" id="modalAddressRazonSocial" name="nombre" class="form-control" placeholder=" " />
-                            <label for="modalAddressRazonSocial">Razón Social (Nombre de la empresa) *</label>
+                            <label for="modalAddressRazonSocial">Razón Social (Nombre de la empresa) </label>
                         </div>
                         <div class="invalid-feedback"></div>
                     </div>
@@ -155,7 +155,7 @@
 
                     <div class="col-12 text-end mt-4">
                         <button type="submit" id="agregar-empresa-btn" class="btn btn-primary me-2">
-                            <i class="ri-add-line"></i> Agregar Contacto
+                            <i class="ri-add-line"></i> Agregar Empresa
                         </button>
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
                             <i class="ri-close-line"></i> Cancelar
