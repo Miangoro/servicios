@@ -32,9 +32,7 @@
 
 <!-- Page Scripts -->
 @section('page-script')
-@vite(['resources/js/tipos.js'])
-<script src="{{ asset('js/unidades.js') }}"></script>
-
+@vite(['resources/js/tipos.js', 'resources/js/unidades.js'])
 @endsection
 
 @section('content')
@@ -47,27 +45,22 @@
 </style>
 <div class="container-fluid mt--7">
     <div class="row">
-        <div class="col">
+        <div class="col-lg-10 mx-auto">
             <div class="card shadow">
                 <div class="card-header border-0">
-    <div class="row align-items-start">  <!-- Cambiado de align-items-center a align-items-start -->
-        <div class="col-6">
-            <h3 class="mb-3"><b>Catálogo de Unidades</b></h3>  <!-- Añadido mb-3 para margen inferior -->
-            <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
-                <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                <span class="d-none d-sm-inline-block">Nueva Unidad</span>
-            </button>
-        </div>
-        <div class="col-6 text-right">
-            <!-- Contenido derecho si es necesario -->
-        </div>
-    </div>
-</div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="mb-0"><b>Catálogo de Unidades</b></h3>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
+                            <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                            <span class="d-none d-sm-inline-block">Nueva Unidad</span>
+                        </button>
+                    </div>
+                </div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 
                 <div class="table-responsive p-3">
                     <table id= "tablaUnidades" class="table table-flush table-bordered unidades_datatable table-striped table-sm">
-                       
+                        
                         <thead class="table-dark">
                             <tr>
                                 <th style="width: 80px;">NO.</th>   <th>NOMBRE</th> 
@@ -75,7 +68,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                           
+                            
                         </tbody>
                     </table>
                 </div>
@@ -90,20 +83,20 @@
 
 
 <!-- FormValidation -->
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/FormValidation.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/Bootstrap5.min.js') }}"></script>
-<script src="{{ asset('assets/vendor/libs/formvalidation/dist/js/plugins/AutoFocus.min.js') }}"></script>
+@vite([
+  'resources/assets/vendor/libs/@form-validation/popular.js',
+  'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
+  'resources/assets/vendor/libs/@form-validation/auto-focus.js'
+])
 
 <!-- SweetAlert2 -->
-<script src="{{ asset('assets/vendor/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+@vite(['resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
 
 <!-- Tu archivo de unidades -->
-<script src="{{ asset('assets/js/unidades.js') }}"></script>
+@vite(['resources/assets/js/unidades.js'])
 
 @push('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
-
 @endpush
 
 @endsection
