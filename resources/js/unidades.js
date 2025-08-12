@@ -13,11 +13,7 @@ class UnidadesHandler {
                         notEmpty: {
                             message: 'Por favor introduce el nombre de la unidad'
                         },
-                        stringLength: {
-                            min: 3,
-                            max: 255,
-                            message: 'El nombre debe tener entre 3 y 255 caracteres'
-                        }
+                        
                     }
                 }
             },
