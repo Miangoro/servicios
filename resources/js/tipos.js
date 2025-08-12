@@ -460,5 +460,23 @@ $(function() {
             orderable: false,
             searchable: false
         }, ]
+    }).on('init.dt', function () {
+    var boton = $('#agregarUnidadBtn').clone();
+
+    var searchDiv = $('.dataTables_filter');
+
+    // Contenedor con flexbox
+    searchDiv.css({
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'right',
+      gap: '10px'
     });
+
+    // Mover el botón a la derecha del input de búsqueda
+    searchDiv.append(boton);
+
+    // Eliminar el botón original para evitar duplicados
+    $('#agregarUnidadBtn').remove();
+  });
 });
