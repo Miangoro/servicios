@@ -45,21 +45,24 @@
 </style>
 <div class="container-fluid mt--7">
     <div class="row">
-        <div class="col-lg-10 mx-auto">
+        <div class="col-12">
             <div class="card shadow">
                 <div class="card-header border-0">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h3 class="mb-0"><b>Catálogo de Unidades</b></h3>
-                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
-                            <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                            <span class="d-none d-sm-inline-block">Nueva Unidad</span>
-                        </button>
+                        <!-- Contenedor para el botón de Nueva Unidad, alineado a la derecha -->
+                        <div class="ms-auto">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarUnidades">
+                                <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                                <span class="d-none d-sm-inline-block">Nueva Unidad</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 
                 <div class="table-responsive p-3">
-                    <table id= "tablaUnidades" class="table table-flush table-bordered unidades_datatable table-striped table-sm">
+                    <table id= "tablaUnidades" class="table table-flush table-bordered unidades_datatable table-striped">
                         
                         <thead class="table-dark">
                             <tr>
