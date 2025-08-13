@@ -274,7 +274,7 @@
                                     name="questions[QUESTION_INDEX][question_text]"
                                     rows="2"
                                     placeholder="Escriba su pregunta aquí"
-                                    onchange="updatePreview(this.closest('.question-item'))"
+                                    oninput="updatePreview(this.closest('.question-item'))"
                                     required
                                     class="form-control h-px-100"></textarea>
                         </div>

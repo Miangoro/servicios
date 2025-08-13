@@ -6,59 +6,69 @@ use Illuminate\Http\Request;
 use Illuminate\Support\FacadesRoute;
 use App\Models\CatalogoLaboratorio;
 use App\Models\CatalogoUnidad;
+use Illuminate\Support\Str;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
-
-use LaravelDaily\LaravelCharts\Classes\LaravelChart;
-use assets\js\components\charts;
 use Illuminate\Validation\ValidationException;
 
 class CatalogoLaboratorios extends Controller
 {
     public function index(Request $request)
     {
-        if($request->ajax()){
-            $sql = CatalogoLaboratorio::orderBy('id_laboratorio', 'desc')->get();//Nombre del modelo
-           return DataTables::of($sql)->addIndexColumn()
-                ->addColumn('action', function($row){
+        if ($request->ajax()) {
+            $sql = CatalogoLaboratorio::orderBy('id_laboratorio', 'desc')->get();
 
+            return DataTables::of($sql)
+                ->addIndexColumn()
+                ->addColumn('action', function($row) {
                     $btn = '
                     <div class="dropdown d-flex justify-content-center">
-                        <button  class="btn btn-info dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                          <i class="fas fa-gear me-2"></i> Opciones
-                        </button>
+                        <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_laboratorio . '">'.
                             '<li>
                                 <a class="dropdown-item" href="javascript:void(0);" onclick="editLab(' . $row->id_laboratorio . ')">'.
-                                    '<i class="fas fa-edit me-2"></i> Editar'.
+                                    '<i class="ri-file-edit-fill ri-20px text-info"></i> Editar' .
                                 '</a>
                             </li>
                             <li>
                                 <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="deleteLab(' . $row->id_laboratorio . ')">'.
-                                    '<i class="fas fa-trash-alt me-2"></i> Eliminar'.
+                                    '<i class="ri-delete-bin-2-fill ri-20px text-danger"></i> Eliminar' .
                                 '</a>
                             </li>'
                         .'</ul>
-                          
                     </div>';
                     return $btn;
                 })
-            ->rawColumns(['action'])
-            ->make(true);
+
+                ->editColumn('descripcion', function($row) {
+                    if($row->descripcion === null){
+                      return 'Sin descripción';  
+                    }
+                    return Str::limit(($row->descripcion), 50);
+                    
+                })
+                ->rawColumns(['action', 'descripcion'])
+                ->make(true);
         }
-       
-        return view('catalogo.find_catalogo_laboratorios');  
-        
+
+        return view('catalogo.find_catalogo_laboratorios');
     }
 
     // Registrar datos
     public function store(Request $request)
     {
         try{
+            $descripcion = $request->descripcionCampo;
+            // quita etiquetas vacías y espacios
+            $descripcionLimpia = trim(strip_tags($descripcion));
+
+            if ($descripcionLimpia === '') {
+                $descripcion = null;
+            }
         $laboratorio = CatalogoLaboratorio::create([
                 'laboratorio' => $request->nombre,
                 'clave' => $request->clave,
-                'descripcion' => $request->descripcionCampo,
+                'descripcion' => $descripcion,
                 'habilitado' => 1,
                 'id_usuario' => Auth::id(),
                 'id_unidad' => $request->selectUnidades,
@@ -107,13 +117,20 @@ class CatalogoLaboratorios extends Controller
     public function update(Request $request, $id)
     {
         try {
+            $descripcion = $request->descripcion;
+            // quita etiquetas vacías y espacios
+            $descripcionLimpia = trim(strip_tags($descripcion));
+
+            if ($descripcionLimpia === '') {
+                $descripcion = null;
+            }
 
             //Encontrar el laboratorio o fallar si no existe
             $laboratorio = CatalogoLaboratorio::findOrFail($id);
             $laboratorio->update([
                 'laboratorio' => $request->laboratorio,
                 'clave' => $request->clave,
-                'descripcion' => $request->descripcion,
+                'descripcion' => $descripcion,
                 'id_unidad' => $request->selectUnidadesEdit,
             ]);
             return response()->json(['message' => 'Laboratorio modificado correctamente.']);

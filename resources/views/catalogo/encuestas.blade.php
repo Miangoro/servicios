@@ -36,7 +36,7 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h3 class="mb-0"><b>Encuestas</b></h3>
-                            <a type="button" class="add-new btn btn-primary waves-effect waves-light" href="{{ route('encuestas.create') }}">
+                            <a id="addEncuestaBTN" type="button" class="add-new btn btn-primary waves-effect waves-light" href="{{ route('encuestas.create') }}">
                              <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                              <span class="d-none d-sm-inline-block">Agregar Encuesta</span>
                             </a>
