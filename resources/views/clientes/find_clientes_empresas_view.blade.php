@@ -555,25 +555,22 @@
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0">
-                    <div class="row align-items-start mt-4">
-                        <div class="col-6">
+                    <div class="row align-items-center mt-4">
+                        <div class="col-sm-6">
                             <h3 class="mb-3"><b>Historial Clientes</b></h3>
                             <div class="total-clientes-count">
                                 Clientes total registrados: <span id="totalEmpresasCount">{{ ($clientesActivos ?? 0) + ($clientesInactivos ?? 0) }}</span>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#agregarEmpresa">
-                                    <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                                    <span class="d-none d-sm-inline-block">Agregar Cliente</span>
-                                </button>
-                                <button type="button" class="btn btn-info mt-2" data-bs-toggle="modal" data-bs-target="#exportarVentasModal">
-                                    <i class="ri-file-upload-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                                    <span class="d-none d-sm-inline-block">Exportar</span>
-                                </button>
-                            </div>
                         </div>
-                        <div class="col-6 text-right">
-                            {{-- Puedes añadir algo aquí si lo necesitas --}}
+                        <div class="col-sm-6 d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEmpresa">
+                                <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                                <span class="d-none d-sm-inline-block">Agregar Cliente</span>
+                            </button>
+                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportarVentasModal">
+                                <i class="ri-file-upload-line ri-16px me-0 me-sm-2 align-baseline"></i>
+                                <span class="d-none d-sm-inline-block">Exportar</span>
+                            </button>
                         </div>
                     </div>
                 </div>

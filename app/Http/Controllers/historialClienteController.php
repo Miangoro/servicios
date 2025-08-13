@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\empresas_clientes;
 use App\Models\clientes_contacto;
 use App\Models\catalogos_regimenes;
+use App\Models\servicios_tracking_clientes; // Nombre del modelo corregido según tu solicitud
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Validation\ValidationException;
@@ -133,7 +134,8 @@ class historialClienteController extends Controller
     }
 
     /**
-     * Almacena una nueva empresa en la base de datos con un código secuencial.
+     * Almacena una nueva empresa en la base de datos con un código secuencial
+     * y registra la acción en la tabla de seguimiento.
      *
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -185,16 +187,38 @@ class historialClienteController extends Controller
             $empresa->codigo = 'CC' . $empresa->id;
             $empresa->save();
 
+            // Registrar la acción de registro de la empresa
+            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                'nombre' => 'Se registró una nueva empresa.',
+                'fecha_registro' => now(),
+                'id_usuario' => Auth::id(),
+                'id_cliente' => 0,
+                'id_empresa' => $empresa->id,
+                'id_evento' => 1,
+                'url_adjunto' => $empresa->constancia,
+            ]);
+
             if ($request->has('contactos') && is_array($request->input('contactos'))) {
                 foreach ($request->input('contactos') as $contactData) {
                     if (!empty($contactData['contacto']) || !empty($contactData['celular']) || !empty($contactData['correo'])) {
-                        clientes_contacto::create([
+                        $contacto = clientes_contacto::create([
                             'cliente_id' => $empresa->id,
                             'nombre_contacto' => $contactData['contacto'] ?? null,
                             'telefono_contacto' => $contactData['celular'] ?? null,
                             'correo_contacto' => $contactData['correo'] ?? '',
                             'status' => 1,
                             'observaciones' => null,
+                        ]);
+
+                        // Registrar la acción de registro del contacto
+                        servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                            'nombre' => 'Se registró un cliente con nombre: ' . ($contacto->nombre_contacto ?? 'N/A'),
+                            'fecha_registro' => now(),
+                            'id_usuario' => Auth::id(),
+                            'id_cliente' => $contacto->id,
+                            'id_empresa' => $empresa->id,
+                            'id_evento' => 1,
+                            'url_adjunto' => null,
                         ]);
                     }
                 }
@@ -246,7 +270,7 @@ class historialClienteController extends Controller
     }
 
     /**
-     * Actualiza una empresa existente.
+     * Actualiza una empresa existente y registra la acción en la tabla de seguimiento.
      *
      * @param \Illuminate\Http\Request $request
      * @param int $id
@@ -302,6 +326,18 @@ class historialClienteController extends Controller
 
             $empresa->save();
 
+            // Registrar la acción de edición de la empresa
+            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                'nombre' => 'Se editó la información del cliente: ' . $empresa->nombre,
+                'fecha_registro' => now(),
+                'id_usuario' => Auth::id(),
+                'id_cliente' => 0,
+                'id_empresa' => $empresa->id,
+                'id_evento' => 2,
+                'url_adjunto' => $empresa->constancia,
+                'observaciones' => $validatedData['motivo_edicion'],
+            ]);
+
             // Sincroniza los contactos existentes con los nuevos.
             $existingContactIds = $empresa->clientesContactos->pluck('id')->toArray();
             $newContactIds = [];
@@ -320,6 +356,19 @@ class historialClienteController extends Controller
                                 'observaciones' => $contactData['observaciones'] ?? null,
                             ]);
                             $newContactIds[] = $contacto->id;
+                            
+                            // Registrar la acción de edición del contacto
+                            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                                'nombre' => 'Se editó la información del contacto: ' . ($contacto->nombre_contacto ?? 'N/A'),
+                                'fecha_registro' => now(),
+                                'id_usuario' => Auth::id(),
+                                'id_cliente' => $contacto->id,
+                                'id_empresa' => $empresa->id,
+                                'id_evento' => 2,
+                                'url_adjunto' => null,
+                                'observaciones' => $validatedData['motivo_edicion'],
+                            ]);
+
                         } else {
                             $contacto = clientes_contacto::create([
                                 'cliente_id' => $empresa->id,
@@ -330,6 +379,18 @@ class historialClienteController extends Controller
                                 'observaciones' => null,
                             ]);
                             $newContactIds[] = $contacto->id;
+
+                            // Registrar la acción de registro de un nuevo contacto
+                            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                                'nombre' => 'Se agregó un nuevo contacto: ' . ($contacto->nombre_contacto ?? 'N/A') . ' a la empresa ' . $empresa->nombre,
+                                'fecha_registro' => now(),
+                                'id_usuario' => Auth::id(),
+                                'id_cliente' => $contacto->id,
+                                'id_empresa' => $empresa->id,
+                                'id_evento' => 1,
+                                'url_adjunto' => null,
+                                'observaciones' => null,
+                            ]);
                         }
                     }
                 }
@@ -475,33 +536,33 @@ class historialClienteController extends Controller
                 ->addColumn('action', function ($row) {
                     if ($row->estado_cliente === 0) {
                         return '<span class="badge bg-danger-light text-danger">Dado de baja</span>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
-                                        <i class="ri-check-line me-1"></i>
-                                        Dar de alta
-                                    </button>
-                                </div>';
+                                 <div class="btn-group">
+                                     <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
+                                         <i class="ri-check-line me-1"></i>
+                                         Dar de alta
+                                     </button>
+                                 </div>';
                     }
                     $btn = '<div class="dropdown">
-                                <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
-                                    <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad(' . $row->id . ')">
-                                            <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad(' . $row->id . ')">
-                                            <i class="ri-edit-box-line ri-20px text-info"></i>Editar
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
-                                            <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>';
+                                 <button class="btn btn-sm btn-success-light dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton_' . $row->id . '">
+                                     <li>
+                                         <a class="dropdown-item" href="javascript:void(0);" onclick="viewUnidad(' . $row->id . ')">
+                                             <i class="ri-search-line ri-20px text-secondary"></i>Visualizar
+                                         </a>
+                                     </li>
+                                     <li>
+                                         <a class="dropdown-item" href="javascript:void(0);" onclick="editUnidad(' . $row->id . ')">
+                                             <i class="ri-edit-box-line ri-20px text-info"></i>Editar
+                                         </a>
+                                     </li>
+                                     <li>
+                                         <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="darDeBajaUnidad(' . $row->id . ')">
+                                             <i class="ri-delete-bin-7-line ri-20px text-danger"></i> Dar de baja
+                                         </a>
+                                     </li>
+                                 </ul>
+                             </div>';
                     return $btn;
                 })
                 ->rawColumns(['constancia', 'action'])
@@ -555,7 +616,7 @@ class historialClienteController extends Controller
         try {
             Log::info('Solicitud de exportación recibida:', $request->all());
             $query = empresas_clientes::query()->with('catalogoRegimen');
-                                                
+                                             
             $filtrosAplicados = [];
             
             if ($request->filled('empresa_id') && $request->input('empresa_id') !== 'todos') {
@@ -634,12 +695,12 @@ class historialClienteController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $btn = '<span class="badge bg-danger-light text-danger">Dado de baja</span>
-                                <div class="btn-group">
-                                    <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
-                                        <i class="ri-check-line me-1"></i>
-                                        Dar de alta
-                                    </button>
-                                </div>';
+                                 <div class="btn-group">
+                                     <button type="button" class="btn btn-sm btn-success-light" onclick="darDeAltaUnidad(' . $row->id . ')">
+                                         <i class="ri-check-line me-1"></i>
+                                         Dar de alta
+                                     </button>
+                                 </div>';
                     return $btn;
                 })
                 ->rawColumns(['constancia', 'action'])

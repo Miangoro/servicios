@@ -433,6 +433,7 @@ $(function() {
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
         },
+        dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center"l<"botones_datatable d-flex align-items-center">>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
         processing: true,
         serverSide: true,
         responsive: true,
@@ -460,23 +461,29 @@ $(function() {
             orderable: false,
             searchable: false
         }, ]
-    }).on('init.dt', function () {
-    var boton = $('#agregarUnidadBtn').clone();
+    }).on('init.dt', function() {
+        var boton = $('#agregarUnidadBtn').clone();
 
-    var searchDiv = $('.dataTables_filter');
+        // Mueve el botón al nuevo contenedor
+        $('.botones_datatable').append(boton);
 
-    // Contenedor con flexbox
-    searchDiv.css({
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'right',
-      gap: '10px'
+        // Agrega la clase de margen al botón
+        boton.addClass('ms-2');
+
+        // Elimina el botón original para evitar duplicados
+        $('#agregarUnidadBtn').remove();
+
+        // Oculta el texto "Mostrar" y los "registros"
+        $('.dataTables_length label').contents().filter(function() {
+            return this.nodeType === 3;
+        }).remove();
+
+        // Mueve el filtro de búsqueda para alinear el botón y el mostrar
+        var searchDiv = $('.dataTables_filter');
+        searchDiv.css({
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+        });
     });
-
-    // Mover el botón a la derecha del input de búsqueda
-    searchDiv.append(boton);
-
-    // Eliminar el botón original para evitar duplicados
-    $('#agregarUnidadBtn').remove();
-  });
 });

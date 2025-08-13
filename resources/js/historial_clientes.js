@@ -1,15 +1,3 @@
-/**
- * Script para la gestión de empresas (CRUD) mediante AJAX.
- *
- * Mejoras implementadas:
- * - Uso de async/await para peticiones más limpias.
- * - Funciones auxiliares centralizadas para manejo de modales, errores y peticiones.
- * - La lógica de "dar de baja" y "dar de alta" ahora se comunica con el servidor
- * a través de peticiones AJAX para una gestión de estado persistente.
- * - Las tablas y los contadores se actualizan en tiempo real sin recargar la página.
- * - Manejo de errores mejorado para peticiones que devuelven HTML en lugar de JSON.
- * - Modificación del menú de opciones para mostrar "Dar de Alta" si el cliente está inactivo.
- */
 document.addEventListener('DOMContentLoaded', function () {
     // Definición de elementos y variables principales
     const formAgregarEmpresa = document.getElementById('formAgregarContacto');
@@ -217,10 +205,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Error al actualizar las estadísticas:', error);
         }
     }
-    
+
     // Función para animar el conteo de números (ya la tenías)
     function animateCounter(selector, targetValue) {
-        // ... (Tu código de animación) ...
         const element = $(selector);
         const startValue = 0;
         const duration = 1000;
@@ -236,7 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
             element.text(Math.floor(currentValue));
         }, 16);
     }
-    
+
     /**
      * Muestra el modal con el formulario de edición cargado vía AJAX.
      * @param {number} id - El ID del cliente a editar.
@@ -264,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
             form.querySelectorAll('.contact-row select').forEach(select => $(select).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(select).closest('td') }));
             document.getElementById('add-contact-row-editar').addEventListener('click', () => addContactRow('contact-rows-container-editar'));
 
-            // 🟢 Listener para el submit del formulario de edición.
+            // Listener para el submit del formulario de edición.
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
                 // Realiza la petición AJAX para editar
@@ -273,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 if (success) {
                     editHistorialModal.hide();
-                    // 🟢 Si la edición fue exitosa, recarga la UI
+
                     updateUI();
                 }
             });
@@ -386,8 +373,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         text: data.message,
                         customClass: { confirmButton: 'btn btn-success' }
                     });
-                    
-                    //  Recarga la UI después de cambiar el estado.
+
+                    // Recarga la UI después de cambiar el estado.
                     updateUI();
 
                 } catch (error) {
@@ -402,7 +389,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Inicializar DataTables
     dataTable = $('#tablaHistorial').DataTable({
-        language: { url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json' },
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+            lengthMenu: '_MENU_',
+        },
         processing: true,
         serverSide: true,
         responsive: false,
@@ -462,7 +452,8 @@ document.addEventListener('DOMContentLoaded', function () {
         ],
         rowCallback: (row, data) => {
             $(row).toggleClass('table-danger', data.estado_cliente === 0);
-        }
+        },
+        dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end"l>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
     });
 
     // Carga inicial de estadísticas
@@ -597,5 +588,47 @@ document.addEventListener('DOMContentLoaded', function () {
     // Evento para habilitar/deshabilitar el filtro de empresa
     document.getElementById('habilitar_filtro_empresa').addEventListener('change', function() {
         document.getElementById('empresa_id').disabled = !this.checked;
+    });
+
+    // MODIFICACIÓN ACTUALIZADA: Mover los botones junto al control de "Mostrar X registros"
+    $('#tablaHistorial').on('init.dt', function () {
+        // Obtener referencias a los elementos necesarios
+        const dataTablesLength = $('.dataTables_length');
+        const dataTablesFilter = $('.dataTables_filter');
+        
+        // Crear contenedor principal con flexbox
+        const mainContainer = $('<div>').addClass('d-flex justify-content-between align-items-center w-100 mb-3');
+        
+        // Contenedor izquierdo para botones y selector de registros
+        const leftContainer = $('<div>').addClass('d-flex align-items-center gap-2');
+        
+        // Clonar y preparar los botones (eliminando los originales para evitar duplicados)
+        const botonAgregar = $('#agregarClienteBtn').length ? $('#agregarClienteBtn').clone() : null;
+        const botonExportar = $('#btn-export-clientes').length ? $('#btn-export-clientes').clone() : null;
+        
+        // Eliminar botones originales si existen
+        $('#agregarClienteBtn').remove();
+        $('#btn-export-clientes').remove();
+        
+        // Agregar botones al contenedor izquierdo
+        if (botonAgregar) {
+            leftContainer.append(botonAgregar);
+        }
+        if (botonExportar) {
+            leftContainer.append(botonExportar);
+        }
+        
+        // Agregar el selector de "Mostrar X registros" al contenedor izquierdo
+        leftContainer.append(dataTablesLength);
+        
+        // Agregar contenedores al contenedor principal
+        mainContainer.append(leftContainer);
+        mainContainer.append(dataTablesFilter);
+        
+        // Insertar el contenedor principal antes de la tabla
+        $('#tablaHistorial').before(mainContainer);
+        
+        // Limpiar el div wrapper original de DataTables que puede estar vacío
+        $('.dataTables_wrapper .row').first().hide();
     });
 });

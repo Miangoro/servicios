@@ -9,13 +9,21 @@ class servicios_tracking_clientes extends Model
 {
     use HasFactory;
 
-    // Define la clave primaria y el nombre de la tabla
-    protected $primaryKey = 'id_tracking';
+    // Nombre de la tabla
     protected $table = 'servicios_tracking_clientes';
+
+    // Clave primaria de la tabla
+    protected $primaryKey = 'id_tracking';
+
+    // Indica si la clave primaria es auto-incremental
+    // Este es el valor por defecto, pero es buena práctica ser explícito
+    public $incrementing = true;
+
+    // Desactiva los timestamps si la tabla no tiene created_at y updated_at
+    public $timestamps = false;
 
     // Campos que pueden ser asignados masivamente
     protected $fillable = [
-        'id_tracking',
         'nombre',
         'observaciones',
         'fecha_registro',
@@ -25,6 +33,4 @@ class servicios_tracking_clientes extends Model
         'id_evento',
         'url_adjunto'
     ];
-
-  
 }
