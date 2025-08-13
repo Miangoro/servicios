@@ -14,9 +14,9 @@
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
         //Animacion "loading"
         'resources/assets/vendor/libs/spinkit/spinkit.scss',
-          'resources/assets/vendor/libs/quill/typography.scss',
-  'resources/assets/vendor/libs/quill/katex.scss',
-  'resources/assets/vendor/libs/quill/editor.scss'
+        'resources/assets/vendor/libs/quill/typography.scss',
+        'resources/assets/vendor/libs/quill/katex.scss',
+        'resources/assets/vendor/libs/quill/editor.scss'
     ])
 @endsection
 
@@ -46,7 +46,7 @@
 
     .columna-num {
     width: auto;
-    max-width: 100px;
+    max-width: 50px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -83,10 +83,10 @@
                     <table id="tablaLaboratorios" class="table table-flush table-bordered lab_datatable table-striped table-sm">
                         <thead class="table-dark">
                             <tr>
-                                <th scope="col" class=" columna-num text-white">No.</th>
+                                <th scope="col" class="columna-num text-white">No.</th>
                                 <th scope="col" class="text-white">Clave</th>
                                 <th scope="col" class="text-white">Nombre de laboratorio</th>
-                                <th scope="col" class="text-white">Descripción</th>
+                                <th scope="col" class="columna-desc text-white">Descripción</th>
                                 <th scope="col" class="text-white">Acciones</th>
                             </tr>
                         </thead>

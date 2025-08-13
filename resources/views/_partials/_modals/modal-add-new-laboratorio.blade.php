@@ -11,6 +11,7 @@
       <div class="modal-body p-4">
         <form id="agregarLaboratorioForm" class="row g-5">
                     @csrf
+                    <span>Informacipon principal</span>
                     <div class="col-12 col-md-6">
                         <div class="form-floating form-floating-outline">
                             <input type="text" id="clave" name="clave" class="form-control" placeholder="Clave del laboratorio"/>
@@ -30,6 +31,7 @@
                         </select>
                     </div>
                     <div class="col-12">
+                        <span>Descripción</span>
                         <input type="hidden" name="descripcionCampo" id="descripcion">
                         <div id="snow-toolbar">
                             <span class="ql-formats">
@@ -57,13 +59,11 @@
                                 <button class="ql-code-block"></button>
                             </span>
                         </div>
-                        <div id="snow-editor">
-                        </div>
-                        
+                        <div id="snow-editor"></div>
                     </div>
 
                     <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-                        <button type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
+                        <button id="modalAddLabBtn" type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
                             <i class="ri-add-line"></i> Agregar
                         </button>
                         <button type="reset" class="btn btn-danger" data-bs-dismiss="modal" aria-label="Close">

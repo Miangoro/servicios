@@ -181,7 +181,7 @@ window.addOption = function(questionItem) {
                     name="questions[${questionIndex}][options][]" 
                     placeholder="Opción ${optionIndex + 1}"
                     class="form-control"
-                    onchange="updatePreview(this.closest('.question-item'))">
+                    oninput="updatePreview(this.closest('.question-item'))">
             <button type="button" 
                     onclick="removeOption(this)"
                     class="btn btn-icon btn-danger">
@@ -189,7 +189,7 @@ window.addOption = function(questionItem) {
             </button>
         </div>
     `;
-    
+
     optionsList.insertAdjacentHTML('beforeend', optionTemplate);
     updatePreview(questionItem);
 }
@@ -248,16 +248,10 @@ window.updatePreview = function (questionItem) {
     previewContainer.innerHTML = previewHtml;
 }
 
-
-// Inicializar eventos cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function () {
-    // es importante que esto se ejecute al cargar la página para las preguntas ya existentes
-    updateQuestionNumbers();
-    document.querySelectorAll('.question-item').forEach(updatePreview);
+  updateQuestionNumbers();
+  document.querySelectorAll('.question-item').forEach(updatePreview);
 
-});
-
-document.addEventListener('DOMContentLoaded', function () {
   const form = document.getElementById('encuestaForm');
 
   if (form) {
@@ -325,7 +319,6 @@ document.addEventListener('DOMContentLoaded', function () {
           html: '',
           timer: 5000,
         customClass: {
-          confirmButton: 'btn btn-primary waves-effect waves-light'
         },
         buttonsStyling: true,
           willOpen: function () {
@@ -338,12 +331,6 @@ document.addEventListener('DOMContentLoaded', function () {
             clearInterval(timerInterval);
           }
         }).then(function (result) {
-          if (
-            // Read more about handling dismissals
-            result.dismiss === Swal.DismissReason.timer
-          ) {
-            console.log('I was closed by the timer');
-          }
         });
       }
     });

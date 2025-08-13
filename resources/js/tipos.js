@@ -38,25 +38,25 @@ $(function() {
             orderable: true,
             searchable: false
         }, ]
-    }).on('init.dt', function () {
-    var boton = $('#addLabBtn').clone();
+    }).on('init.dt', function() {
+        var boton = $('#addLabBtn').clone();
 
-    var searchDiv = $('.dataTables_filter');
+        var searchDiv = $('.dataTables_filter');
 
-    // Contenedor con flexbox
-    searchDiv.css({
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'right',
-      gap: '10px'
+        // Contenedor con flexbox
+        searchDiv.css({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'right',
+            gap: '10px'
+        });
+
+        // Mover el botón a la derecha
+        searchDiv.append(boton);
+
+        // Eliminar el botón original para evitar duplicados
+        $('#addLabBtn').remove();
     });
-
-    // Mover el botón a la derecha del input de búsqueda
-    searchDiv.append(boton);
-
-    // Eliminar el botón original para evitar duplicados
-    $('#addLabBtn').remove();
-  });
 });
 
 function showAlert(message, type = 'success') {
@@ -84,12 +84,39 @@ function reloadTableOrPage() {
     }
 }
 
+var quillEdit = new Quill('#snow-editor-edit', {
+    theme: 'snow',
+    modules: {
+        toolbar: '#snow-toolbar-edit'
+    }
+});
+
 /**
  * Abre el modal de edición y carga los datos del laboratorio.
  * @param {number} id - El ID del laboratorio a editar.
  */
 window.editLab = function(id) {
-    fetch(`/laboratorios/${id}/edit`)
+    // Primero, carga las unidades para el select
+    fetch('/laboratorios/unidades')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al cargar las unidades');
+            }
+            return response.json();
+        })
+        .then(unidadesData => {
+            const select = document.getElementById('selectUnidadesEdit');
+            select.innerHTML = '<option value="">Seleccione una unidad</option>';
+            for (const key in unidadesData) {
+                if (unidadesData.hasOwnProperty(key)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.text = unidadesData[key];
+                    select.appendChild(option);
+                }
+            }
+            return fetch(`/laboratorios/${id}/edit`);
+        })
         .then(response => {
             if (!response.ok) {
                 return response.json().then(errorData => {
@@ -102,8 +129,12 @@ window.editLab = function(id) {
             document.getElementById('id_laboratorio_modal').value = data.id_laboratorio;
             document.getElementById('nombre_laboratorio_modal').value = data.nombre;
             document.getElementById('clave_laboratorio_modal').value = data.clave;
+            // Asignar el valor de la unidad después de cargar las opciones
             document.getElementById('selectUnidadesEdit').value = data.id_unidad;
             document.getElementById('descripcion_laboratorio_modal').value = data.descripcion;
+
+            // Mostrar descripcion en el editor Quill
+            quillEdit.clipboard.dangerouslyPasteHTML(data.descripcion || '');
 
             var editModal = new bootstrap.Modal(document.getElementById('editLabModal'));
             editModal.show();
@@ -116,18 +147,17 @@ window.editLab = function(id) {
                 if (parsedError.error) {
                     errorMessage = 'Error del servidor: ' + parsedError.error;
                 }
-            } catch (e) {
-                // Ignore parse error
-            }
+            } catch (e) {}
             showAlert(errorMessage, 'error');
         });
-}
+};
 
 /**
  * Elimina un laboratorio después de la confirmación del usuario.
  * @param {number} id - El ID del laboratorio a eliminar.
  */
 window.deleteLab = function(id) {
+
     if (typeof Swal !== 'undefined') {
         Swal.fire({
             title: '¿Estás seguro?',
@@ -213,24 +243,30 @@ window.deleteLab = function(id) {
     }
 }
 
-
 document.addEventListener('DOMContentLoaded', function() {
     const agregarLaboratorioForm = document.getElementById('agregarLaboratorioForm');
     const editLaboratorioForm = document.getElementById('editLaboratorio');
     let fvAdd;
 
+    const Span = document.createElement('span');
+    Span.className = 'spinner-border me-1 m-1';
+    Span.role = 'status';
+    Span.ariaHidden = 'true';
+    const addBtn = document.getElementById('modalAddLabBtn');
+    const saveBtn = document.getElementById('modalEditLabBtn');
+
     var quill = new Quill('#snow-editor', {
-    theme: 'snow',
+        theme: 'snow',
         modules: {
             toolbar: '#snow-toolbar'
         }
     });
 
+
     if (agregarLaboratorioForm) {
 
         document.getElementById('agregarLaboratorioForm').addEventListener('submit', function(e) {
-            document.getElementById('descripcion').value = quill.getText().trim();
-
+            document.getElementById('descripcion').value = quill.root.innerHTML; // Cambiado a innerHTML para guardar el formato
         });
 
         fvAdd = FormValidation.formValidation(agregarLaboratorioForm, {
@@ -285,9 +321,12 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error al obtener datos:', error));
 
         fvAdd.on('core.form.valid', function() {
-             document.getElementById('descripcion').value = quill.root.innerHTML;
+            document.getElementById('descripcion').value = quill.root.innerHTML;
             // El formulario de agregar es válido, procede con el envío AJAX
             const formData = new FormData(agregarLaboratorioForm);
+
+            addBtn.appendChild(Span);
+            addBtn.disabled = true;
 
             fetch('/catalogos/laboratorios', { // Ruta para guardar nuevos laboratorios
                     method: 'POST',
@@ -305,6 +344,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
+                    addBtn.disabled = false;
+                    addBtn.removeChild(Span);
+
                     showAlert("Laboratorio agregado correctamente.", 'success');
                     var addModal = bootstrap.Modal.getInstance(document.getElementById('agregarLab'));
                     if (addModal) {
@@ -315,6 +357,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     reloadTableOrPage();
                 })
                 .catch(error => {
+                    addBtn.disabled = false;
+                    addBtn.removeChild(Span);
+
                     console.error('Error al guardar el laboratorio:', error);
                     let errorMessage = 'Ocurrió un error inesperado al guardar. Por favor, intente de nuevo.';
                     try {
@@ -345,6 +390,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     if (editLaboratorioForm) {
+
+        document.getElementById('editLaboratorio').addEventListener('submit', function(e) {
+            // CORRECCIÓN: Usa el objeto quillEdit para obtener el HTML
+            document.getElementById('descripcion_laboratorio_modal').value = quillEdit.root.innerHTML;
+        });
+
+
         const fvEdit = FormValidation.formValidation(editLaboratorioForm, {
             fields: {
                 laboratorio: {
@@ -401,9 +453,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error al obtener datos:', error));
 
         fvEdit.on('core.form.valid', function() {
-            // El formulario de editar es válido, procede con el envío AJAX
+            // CORRECCIÓN: Usa el objeto quillEdit para obtener el HTML y asignarlo al campo oculto
+            document.getElementById('descripcion_laboratorio_modal').value = quillEdit.root.innerHTML;
+
             const laboratorioId = document.getElementById('id_laboratorio_modal').value;
             const formData = new FormData(editLaboratorioForm);
+
+            modalEditLabBtn.appendChild(Span);
+            modalEditLabBtn.disabled = true;
 
             fetch(`/laboratorios/${laboratorioId}`, { // Ruta para actualizar laboratorio
                     method: 'POST', // Laravel usa POST con @method('PUT')
@@ -421,6 +478,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
+                    modalEditLabBtn.disabled = false;
+                    modalEditLabBtn.removeChild(Span);
+
                     showAlert(data.message, 'success');
                     var editModal = bootstrap.Modal.getInstance(document.getElementById('editLabModal'));
                     if (editModal) {
@@ -429,6 +489,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     reloadTableOrPage();
                 })
                 .catch(error => {
+                    modalEditLabBtn.disabled = false;
+                    modalEditLabBtn.removeChild(Span);
+
                     console.error('Error al actualizar el laboratorio:', error);
                     let errorMessage = 'Ocurrió un error inesperado al actualizar. Por favor, intente de nuevo.';
                     try {
@@ -488,23 +551,23 @@ $(function() {
             orderable: false,
             searchable: false
         }, ]
-    }).on('init.dt', function () {
-    var boton = $('#agregarUnidadBtn').clone();
+    }).on('init.dt', function() {
+        var boton = $('#agregarUnidadBtn').clone();
 
-    var searchDiv = $('.dataTables_filter');
+        var searchDiv = $('.dataTables_filter');
 
-    // Contenedor con flexbox
-    searchDiv.css({
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'right',
-      gap: '10px'
+        // Contenedor con flexbox
+        searchDiv.css({
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'right',
+            gap: '10px'
+        });
+
+        // Mover el botón a la derecha del input de búsqueda
+        searchDiv.append(boton);
+
+        // Eliminar el botón original para evitar duplicados
+        $('#agregarUnidadBtn').remove();
     });
-
-    // Mover el botón a la derecha del input de búsqueda
-    searchDiv.append(boton);
-
-    // Eliminar el botón original para evitar duplicados
-    $('#agregarUnidadBtn').remove();
-  });
 });
