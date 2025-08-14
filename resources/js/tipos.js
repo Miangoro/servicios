@@ -534,7 +534,6 @@ $(function() {
             data: function(d) {}
         },
         dataType: 'json',
-        type: "POST",
         columns: [{
             data: null,
             name: 'num',
@@ -554,23 +553,16 @@ $(function() {
         }, ]
     }).on('init.dt', function() {
         var boton = $('#agregarUnidadBtn').clone();
-    }).on('init.dt', function() {
-        var boton = $('#agregarUnidadBtn').clone();
-
         // Mueve el botón al nuevo contenedor
         $('.botones_datatable').append(boton);
-
         // Agrega la clase de margen al botón
         boton.addClass('ms-2');
-
         // Elimina el botón original para evitar duplicados
         $('#agregarUnidadBtn').remove();
-
         // Oculta el texto "Mostrar" y los "registros"
         $('.dataTables_length label').contents().filter(function() {
             return this.nodeType === 3;
         }).remove();
-
         // Mueve el filtro de búsqueda para alinear el botón y el mostrar
         var searchDiv = $('.dataTables_filter');
         searchDiv.css({

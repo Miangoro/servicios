@@ -1,3 +1,59 @@
+$(function() {
+    // Inicialización de la tabla de DataTables
+    var table = $('.unidades_datatable').DataTable({
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+        },
+        dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center"l<"botones_datatable d-flex align-items-center">>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        ajax: {
+            url: "/catalogos/unidades",
+            type: "GET",
+            data: function(d) {}
+        },
+        dataType: 'json',
+        columns: [{
+            data: null,
+            name: 'num',
+            orderable: false,
+            searchable: false,
+            render: function(data, type, row, meta) {
+                return meta.row + 1;
+            }
+        }, {
+            data: 'nombre',
+            name: 'nombre'
+        }, {
+            data: 'action',
+            name: 'action',
+            orderable: false,
+            searchable: false
+        }, ]
+    }).on('init.dt', function() {
+        var boton = $('#agregarUnidadBtn').clone();
+        // Mueve el botón al nuevo contenedor
+        $('.botones_datatable').append(boton);
+        // Agrega la clase de margen al botón
+        boton.addClass('ms-2');
+        // Elimina el botón original para evitar duplicados
+        $('#agregarUnidadBtn').remove();
+        // Oculta el texto "Mostrar" y los "registros"
+        $('.dataTables_length label').contents().filter(function() {
+            return this.nodeType === 3;
+        }).remove();
+        // Mueve el filtro de búsqueda para alinear el botón y el mostrar
+        var searchDiv = $('.dataTables_filter');
+        searchDiv.css({
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+        });
+    });
+});
+
+// Clase para el manejo de las Unidades
 class UnidadesHandler {
     constructor() {
         this.initValidators();
@@ -13,7 +69,6 @@ class UnidadesHandler {
                         notEmpty: {
                             message: 'Por favor introduce el nombre de la unidad'
                         },
-                        
                     }
                 }
             },
@@ -79,9 +134,9 @@ class UnidadesHandler {
 
     submitAddForm() {
         const formData = new FormData(document.getElementById('formAgregarUnidad'));
-        
+
         this.showLoading('Registrando unidad...');
-        
+
         fetch('/catalogos/unidades', {
             method: 'POST',
             headers: {
@@ -110,9 +165,9 @@ class UnidadesHandler {
         const form = document.getElementById('editarunidad');
         const formData = new FormData(form);
         const id = document.getElementById('idUnidad').value;
-        
+
         this.showLoading('Actualizando unidad...');
-        
+
         fetch(`/unidades/${id}`, {
             method: 'POST',
             headers: {
@@ -148,7 +203,6 @@ class UnidadesHandler {
             cancelButtonColor: '#d33',
             confirmButtonText: 'Sí, eliminar',
             cancelButtonText: 'Cancelar',
-            // Eliminamos cualquier configuración que pudiera agregar el botón "No"
             focusConfirm: true,
             focusCancel: false,
             buttons: {
@@ -166,7 +220,7 @@ class UnidadesHandler {
         }).then((result) => {
             if (result.isConfirmed) {
                 this.showLoading('Eliminando unidad...');
-                
+
                 fetch(`/unidades/${id}`, {
                     method: 'DELETE',
                     headers: {
@@ -223,20 +277,19 @@ class UnidadesHandler {
 
     handleError(error, defaultMessage) {
         console.error('Error:', error);
-        
+
         let errorMessage = defaultMessage;
         if (error.errors) {
             errorMessage = Object.values(error.errors).join('<br>');
         } else if (error.message) {
             errorMessage = error.message;
         }
-        
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
             html: errorMessage,
             confirmButtonText: 'Entendido',
-            // Solo mostrar botón de confirmación
             showCancelButton: false,
             showDenyButton: false
         });
@@ -246,12 +299,12 @@ class UnidadesHandler {
 // Inicialización cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
     window.unidadesHandler = new UnidadesHandler();
-    
+
     // Asignar la función de eliminar al ámbito global
     window.deleteUnidad = (id) => {
         window.unidadesHandler.deleteUnidad(id);
     };
-    
+
     // Función para editar (ya existente)
     window.editUnidad = function(id) {
         fetch(`/getUnidad/${id}`)
@@ -261,10 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 if (data.error) throw new Error(data.error);
-                
+
                 document.getElementById('idUnidad').value = data.id_unidad;
                 document.getElementById('nombre_Unidad').value = data.nombre_Unidad;
-                
+
                 const modal = new bootstrap.Modal(document.getElementById('editUnidadesModal'));
                 modal.show();
             })

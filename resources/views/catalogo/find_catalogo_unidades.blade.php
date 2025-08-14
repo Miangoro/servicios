@@ -2,7 +2,6 @@
 
 @section('title', 'Unidades')
 
-<!-- Vendor Styles -->
 @section('vendor-style')
     @vite([
         'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
@@ -17,7 +16,6 @@
     ])
 @endsection
 
-<!-- Vendor Scripts -->
 @section('vendor-script')
 @vite([
     'resources/assets/vendor/libs/moment/moment.js',
@@ -33,8 +31,8 @@
 @endsection
 
 @section('page-script')
-{{-- Se incluyen ambos archivos, aunque el segundo archivo ya no sea necesario --}}
-@vite(['resources/js/tipos.js', 'resources/js/unidades.js'])
+{{-- Se incluye únicamente el archivo de unidades, ya que es el que inicializa la tabla --}}
+@vite(['resources/js/unidades.js'])
 @endsection
 
 @section('content')
