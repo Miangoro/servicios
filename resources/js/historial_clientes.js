@@ -456,8 +456,8 @@ document.addEventListener('DOMContentLoaded', function () {
         dom: '<"top-row d-flex flex-wrap justify-content-between align-items-center"f<"d-flex gap-2 align-items-center"lB>>rtip',
         buttons: [
             {
-                text: 'Agregar Cliente',
-                className: 'btn btn-primary btn  waves-effect waves-light',
+                text: '<i class="ri-add-line"></i> Agregar Cliente',
+                className: 'btn btn-primary waves-effect waves-light m-1',
                 attr: {
                     id: 'agregarClienteBtn'
                 },
@@ -466,8 +466,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             },
             {
-                text: 'Exportar',
-                className: 'btn btn-info btn-info waves-effect waves-light',
+                text: '<i class="ri-file-text-line"></i> Exportar',
+                className: 'btn btn-info waves-effect waves-light m-1',
                 attr: {
                     id: 'exportarClientesBtn',
                 },
