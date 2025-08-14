@@ -3,7 +3,6 @@
 @section('title', 'ClientesEmpresas')
 
 @section('vendor-style')
-    {{-- Animacion "loading" --}}
     @vite([
         'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
         'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
@@ -18,7 +17,6 @@
         'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss',
         'resources/assets/vendor/libs/typeahead-js/typeahead.scss'
     ])
-    {{-- Agregado de la biblioteca de iconos Remixicon --}}
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 @endsection
 
@@ -43,9 +41,9 @@
 
 @section('page-script')
 @vite([
-  'resources/assets/js/forms-selects.js',
-  'resources/assets/js/forms-tagify.js',
-  'resources/assets/js/forms-typeahead.js'
+    'resources/assets/js/forms-selects.js',
+    'resources/assets/js/forms-tagify.js',
+    'resources/assets/js/forms-typeahead.js'
 ])
 <script>
     // Define variables JavaScript con las URLs de las rutas
@@ -236,8 +234,13 @@
         
         // Inicializar la tabla de clientes activos con un filtro de búsqueda
         var tablaHistorial = $('#tablaHistorial').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+            },
+            dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center"l<"botones_datatable_clientes d-flex align-items-center">>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
             processing: true,
             serverSide: true,
+            responsive: true,
             ajax: dataTableAjaxUrl,
             columns: [
                 { data: 'id', name: 'id' },
@@ -252,18 +255,32 @@
             ],
             // Configuración del filtro de búsqueda
             initComplete: function () {
-                this.api().columns().every(function () {
-                    var column = this;
-                    // Mover el filtro de búsqueda para la columna 'Empresa'
-                    if (column.index() === 1) { // 1 es el índice de la columna 'Empresa'
-                        var input = $('<input type="text" class="form-control" placeholder="Buscar por empresa">')
-                            .appendTo($(column.header()).empty())
-                            .on('keyup change clear', function () {
-                                if (column.search() !== this.value) {
-                                    column.search(this.value).draw();
-                                }
-                            });
-                    }
+                 // Clona los botones originales
+                var addButton = $('#agregarClienteBtn').clone();
+                var exportButton = $('#exportarClientesBtn').clone();
+                
+                // Mueve los botones al nuevo contenedor de DataTables
+                $('.botones_datatable_clientes').append(addButton);
+                $('.botones_datatable_clientes').append(exportButton);
+                
+                // Agrega la clase de margen al botón de exportar
+                exportButton.addClass('ms-2');
+                
+                // Elimina los botones originales para evitar duplicados
+                $('#agregarClienteBtn').remove();
+                $('#exportarClientesBtn').remove();
+                
+                // Oculta el texto "Mostrar" y los "registros"
+                $('.dataTables_length label').contents().filter(function() {
+                    return this.nodeType === 3;
+                }).remove();
+                
+                // Mueve el filtro de búsqueda para alinear el botón y el mostrar
+                var searchDiv = $('.dataTables_filter');
+                searchDiv.css({
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
                 });
             }
         });
@@ -542,8 +559,8 @@
                     <div class="stats-card-percentage" id="porcentajeInactivos" style="display: none;">
                         <i class="ri-arrow-up-line"></i>
                         0%
-                    </div>
                 </div>
+            </div>
                 <div class="stats-card-loading">
                     <div class="spinner"></div>
                 </div>
@@ -554,24 +571,15 @@
     <div class="row">
         <div class="col">
             <div class="card shadow">
-                <div class="card-header border-0">
-                    <div class="row align-items-center mt-4">
+                <div class="card-header border-0 pb-1">
+                    <div class="row align-items-center">
                         <div class="col-sm-6">
                             <h3 class="mb-3"><b>Historial Clientes</b></h3>
                             <div class="total-clientes-count">
                                 Clientes total registrados: <span id="totalEmpresasCount">{{ ($clientesActivos ?? 0) + ($clientesInactivos ?? 0) }}</span>
                             </div>
                         </div>
-                        <div class="col-sm-6 d-flex justify-content-end gap-2">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarEmpresa">
-                                <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                                <span class="d-none d-sm-inline-block">Agregar Cliente</span>
-                            </button>
-                            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#exportarVentasModal">
-                                <i class="ri-file-upload-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                                <span class="d-none d-sm-inline-block">Exportar</span>
-                            </button>
-                        </div>
+                       
                     </div>
                 </div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">

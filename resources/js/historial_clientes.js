@@ -453,7 +453,29 @@ document.addEventListener('DOMContentLoaded', function () {
         rowCallback: (row, data) => {
             $(row).toggleClass('table-danger', data.estado_cliente === 0);
         },
-        dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end"l>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+        dom: '<"top-row d-flex flex-wrap justify-content-between align-items-center"f<"d-flex gap-2 align-items-center"lB>>rtip',
+        buttons: [
+            {
+                text: 'Agregar Cliente',
+                className: 'btn btn-primary btn  waves-effect waves-light',
+                attr: {
+                    id: 'agregarClienteBtn'
+                },
+                action: function(e, dt, node, config) {
+                    $('#agregarEmpresa').modal('show');
+                }
+            },
+            {
+                text: 'Exportar',
+                className: 'btn btn-info btn-info waves-effect waves-light',
+                attr: {
+                    id: 'exportarClientesBtn',
+                },
+                action: function(e, dt, node, config) {
+                    $('#exportarVentasModal').modal('show');
+                }
+            }
+        ]
     });
 
     // Carga inicial de estadísticas
@@ -588,47 +610,5 @@ document.addEventListener('DOMContentLoaded', function () {
     // Evento para habilitar/deshabilitar el filtro de empresa
     document.getElementById('habilitar_filtro_empresa').addEventListener('change', function() {
         document.getElementById('empresa_id').disabled = !this.checked;
-    });
-
-    // MODIFICACIÓN ACTUALIZADA: Mover los botones junto al control de "Mostrar X registros"
-    $('#tablaHistorial').on('init.dt', function () {
-        // Obtener referencias a los elementos necesarios
-        const dataTablesLength = $('.dataTables_length');
-        const dataTablesFilter = $('.dataTables_filter');
-        
-        // Crear contenedor principal con flexbox
-        const mainContainer = $('<div>').addClass('d-flex justify-content-between align-items-center w-100 mb-3');
-        
-        // Contenedor izquierdo para botones y selector de registros
-        const leftContainer = $('<div>').addClass('d-flex align-items-center gap-2');
-        
-        // Clonar y preparar los botones (eliminando los originales para evitar duplicados)
-        const botonAgregar = $('#agregarClienteBtn').length ? $('#agregarClienteBtn').clone() : null;
-        const botonExportar = $('#btn-export-clientes').length ? $('#btn-export-clientes').clone() : null;
-        
-        // Eliminar botones originales si existen
-        $('#agregarClienteBtn').remove();
-        $('#btn-export-clientes').remove();
-        
-        // Agregar botones al contenedor izquierdo
-        if (botonAgregar) {
-            leftContainer.append(botonAgregar);
-        }
-        if (botonExportar) {
-            leftContainer.append(botonExportar);
-        }
-        
-        // Agregar el selector de "Mostrar X registros" al contenedor izquierdo
-        leftContainer.append(dataTablesLength);
-        
-        // Agregar contenedores al contenedor principal
-        mainContainer.append(leftContainer);
-        mainContainer.append(dataTablesFilter);
-        
-        // Insertar el contenedor principal antes de la tabla
-        $('#tablaHistorial').before(mainContainer);
-        
-        // Limpiar el div wrapper original de DataTables que puede estar vacío
-        $('.dataTables_wrapper .row').first().hide();
     });
 });
