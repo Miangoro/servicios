@@ -250,12 +250,17 @@
                 { data: 'colonia', name: 'colonia' },
                 { data: 'localidad', name: 'localidad' },
                 { data: 'municipio', name: 'municipio' },
+                { data: 'estado', name: 'estado' },
+                { data: 'regimen_fiscal', name: 'regimen_fiscal' },
+                { data: 'credito', name: 'credito' },
+                // 👇 **Posición corregida**
                 { data: 'constancia_fiscal', name: 'constancia_fiscal' },
                 { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
+                // 👆 **Posición corregida**
             ],
             // Configuración del filtro de búsqueda
             initComplete: function () {
-                 // Clona los botones originales
+                // Clona los botones originales
                 var addButton = $('#agregarClienteBtn').clone();
                 var exportButton = $('#exportarClientesBtn').clone();
                 
@@ -594,8 +599,13 @@
                                 <th>Colonia</th>
                                 <th>Localidad</th>
                                 <th>Municipio</th>
-                                <th class="constancia" >Constancia</th>
+                                <th>Estado</th>
+                                <th>Régimen Fiscal</th>
+                                <th>Crédito</th>
+                                {{-- 👇 **Posición corregida** --}}
+                                <th class="constancia">Constancia</th>
                                 <th class="text-center" style="width: 120px;">Acciones</th>
+                                {{-- 👆 **Posición corregida** --}}
                             </tr>
                         </thead>
                         <tbody>

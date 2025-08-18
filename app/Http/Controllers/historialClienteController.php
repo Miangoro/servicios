@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\empresas_clientes;
 use App\Models\clientes_contacto;
 use App\Models\catalogos_regimenes;
-use App\Models\servicios_tracking_clientes; // Nombre del modelo corregido según tu solicitud
+use App\Models\servicios_tracking_clientes;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Validation\ValidationException;
@@ -82,7 +82,6 @@ class historialClienteController extends Controller
             $empresa = empresas_clientes::with('clientesContactos')->findOrFail($id);
             $regimenes = catalogos_regimenes::all();
             
-            // Se pasa la variable `$regimenes` a la vista
             return view('_partials._modals.modal-add-edit-Historial', compact('empresa', 'regimenes'));
         } catch (\Exception $e) {
             Log::error('Error al cargar modal de edición de empresa: ' . $e->getMessage() . ' en ' . $e->getFile() . ' línea ' . $e->getLine());
@@ -110,7 +109,6 @@ class historialClienteController extends Controller
 
     /**
      * Muestra la vista para el modal de exportación.
-     * Esta función ahora solo es llamada desde index o mediante AJAX.
      *
      * @return \Illuminate\View\View
      */
@@ -166,12 +164,11 @@ class historialClienteController extends Controller
 
             $empresa = new empresas_clientes();
             
-            // Asignar los datos validados al modelo, excepto los que se manejan por separado
             $empresa->fill(Arr::except($validatedData, ['constancia', 'contactos']));
             $empresa->noext = $validatedData['no_exterior'];
-            $empresa->tipo = 0;
+            $empresa->tipo = 0; // Este campo parece no usarse en la validación, revisar si es necesario
             $empresa->estado_cliente = null;
-            $empresa->codigo = ''; // Temporalmente vacío para poder generar el ID
+            $empresa->codigo = '';
 
             if ($request->hasFile('constancia')) {
                 $path = $request->file('constancia')->store(date('Y/m/d'), 'public');
@@ -183,12 +180,10 @@ class historialClienteController extends Controller
 
             $empresa->save();
 
-            // Generar el código basado en el ID y guardar la empresa de nuevo
             $empresa->codigo = 'CC' . $empresa->id;
             $empresa->save();
 
-            // Registrar la acción de registro de la empresa
-            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+            servicios_tracking_clientes::create([
                 'nombre' => 'Se registró una nueva empresa.',
                 'fecha_registro' => now(),
                 'id_usuario' => Auth::id(),
@@ -210,8 +205,7 @@ class historialClienteController extends Controller
                             'observaciones' => null,
                         ]);
 
-                        // Registrar la acción de registro del contacto
-                        servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                        servicios_tracking_clientes::create([
                             'nombre' => 'Se registró un cliente con nombre: ' . ($contacto->nombre_contacto ?? 'N/A'),
                             'fecha_registro' => now(),
                             'id_usuario' => Auth::id(),
@@ -304,7 +298,6 @@ class historialClienteController extends Controller
                 'motivo_edicion' => 'required|string|max:1000',
             ]);
             
-            // Asignar los datos validados al modelo, excepto los archivos y contactos
             $empresa->fill(Arr::except($validatedData, ['constancia', 'contactos', 'motivo_edicion']));
             $empresa->noext = $validatedData['no_exterior'];
             
@@ -326,8 +319,7 @@ class historialClienteController extends Controller
 
             $empresa->save();
 
-            // Registrar la acción de edición de la empresa
-            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+            servicios_tracking_clientes::create([
                 'nombre' => 'Se editó la información del cliente: ' . $empresa->nombre,
                 'fecha_registro' => now(),
                 'id_usuario' => Auth::id(),
@@ -338,14 +330,12 @@ class historialClienteController extends Controller
                 'observaciones' => $validatedData['motivo_edicion'],
             ]);
 
-            // Sincroniza los contactos existentes con los nuevos.
             $existingContactIds = $empresa->clientesContactos->pluck('id')->toArray();
             $newContactIds = [];
 
             if ($request->has('contactos') && is_array($request->input('contactos'))) {
                 foreach ($request->input('contactos') as $contactData) {
                     if (!empty($contactData['contacto']) || !empty($contactData['celular']) || !empty($contactData['correo'])) {
-                        // Si el contacto ya tiene un ID, lo actualiza. De lo contrario, lo crea.
                         if (isset($contactData['id']) && in_array($contactData['id'], $existingContactIds)) {
                             $contacto = clientes_contacto::findOrFail($contactData['id']);
                             $contacto->update([
@@ -357,8 +347,7 @@ class historialClienteController extends Controller
                             ]);
                             $newContactIds[] = $contacto->id;
                             
-                            // Registrar la acción de edición del contacto
-                            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                            servicios_tracking_clientes::create([
                                 'nombre' => 'Se editó la información del contacto: ' . ($contacto->nombre_contacto ?? 'N/A'),
                                 'fecha_registro' => now(),
                                 'id_usuario' => Auth::id(),
@@ -380,8 +369,7 @@ class historialClienteController extends Controller
                             ]);
                             $newContactIds[] = $contacto->id;
 
-                            // Registrar la acción de registro de un nuevo contacto
-                            servicios_tracking_clientes::create([ // Corregido: ServiciosTrackingClientes -> servicios_tracking_clientes
+                            servicios_tracking_clientes::create([
                                 'nombre' => 'Se agregó un nuevo contacto: ' . ($contacto->nombre_contacto ?? 'N/A') . ' a la empresa ' . $empresa->nombre,
                                 'fecha_registro' => now(),
                                 'id_usuario' => Auth::id(),
@@ -396,7 +384,6 @@ class historialClienteController extends Controller
                 }
             }
 
-            // Elimina los contactos que ya no están en la lista de la solicitud.
             $contactsToDelete = array_diff($existingContactIds, $newContactIds);
             clientes_contacto::destroy($contactsToDelete);
 
@@ -525,8 +512,14 @@ class historialClienteController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $sql = empresas_clientes::query();
+            // Se carga la relación "catalogoRegimen" para obtener el nombre del régimen fiscal.
+            $sql = empresas_clientes::with('catalogoRegimen');
+            
             return DataTables::of($sql)->addIndexColumn()
+                // Se añade una nueva columna para mostrar el nombre del régimen fiscal
+                ->addColumn('regimen_fiscal_nombre', function($row) {
+                    return $row->catalogoRegimen->regimen ?? 'N/A';
+                })
                 ->addColumn('constancia', function ($row) {
                     if (!empty($row->constancia) && str_ends_with($row->constancia, '.pdf')) {
                         return Storage::url($row->constancia);
@@ -569,12 +562,10 @@ class historialClienteController extends Controller
                 ->make(true);
         }
         
-        // Obtiene todas las empresas, regímenes y estadísticas para pasarlas a la vista.
         $stats = $this->getDashboardStats();
         $regimenes = catalogos_regimenes::all();
         $empresas = empresas_clientes::select('id', 'nombre')->orderBy('nombre', 'asc')->get();
 
-        // Combina los datos y los pasa a la vista principal.
         return view('clientes.find_clientes_empresas_view', array_merge(compact('regimenes', 'empresas'), $stats));
     }
 
@@ -587,7 +578,9 @@ class historialClienteController extends Controller
     {
         try {
             $total = empresas_clientes::count();
-            $personasFisicas = empresas_clientes::where('tipo', 0)->count();
+            // Este campo 'tipo' no se utiliza en tus demás funciones y parece redundante.
+            // La lógica para personas físicas se maneja a través del régimen fiscal.
+            $personasFisicas = empresas_clientes::where('tipo', 0)->count(); 
             $otrosRegimenes = empresas_clientes::where('tipo', '!=', 0)->count();
             $porcentajeFisicas = ($total > 0) ? ($personasFisicas / $total * 100) : 0;
             $porcentajeOtros = ($total > 0) ? ($otrosRegimenes / $total * 100) : 0;
@@ -685,8 +678,14 @@ class historialClienteController extends Controller
     public function obtenerInactivos(Request $request): \Illuminate\Http\JsonResponse
     {
         if ($request->ajax()) {
-            $sql = empresas_clientes::where('estado_cliente', 0);
+            // Se carga la relación "catalogoRegimen" para obtener el nombre del régimen fiscal.
+            $sql = empresas_clientes::where('estado_cliente', 0)->with('catalogoRegimen');
+
             return DataTables::of($sql)->addIndexColumn()
+                // Se añade una nueva columna para mostrar el nombre del régimen fiscal
+                ->addColumn('regimen_fiscal_nombre', function($row) {
+                    return $row->catalogoRegimen->regimen ?? 'N/A';
+                })
                 ->addColumn('constancia', function ($row) {
                     if (!empty($row->constancia) && str_ends_with($row->constancia, '.pdf')) {
                         return Storage::url($row->constancia);

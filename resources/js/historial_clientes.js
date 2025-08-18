@@ -4,16 +4,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const agregarEmpresaModalElement = document.getElementById('agregarEmpresa');
     const editHistorialModalElement = document.getElementById('editHistorialModal');
     const viewHistorialModalElement = document.getElementById('viewHistorialModal');
-    const exportModalElement = document.getElementById('modal-add-export_clientes_empresas');
     const viewPdfModalElement = document.getElementById('viewPdfModal');
     const editHistorialModalContent = document.getElementById('editHistorialModalContent');
     const viewHistorialModalContent = document.getElementById('viewHistorialModalContent');
+    const exportModalElement = document.getElementById('modal-add-export_clientes_empresas');
 
     const agregarEmpresaModal = agregarEmpresaModalElement ? new bootstrap.Modal(agregarEmpresaModalElement) : null;
     const editHistorialModal = editHistorialModalElement ? new bootstrap.Modal(editHistorialModalElement) : null;
     const viewHistorialModal = viewHistorialModalElement ? new bootstrap.Modal(viewHistorialModalElement) : null;
-    const exportModal = exportModalElement ? new bootstrap.Modal(exportModalElement) : null;
     const viewPdfModal = viewPdfModalElement ? new bootstrap.Modal(viewPdfModalElement) : null;
+    const exportModal = exportModalElement ? new bootstrap.Modal(exportModalElement) : null;
 
     let contactIndex = 0;
     let dataTable;
@@ -74,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /**
      * Actualiza el contador de clientes y recarga la tabla.
-     * Esta función centraliza toda la lógica de actualización de la UI.
      */
     function updateUI() {
         if (dataTable) {
@@ -104,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                     ...options.headers
                 }
             });
@@ -158,12 +157,23 @@ document.addEventListener('DOMContentLoaded', function () {
             $(this).attr('name', $(this).attr('name').replace('INDEX', contactIndex));
         });
 
-        if (data.contacto) newRow.querySelector('[name$="[contacto]"]').value = data.contacto;
-        if (data.celular) newRow.querySelector('[name$="[celular]"]').value = data.celular;
-        if (data.correo) newRow.querySelector('[name$="[correo]"]').value = data.correo;
+        if (data.id) {
+            const hiddenId = document.createElement('input');
+            hiddenId.type = 'hidden';
+            hiddenId.name = `${prefix}[id]`;
+            hiddenId.value = data.id;
+            newRow.appendChild(hiddenId);
+        }
+
+        if (data.nombre_contacto) newRow.querySelector('[name$="[contacto]"]').value = data.nombre_contacto;
+        if (data.telefono_contacto) newRow.querySelector('[name$="[celular]"]').value = data.telefono_contacto;
+        if (data.correo_contacto) newRow.querySelector('[name$="[correo]"]').value = data.correo_contacto;
+
         const statusField = newRow.querySelector('[name$="[status]"]');
-        if (statusField) statusField.value = data.status !== undefined ? data.status.toString() : '0';
-        if (data.observaciones) newRow.querySelector('[name$="[observaciones]"]').value = data.observaciones;
+        if (statusField) statusField.value = data.status !== undefined ? data.status.toString() : '1';
+
+        const observacionesField = newRow.querySelector('[name$="[observaciones]"]');
+        if (observacionesField) observacionesField.value = data.observaciones || '';
 
         if (isViewMode) {
             $(newRow).find('input, select, textarea').prop('disabled', true);
@@ -173,20 +183,19 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         container.appendChild(newRow);
-        const selectElement = $(newRow).find('select');
-        selectElement.select2({
+        $(newRow).find('select').select2({
             minimumResultsForSearch: Infinity,
-            dropdownParent: selectElement.closest('td')
+            dropdownParent: $(newRow).closest('.modal-content')
         });
         contactIndex++;
     }
+
 
     /**
      * Actualiza el contador de clientes en los cuadros de estadísticas.
      */
     async function updateClientStats() {
         if (typeof estadisticasClientesUrl === 'undefined') {
-            console.warn("'estadisticasClientesUrl' no está definida. No se pueden actualizar las estadísticas.");
             return;
         }
         try {
@@ -194,7 +203,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error('Error al obtener las estadísticas.');
             const data = await response.json();
             if (data) {
-                // Actualizar los contadores en las tarjetas
                 animateCounter('#clientesActivosCount', data.clientesActivos);
                 animateCounter('#personasFisicasCount', data.personasFisicas);
                 animateCounter('#otrosRegimenesCount', data.otrosRegimenes);
@@ -244,23 +252,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
             editHistorialModalContent.innerHTML = await response.text();
             const form = document.getElementById('editarhistorial');
-            contactIndex = form.querySelectorAll('.contact-row').length;
+
+            contactIndex = 0;
+            form.querySelectorAll('.contact-row').forEach(row => {
+                const inputs = $(row).find('input, select, textarea');
+                inputs.each(function() {
+                    const originalName = $(this).attr('name');
+                    const newName = originalName.replace(/contactos\[\d+\]/, `contactos[${contactIndex}]`);
+                    $(this).attr('name', newName);
+                });
+                contactIndex++;
+            });
 
             form.querySelectorAll('.remove-contact-row').forEach(btn => btn.addEventListener('click', () => btn.closest('.contact-row').remove()));
             $('#editarhistorial .select2').select2({ dropdownParent: editHistorialModalElement });
             form.querySelectorAll('.contact-row select').forEach(select => $(select).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(select).closest('td') }));
             document.getElementById('add-contact-row-editar').addEventListener('click', () => addContactRow('contact-rows-container-editar'));
 
-            // Listener para el submit del formulario de edición.
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
-                // Realiza la petición AJAX para editar
                 const success = await submitForm(this, `/empresas/${id}`, {
                     successButtonText: '<i class="ri-add-line"></i> Actualizar Empresa'
                 });
                 if (success) {
                     editHistorialModal.hide();
-
                     updateUI();
                 }
             });
@@ -289,12 +304,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             viewHistorialModalContent.innerHTML = await response.text();
-            const contactRows = document.getElementById('contact-rows-container-view');
-            if (contactRows) {
-                $(contactRows).find('select').each(function() {
-                    $(this).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(this).closest('td') });
-                });
-            }
+            $(viewHistorialModalContent).find('select').each(function() {
+                $(this).select2({ minimumResultsForSearch: Infinity, dropdownParent: viewHistorialModalElement });
+            });
         } catch (error) {
             console.error('Error al cargar la vista del historial:', error);
             viewHistorialModalContent.innerHTML = `<div class="modal-body"><div class="alert alert-danger p-4">Error al cargar los detalles: ${error.message || 'Error desconocido'}</div></div>`;
@@ -356,7 +368,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                             'Accept': 'application/json'
                         }
                     });
@@ -374,7 +386,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         customClass: { confirmButton: 'btn btn-success' }
                     });
 
-                    // Recarga la UI después de cambiar el estado.
                     updateUI();
 
                 } catch (error) {
@@ -414,6 +425,10 @@ document.addEventListener('DOMContentLoaded', function () {
             { data: 'colonia', name: 'colonia', width: '80px', className: 'text-wrap' },
             { data: 'localidad', name: 'localidad', width: '70px', className: 'text-wrap' },
             { data: 'municipio', name: 'municipio', width: '70px', className: 'text-wrap' },
+            { data: 'estado', name: 'estado', width: '70px', className: 'text-wrap' },
+            // CORRECCIÓN: Se usa la columna generada en el controlador para mostrar el nombre
+            { data: 'regimen_fiscal_nombre', name: 'catalogoRegimen.regimen', width: '80px', className: 'text-wrap' },
+            { data: 'credito', name: 'credito', width: '80px', className: 'text-wrap' },
             {
                 data: 'constancia',
                 name: 'constancia',
@@ -458,21 +473,15 @@ document.addEventListener('DOMContentLoaded', function () {
             {
                 text: '<i class="ri-add-line"></i> Agregar Cliente',
                 className: 'btn btn-primary waves-effect waves-light m-1',
-                attr: {
-                    id: 'agregarClienteBtn'
-                },
                 action: function(e, dt, node, config) {
-                    $('#agregarEmpresa').modal('show');
+                    agregarEmpresaModal.show();
                 }
             },
             {
                 text: '<i class="ri-file-text-line"></i> Exportar',
                 className: 'btn btn-info waves-effect waves-light m-1',
-                attr: {
-                    id: 'exportarClientesBtn',
-                },
                 action: function(e, dt, node, config) {
-                    $('#exportarVentasModal').modal('show');
+                    exportModal.show();
                 }
             }
         ]
@@ -490,7 +499,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             if (success) {
                 agregarEmpresaModal.hide();
-                // Se llama a la función centralizada de actualización de la UI
                 updateUI();
             }
         });
@@ -499,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Eventos de modales
     if (agregarEmpresaModalElement) {
         agregarEmpresaModalElement.addEventListener('shown.bs.modal', () => {
-            $('#agregarEmpresa .select2').select2({ dropdownParent: $('#agregarEmpresa') });
+            $('#agregarEmpresa .select2').select2({ dropdownParent: agregarEmpresaModalElement });
             contactIndex = 0;
             $('#contact-rows-container-agregar').empty();
             addContactRow('contact-rows-container-agregar');
@@ -515,12 +523,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // Evento para el modal de exportación
     async function loadClientesForExportModal() {
         if (!clientesAjaxUrl) {
-            console.warn("'clientesAjaxUrl' no está definida.");
             return;
         }
         const selectElement = document.getElementById('filtroCliente');
         if (!selectElement) {
-            console.error("No se encontró el elemento 'filtroCliente'.");
             return;
         }
         $(selectElement).find('option:not(:first)').remove();
@@ -551,8 +557,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const pdfUrl = $(this).data('pdf-url');
         if (pdfUrl) {
             showPdfViewer(pdfUrl);
-        } else {
-            console.warn('No se encontró la URL del contenido para este elemento.');
         }
     });
 
