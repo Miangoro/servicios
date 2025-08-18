@@ -14,4 +14,10 @@ class OpcionesModel extends Model
         'id_pregunta',
         'opcion',
     ];
+
+    // Nueva relación: una opción pertenece a una pregunta
+    public function pregunta()
+    {
+        return $this->belongsTo(PreguntasModel::class, 'id_pregunta', 'id_pregunta');
+    }
 }

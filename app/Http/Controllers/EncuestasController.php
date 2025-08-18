@@ -73,13 +73,15 @@ class EncuestasController extends Controller
                             </a>
                         </li>';
                     } else {
+                        
                         // Mostrar opción de Responder
-                        $btn .= '<li>
+
+                    }
+                                            $btn .= '<li>
                             <a class="dropdown-item" href="' . route('encuestas.answer', $row->id_encuesta) . '">
                                 <i class="ri-file-check-fill ri-20px text-primary"></i> Responder
                             </a>
                         </li>';
-                    }
 
                     // Siempre mostrar editar si aplica
                     $btn .= '<li>
@@ -96,13 +98,13 @@ class EncuestasController extends Controller
                 ->make(true);
         }
 
-        return view('catalogo.encuestas');
+        return view('encuestas.encuestas');
     }
 
 
     public function create()
     {
-        return view('catalogo.crear_encuesta', [
+        return view('encuestas.crear_encuesta', [
             'encuesta' => new EncuestasModel(),
             'mode' => 'create'
         ]);
@@ -147,7 +149,7 @@ class EncuestasController extends Controller
     public function show(EncuestasModel $encuesta)
     {
         $encuesta->load('preguntas');
-        return view('catalogo.crear_encuesta', [
+        return view('encuestas.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'view'
         ]);
@@ -156,7 +158,7 @@ class EncuestasController extends Controller
     public function edit(EncuestasModel $encuesta)
     {
         $encuesta->load('preguntas');
-        return view('catalogo.crear_encuesta', [
+        return view('encuestas.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'edit'
         ]);
@@ -218,7 +220,7 @@ class EncuestasController extends Controller
             default => collect(),
         };
 
-        return view('catalogo.responder_encuesta', [
+        return view('encuestas.responder_encuesta', [
             'encuesta' => $encuesta,
             'modoLectura' => false, // Modo responder
             'respuestasUsuario' => [],
@@ -345,7 +347,7 @@ class EncuestasController extends Controller
             }
         }
 
-        return view('catalogo.responder_encuesta', [
+        return view('encuestas.responder_encuesta', [
             'encuesta' => $encuesta,
             'modoLectura' => true, // Modo solo lectura
             'respuestasUsuario' => $respuestasUsuario,

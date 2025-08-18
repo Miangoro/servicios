@@ -2,7 +2,6 @@
 
 @section('title', 'Proveedores')
 
-<!-- Vendor Styles -->
 @section('vendor-style')
     @vite([
         'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
@@ -12,19 +11,31 @@
         'resources/assets/vendor/libs/@form-validation/form-validation.scss',
         'resources/assets/vendor/libs/animate-css/animate.scss',
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-        //Animacion "loading"
         'resources/assets/vendor/libs/spinkit/spinkit.scss',
     ])
 @endsection
 
-<!-- Vendor Scripts -->
 @section('vendor-script')
-    @vite(['resources/assets/vendor/libs/moment/moment.js', 'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js', 'resources/assets/vendor/libs/select2/select2.js', 'resources/assets/vendor/libs/@form-validation/popular.js', 'resources/assets/vendor/libs/@form-validation/bootstrap5.js', 'resources/assets/vendor/libs/@form-validation/auto-focus.js', 'resources/assets/vendor/libs/cleavejs/cleave.js', 'resources/assets/vendor/libs/cleavejs/cleave-phone.js', 'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'])
+    @vite([
+        'resources/assets/vendor/libs/moment/moment.js',
+        'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js',
+        'resources/assets/vendor/libs/select2/select2.js',
+        'resources/assets/vendor/libs/@form-validation/popular.js',
+        'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
+        'resources/assets/vendor/libs/@form-validation/auto-focus.js',
+        'resources/assets/vendor/libs/cleavejs/cleave.js',
+        'resources/assets/vendor/libs/cleavejs/cleave-phone.js',
+        'resources/assets/vendor/libs/sweetalert2/sweetalert2.js',
+        'resources/assets/vendor/libs/chartjs/chartjs.js'
+    ])
 @endsection
 
 @section('page-script')
-    @vite(['resources/js/Proveedores.js'])
-
+    @vite(['resources/js/verGraficasProveedores.js'])
+    <script>
+        // Aquí pasamos los datos de las gráficas al JS
+        window.graficasData = @json($datosGraficas);
+    </script>
 @endsection
 
 @section('content')
@@ -35,13 +46,10 @@
                     <div class="card-header border-0 pb-1">
                         <div class="row align-items-center">
                             <div class="col-6">
-                                <button type="button" class="add-new btn btn-secondary waves-effect waves-light">
-                                    <i class="ri-arrow-reply-solid ri-16px me-0 me-sm-2 align-baseline"></i>
-                                    <span class="d-none d-sm-inline-block">Regresar</span>
-                                </button>
-                                <h3 class="mb-0"><b>Gráficas de las encuestas de satisfacción del proveedor</b></h3>
-                                <span>Número de compras:</span>
-                                <span>Número de evaluaciones:</span>
+                                <div class="d-flex flex-row align-items-center">
+                                    <i class="ri-survey-fill ri-40px"></i>
+                                    <h3 class="mb-0 m-1"><b>Gráficas de las encuestas de satisfacción del proveedor</b></h3>
+                                </div>
 
                             </div>
                             <div class="col-6 text-right">
@@ -51,46 +59,48 @@
 
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                    <div class="d-grid">
-                        <div class="col-xl-6 col-12 mb-6">
-                            <div class="card">
-                                <div class="card-header header-elements">
-                                    <h5 class="card-title mb-0">Latest Statistics</h5>
-                                    <div class="card-action-element ms-auto py-0">
-                                        <div class="dropdown">
-                                            <button type="button" class="btn dropdown-toggle px-0" data-bs-toggle="dropdown"
-                                                aria-expanded="false"><i class="ri-calendar-2-line"></i></button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a href="javascript:void(0);"
-                                                        class="dropdown-item d-flex align-items-center">Today</a></li>
-                                                <li><a href="javascript:void(0);"
-                                                        class="dropdown-item d-flex align-items-center">Yesterday</a></li>
-                                                <li><a href="javascript:void(0);"
-                                                        class="dropdown-item d-flex align-items-center">Last 7 Days</a></li>
-                                                <li><a href="javascript:void(0);"
-                                                        class="dropdown-item d-flex align-items-center">Last 30 Days</a>
-                                                </li>
-                                                <li>
-                                                    <hr class="dropdown-divider">
-                                                </li>
-                                                <li><a href="javascript:void(0);"
-                                                        class="dropdown-item d-flex align-items-center">Current Month</a>
-                                                </li>
-                                                <li><a href="javascript:void(0);"
-                                                        class="dropdown-item d-flex align-items-center">Last Month</a></li>
-                                            </ul>
+                    <div class="card-body">
+                        <div class="nav-align-top">
+                            <ul class="nav nav-tabs" role="tablist" id="graficas-tabs">
+                                @foreach($datosGraficas as $id_encuesta => $data)
+                                    <li class="nav-item">
+                                        <button type="button" class="nav-link {{ $loop->first ? 'active' : '' }}" role="tab" data-bs-toggle="tab" data-bs-target="#tab-{{ $id_encuesta }}" aria-controls="tab-{{ $id_encuesta }}" aria-selected="{{ $loop->first ? 'true' : 'false' }}">
+                                            {{ $data['nombre_encuesta'] }}
+                                        </button>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            <div class="tab-content" id="graficas-tab-content">
+                                @foreach($datosGraficas as $id_encuesta => $data)
+                                    <div class="tab-pane fade show {{ $loop->first ? 'active' : '' }}" id="tab-{{ $id_encuesta }}" role="tabpanel">
+                                        <h4>Gráficas para la encuesta: {{ $data['nombre_encuesta'] }}</h4>
+                                        <hr>
+                                        
+                                        <div class="row row-cols-1 row-cols-md-2 col-md-12">
+                                            @foreach($data['preguntas'] as $pregunta)
+                                                <div class="col-md-6">
+                                                    <div class="card-header header-elements">
+                                                        <h5 class="card-title mb-0">{{ $pregunta['nombre_pregunta'] }}</h5>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <canvas id="chart-{{ $id_encuesta }}-{{ $pregunta['id_pregunta'] }}" 
+                                                                class="chartjs" data-height="400"></canvas>
+                                                    </div>
+                                                </div>
+                                            @endforeach
                                         </div>
                                     </div>
-                                </div>
-                                <div class="card-body">
-                                    <canvas id="barChart" class="chartjs" data-height="400"></canvas>
-                                </div>
+
+                                @endforeach
                             </div>
                         </div>
                     </div>
 
-                    <div class="card-footer py-4">
-                        <nav class="d-flex justify-content-end" aria-label="..."></nav>
+                    <div class="card-footer py-4 d-flex flex-row justify-content-center">
+                                <button type="button" class="add-new btn btn-secondary waves-effect waves-light" onclick="history.back()">
+                                     <i class="ri-arrow-left-fill"></i>
+                                    <span class="d-none d-sm-inline-block">Regresar</span>
+                                </button>
                     </div>
                 </div>
             </div>

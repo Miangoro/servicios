@@ -16,4 +16,10 @@ class RespuestasCerradas extends Model
         'id_usuario',
         'created_at'
     ];
+
+    // Relación con OpcionesModel
+    public function opcion()
+    {
+        return $this->belongsTo(OpcionesModel::class, 'id_opcion', 'id_opcion');
+    }
 }

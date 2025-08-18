@@ -223,7 +223,7 @@ Route::middleware('auth')->controller(CatalogoProveedores::class)->group(functio
     Route::get('/proveedores/{id}/edit', [CatalogoProveedores::class, 'getProveedor'])->name('proveedores.edit');
     Route::put('/proveedores/{id}', [CatalogoProveedores::class, 'update'])->name('proveedores.update');
     Route::delete('/proveedores/{id}', [CatalogoProveedores::class, 'destroy']);
-    Route::get('/add_catalogo_proveedores', 'add_catalogo_proveedores')->name('add_catalogo_proveedores');
+    Route::get('/proveedores/{id}/graficas', [CatalogoProveedores::class, 'graficas'])->name('proveedores.graficas');
 });
 
 // Rutas para Encuestas

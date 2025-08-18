@@ -248,6 +248,27 @@ window.updatePreview = function (questionItem) {
     previewContainer.innerHTML = previewHtml;
 }
 
+  //pantalla de carga
+  const loadingSpinner = document.getElementById('loading-spinner');
+
+  //boton de crear encuesta
+  const openModalBtn = document.getElementById('addEncuestaBTN');
+
+  openModalBtn.addEventListener('click', () => {
+    // 1. Mostrar el spinner
+    loadingSpinner.classList.remove('d-none');
+    
+    // 2. Simular una carga de datos con setTimeout (aquí pondrías tu llamada AJAX)
+    setTimeout(() => {
+        // 3. Ocultar el spinner después de que los datos "cargaron"
+        loadingSpinner.classList.add('d-none');
+        
+        // 4. Abrir el modal
+        myModal.show();
+    }, 2000); // 2000 milisegundos = 2 segundos
+});
+
+
 document.addEventListener('DOMContentLoaded', function () {
   updateQuestionNumbers();
   document.querySelectorAll('.question-item').forEach(updatePreview);
