@@ -5,10 +5,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const editHistorialModalElement = document.getElementById('editHistorialModal');
     const viewHistorialModalElement = document.getElementById('viewHistorialModal');
     const viewPdfModalElement = document.getElementById('viewPdfModal');
-    const editHistorialModalContent = document.getElementById('editHistorialModalContent');
-    const viewHistorialModalContent = document.getElementById('viewHistorialModalContent');
-    const exportModalElement = document.getElementById('modal-add-export_clientes_empresas');
+    const exportModalElement = document.getElementById('exportarVentasModal');
 
+    // Inicialización de modales
     const agregarEmpresaModal = agregarEmpresaModalElement ? new bootstrap.Modal(agregarEmpresaModalElement) : null;
     const editHistorialModal = editHistorialModalElement ? new bootstrap.Modal(editHistorialModalElement) : null;
     const viewHistorialModal = viewHistorialModalElement ? new bootstrap.Modal(viewHistorialModalElement) : null;
@@ -25,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * @param {HTMLElement} formElement - El elemento del formulario.
      */
     function clearValidationErrors(formElement) {
+        if (!formElement) return;
         formElement.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         $(formElement).find('.select2-container .select2-selection--single').removeClass('is-invalid');
         formElement.querySelectorAll('.invalid-feedback').forEach(el => el.innerHTML = '');
@@ -86,10 +86,11 @@ document.addEventListener('DOMContentLoaded', function () {
      * Envía una petición de formulario mediante AJAX.
      * @param {HTMLFormElement} form - El formulario a enviar.
      * @param {string} url - La URL del endpoint.
-     * @param {object} [options={}] - Opciones adicionales para la petición.
      */
-    async function submitForm(form, url, options = {}) {
+    async function submitForm(form, url) {
         const submitButton = form.querySelector('button[type="submit"]');
+        if (!submitButton) return false;
+
         const originalButtonHtml = submitButton.innerHTML;
         const loadingHtml = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
 
@@ -104,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData,
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    ...options.headers
+                    'Accept': 'application/json' // Aseguramos que la respuesta sea JSON
                 }
             });
 
@@ -157,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             $(this).attr('name', $(this).attr('name').replace('INDEX', contactIndex));
         });
 
+        // Poblar datos si se proporcionan
         if (data.id) {
             const hiddenId = document.createElement('input');
             hiddenId.type = 'hidden';
@@ -164,16 +166,11 @@ document.addEventListener('DOMContentLoaded', function () {
             hiddenId.value = data.id;
             newRow.appendChild(hiddenId);
         }
-
-        if (data.nombre_contacto) newRow.querySelector('[name$="[contacto]"]').value = data.nombre_contacto;
-        if (data.telefono_contacto) newRow.querySelector('[name$="[celular]"]').value = data.telefono_contacto;
-        if (data.correo_contacto) newRow.querySelector('[name$="[correo]"]').value = data.correo_contacto;
-
-        const statusField = newRow.querySelector('[name$="[status]"]');
-        if (statusField) statusField.value = data.status !== undefined ? data.status.toString() : '1';
-
-        const observacionesField = newRow.querySelector('[name$="[observaciones]"]');
-        if (observacionesField) observacionesField.value = data.observaciones || '';
+        $(newRow).find('[name$="[contacto]"]').val(data.nombre_contacto || '');
+        $(newRow).find('[name$="[celular]"]').val(data.telefono_contacto || '');
+        $(newRow).find('[name$="[correo]"]').val(data.correo_contacto || '');
+        $(newRow).find('[name$="[status]"]').val(data.status !== undefined ? data.status.toString() : '1');
+        $(newRow).find('[name$="[observaciones]"]').val(data.observaciones || '');
 
         if (isViewMode) {
             $(newRow).find('input, select, textarea').prop('disabled', true);
@@ -189,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
         contactIndex++;
     }
-
 
     /**
      * Actualiza el contador de clientes en los cuadros de estadísticas.
@@ -214,7 +210,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Función para animar el conteo de números (ya la tenías)
+    /**
+     * Función para animar el conteo de números.
+     */
     function animateCounter(selector, targetValue) {
         const element = $(selector);
         const startValue = 0;
@@ -237,6 +235,9 @@ document.addEventListener('DOMContentLoaded', function () {
      * @param {number} id - El ID del cliente a editar.
      */
     async function showEditModal(id) {
+        const editHistorialModalContent = document.getElementById('editHistorialModalContent');
+        if (!editHistorialModalContent) return;
+
         editHistorialModalContent.innerHTML = `<div class="modal-body text-center py-5">
             <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             <p class="mt-2">Cargando formulario de edición...</p>
@@ -252,8 +253,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             editHistorialModalContent.innerHTML = await response.text();
             const form = document.getElementById('editarhistorial');
+            if (!form) return;
 
             contactIndex = 0;
+            // Re-indexar los contactos existentes
             form.querySelectorAll('.contact-row').forEach(row => {
                 const inputs = $(row).find('input, select, textarea');
                 inputs.each(function() {
@@ -267,13 +270,16 @@ document.addEventListener('DOMContentLoaded', function () {
             form.querySelectorAll('.remove-contact-row').forEach(btn => btn.addEventListener('click', () => btn.closest('.contact-row').remove()));
             $('#editarhistorial .select2').select2({ dropdownParent: editHistorialModalElement });
             form.querySelectorAll('.contact-row select').forEach(select => $(select).select2({ minimumResultsForSearch: Infinity, dropdownParent: $(select).closest('td') }));
-            document.getElementById('add-contact-row-editar').addEventListener('click', () => addContactRow('contact-rows-container-editar'));
+
+            // Agregar un solo listener para el botón de añadir contacto en edición
+            const addContactBtn = document.getElementById('add-contact-row-editar');
+            if (addContactBtn) {
+                addContactBtn.addEventListener('click', () => addContactRow('contact-rows-container-editar'));
+            }
 
             form.addEventListener('submit', async function(event) {
                 event.preventDefault();
-                const success = await submitForm(this, `/empresas/${id}`, {
-                    successButtonText: '<i class="ri-add-line"></i> Actualizar Empresa'
-                });
+                const success = await submitForm(this, `/empresas/${id}`);
                 if (success) {
                     editHistorialModal.hide();
                     updateUI();
@@ -290,6 +296,9 @@ document.addEventListener('DOMContentLoaded', function () {
      * @param {number} id - El ID del cliente a visualizar.
      */
     async function showViewModal(id) {
+        const viewHistorialModalContent = document.getElementById('viewHistorialModalContent');
+        if (!viewHistorialModalContent) return;
+
         viewHistorialModalContent.innerHTML = `<div class="modal-body text-center py-5">
             <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
             <p class="mt-2">Cargando información de la empresa...</p>
@@ -322,6 +331,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const openPdfInNewTabBtn = document.getElementById('openPdfInNewTabBtn');
         const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
 
+        if (!pdfViewerFrame || !openPdfInNewTabBtn || !pdfLoadingMessage) {
+            console.error('Elementos del modal de PDF no encontrados.');
+            return;
+        }
+
         pdfLoadingMessage.innerText = 'Cargando contenido... Si no se muestra, usa "Abrir en otra pestaña".';
         pdfLoadingMessage.style.display = 'block';
         pdfViewerFrame.style.display = 'none';
@@ -352,7 +366,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * @param {string} successIcon - El icono del mensaje de éxito.
      */
     async function toggleClientStatus(id, endpoint, title, text, confirmText, successTitle, successIcon) {
-        Swal.fire({
+        const result = await Swal.fire({
             title: title,
             text: text,
             icon: successIcon,
@@ -361,174 +375,247 @@ document.addEventListener('DOMContentLoaded', function () {
             cancelButtonColor: '#d33',
             confirmButtonText: confirmText,
             cancelButtonText: 'Cancelar'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    const response = await fetch(`/empresas/${id}/${endpoint}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json'
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (!response.ok) {
-                        throw new Error(data.message || `Error al realizar la operación de ${endpoint}.`);
-                    }
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: successTitle,
-                        text: data.message,
-                        customClass: { confirmButton: 'btn btn-success' }
-                    });
-
-                    updateUI();
-
-                } catch (error) {
-                    console.error(`Error en la petición de ${endpoint}:`, error);
-                    showSweetAlertError('¡Error!', `Hubo un problema: ${error.message}`);
-                }
-            }
         });
+
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`/empresas/${id}/${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || `Error al realizar la operación de ${endpoint}.`);
+                }
+
+                Swal.fire({
+                    icon: 'success',
+                    title: successTitle,
+                    text: data.message,
+                    customClass: { confirmButton: 'btn btn-success' }
+                });
+
+                updateUI();
+            } catch (error) {
+                console.error(`Error en la petición de ${endpoint}:`, error);
+                showSweetAlertError('¡Error!', `Hubo un problema: ${error.message}`);
+            }
+        }
     }
 
     // --- Lógica del CRUD y Event Listeners ---
+    function initializeDataTable() {
+        if (!$.fn.DataTable) return;
 
-    // Inicializar DataTables
-    dataTable = $('#tablaHistorial').DataTable({
-        language: {
-            url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-            lengthMenu: '_MENU_',
-        },
-        processing: true,
-        serverSide: true,
-        responsive: false,
-        ajax: { url: dataTableAjaxUrl, type: "GET" },
-        columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '25px', className: 'text-center' },
-            {
-                data: 'nombre',
-                name: 'nombre',
-                width: '100px',
-                className: 'text-wrap',
-                render: (data, type, row) => {
-                    const iconHtml = row.estado_cliente === 0 ? `<i class="ri-user-forbid-line text-danger me-2"></i>` : '';
-                    return `${iconHtml}${data}`;
-                }
+        dataTable = $('#tablaHistorial').DataTable({
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
+                lengthMenu: '_MENU_',
             },
-            { data: 'rfc', name: 'rfc', width: '80px', className: 'text-center' },
-            { data: 'calle', name: 'calle', width: '100px', className: 'text-wrap' },
-            { data: 'colonia', name: 'colonia', width: '80px', className: 'text-wrap' },
-            { data: 'localidad', name: 'localidad', width: '70px', className: 'text-wrap' },
-            { data: 'municipio', name: 'municipio', width: '70px', className: 'text-wrap' },
-            { data: 'estado', name: 'estado', width: '70px', className: 'text-wrap' },
-            // CORRECCIÓN: Se usa la columna generada en el controlador para mostrar el nombre
-            { data: 'regimen_fiscal_nombre', name: 'catalogoRegimen.regimen', width: '80px', className: 'text-wrap' },
-            { data: 'credito', name: 'credito', width: '80px', className: 'text-wrap' },
-            {
-                data: 'constancia',
-                name: 'constancia',
-                width: '120px',
-                className: 'text-wrap text-center',
-                render: (data) => {
-                    const imageUrl = data ? '/assets/img/icons/misc/pdf.png' : '/img_pdf/FaltaPDF.png';
-                    const buttonClass = data ? '' : 'btn-no-border';
-                    return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn ${buttonClass}" data-pdf-url="${data || '/img_pdf/FaltaPDF.png'}">
-                                <img src="${imageUrl}" alt="Ver PDF" style="width: 40px; height: auto;">
-                            </button>`;
+            processing: true,
+            serverSide: true,
+            responsive: false,
+            ajax: { url: dataTableAjaxUrl, type: "GET" },
+            columns: [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '25px', className: 'text-center' },
+                {
+                    data: 'nombre',
+                    name: 'nombre',
+                    width: '100px',
+                    className: 'text-wrap',
+                    render: (data, type, row) => {
+                        const iconHtml = row.estado_cliente === 0 ? `<i class="ri-user-forbid-line text-danger me-2"></i>` : '';
+                        return `${iconHtml}${data}`;
+                    }
+                },
+                { data: 'rfc', name: 'rfc', width: '80px', className: 'text-center' },
+                { data: 'calle', name: 'calle', width: '100px', className: 'text-wrap' },
+                { data: 'colonia', name: 'colonia', width: '80px', className: 'text-wrap' },
+                { data: 'localidad', name: 'localidad', width: '70px', className: 'text-wrap' },
+                { data: 'municipio', name: 'municipio', width: '70px', className: 'text-wrap' },
+                { data: 'estado', name: 'estado', width: '70px', className: 'text-wrap' },
+                { data: 'regimen_fiscal_nombre', name: 'catalogoRegimen.regimen', width: '80px', className: 'text-wrap' },
+                { data: 'credito', name: 'credito', width: '80px', className: 'text-wrap' },
+                {
+                    data: 'constancia',
+                    name: 'constancia',
+                    width: '120px',
+                    className: 'text-wrap text-center',
+                    render: (data) => {
+                        const imageUrl = data ? '/assets/img/icons/misc/pdf.png' : '/img_pdf/FaltaPDF.png';
+                        const buttonClass = data ? '' : 'btn-no-border';
+                        return `<button type="button" class="btn btn-icon waves-effect waves-light view-pdf-btn ${buttonClass}" data-pdf-url="${data || '/img_pdf/FaltaPDF.png'}">
+                            <img src="${imageUrl}" alt="Ver PDF" style="width: 40px; height: auto;">
+                        </button>`;
+                    }
+                },
+                {
+                    data: null,
+                    name: 'action',
+                    orderable: false,
+                    searchable: false,
+                    width: '1%',
+                    className: 'text-center acciones-col',
+                    render: (data) => {
+                        const actionButton = data.estado_cliente === 0
+                            ? `<li><a href="javascript:void(0)" class="dropdown-item text-success btn-dar-de-alta" data-id="${data.id}"><i class="ri-check-line me-1"></i> Dar de Alta</a></li>`
+                            : `<li><a href="javascript:void(0)" class="dropdown-item text-danger btn-dar-de-baja" data-id="${data.id}"><i class="ri-delete-bin-line me-1"></i> Dar de Baja</a></li>`;
+
+                        return `<div class="dropdown">
+                            <button class="btn btn-sm btn-info dropdown-toggle hide-arrow btn-acciones" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;<span class="d-none d-lg-inline-block">Opciones</span> <i class="ri-arrow-down-s-fill ri-16px"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end p-0">
+                                <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-view-unidad" data-id="${data.id}"><i class="ri-search-line me-1 text-muted"></i> Visualizar</a></li>
+                                <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-edit-unidad" data-id="${data.id}"><i class="ri-edit-box-line me-1 text-info"></i> Editar</a></li>
+                                ${actionButton}
+                            </ul>
+                        </div>`;
+                    }
                 }
+            ],
+            rowCallback: (row, data) => {
+                $(row).toggleClass('table-danger', data.estado_cliente === 0);
             },
-            {
-                data: null,
-                name: 'action',
-                orderable: false,
-                searchable: false,
-                width: '140px',
-                className: 'text-center',
-                render: (data) => {
-                    const actionButton = data.estado_cliente === 0
-                        ? `<li><a href="javascript:void(0)" class="dropdown-item text-success btn-dar-de-alta" data-id="${data.id}"><i class="ri-check-line me-1"></i> Dar de Alta</a></li>`
-                        : `<li><a href="javascript:void(0)" class="dropdown-item text-danger btn-dar-de-baja" data-id="${data.id}"><i class="ri-delete-bin-line me-1"></i> Dar de Baja</a></li>`;
-
-                    return `<div class="dropdown">
-                                <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
-                                <ul class="dropdown-menu dropdown-menu-end p-0">
-                                    <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-view-unidad" data-id="${data.id}"><i class="ri-search-line me-1 text-muted"></i> Visualizar</a></li>
-                                    <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-edit-unidad" data-id="${data.id}"><i class="ri-edit-box-line me-1 text-info"></i> Editar</a></li>
-                                    ${actionButton}
-                                </ul>
-                            </div>`;
+            dom: '<"top-row d-flex flex-wrap justify-content-between align-items-center"f<"d-flex gap-2 align-items-center"lB>>rtip',
+            buttons: [
+                {
+                    text: '<i class="ri-add-line"></i> Agregar Cliente',
+                    className: 'btn btn-primary waves-effect waves-light m-1',
+                    action: () => agregarEmpresaModal?.show()
+                },
+                {
+                    text: '<i class="ri-file-text-line"></i> Exportar',
+                    className: 'btn btn-info waves-effect waves-light m-1',
+                    action: () => exportModal?.show()
                 }
-            }
-        ],
-        rowCallback: (row, data) => {
-            $(row).toggleClass('table-danger', data.estado_cliente === 0);
-        },
-        dom: '<"top-row d-flex flex-wrap justify-content-between align-items-center"f<"d-flex gap-2 align-items-center"lB>>rtip',
-        buttons: [
-            {
-                text: '<i class="ri-add-line"></i> Agregar Cliente',
-                className: 'btn btn-primary waves-effect waves-light m-1',
-                action: function(e, dt, node, config) {
-                    agregarEmpresaModal.show();
-                }
-            },
-            {
-                text: '<i class="ri-file-text-line"></i> Exportar',
-                className: 'btn btn-info waves-effect waves-light m-1',
-                action: function(e, dt, node, config) {
-                    exportModal.show();
-                }
-            }
-        ]
-    });
+            ]
+        });
+    }
 
-    // Carga inicial de estadísticas
-    updateClientStats();
-
-    // Evento para el formulario de agregar empresa
-    if (formAgregarEmpresa) {
-        formAgregarEmpresa.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const success = await submitForm(this, this.action, {
-                successButtonText: '<i class="ri-add-line"></i> Agregar Contacto'
+    function setupEventListeners() {
+        // Formulario de agregar empresa
+        if (formAgregarEmpresa) {
+            formAgregarEmpresa.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const success = await submitForm(this, this.action);
+                if (success) {
+                    agregarEmpresaModal.hide();
+                    updateUI();
+                }
             });
-            if (success) {
-                agregarEmpresaModal.hide();
-                updateUI();
+        }
+
+        // Listeners para los modales
+        if (agregarEmpresaModalElement) {
+            agregarEmpresaModalElement.addEventListener('shown.bs.modal', () => {
+                $('#agregarEmpresa .select2').select2({ dropdownParent: agregarEmpresaModalElement });
+                contactIndex = 0;
+                $('#contact-rows-container-agregar').empty();
+                addContactRow('contact-rows-container-agregar');
+            });
+            agregarEmpresaModalElement.addEventListener('hidden.bs.modal', () => {
+                clearValidationErrors(formAgregarEmpresa);
+                formAgregarEmpresa?.reset();
+                $('#agregarEmpresa .select2').select2('destroy');
+            });
+            const addContactBtnAgregar = document.getElementById('add-contact-row-agregar');
+            if (addContactBtnAgregar) {
+                addContactBtnAgregar.addEventListener('click', () => addContactRow('contact-rows-container-agregar'));
+            }
+        }
+
+        if (editHistorialModalElement) {
+            $('#editHistorialModal').on('hidden.bs.modal', function() {
+                const form = document.getElementById('editarhistorial');
+                if (form) {
+                    clearValidationErrors(form);
+                    const motivoEdicionField = form.querySelector('#motivoEdicion');
+                    if (motivoEdicionField) {
+                        motivoEdicionField.value = '';
+                    }
+                    $(form).find('.select2, select').select2('destroy');
+                }
+            });
+        }
+
+        if (viewHistorialModalElement) {
+            $('#viewHistorialModal').on('hidden.bs.modal', function() {
+                const form = document.getElementById('visualizarhistorialForm');
+                if (form) {
+                    $(form).find('.select2, select').select2('destroy');
+                }
+            });
+        }
+        
+        if (viewPdfModalElement) {
+            viewPdfModalElement.addEventListener('hidden.bs.modal', function() {
+                const pdfViewerFrame = document.getElementById('pdfViewerFrame');
+                const pdfLoadingMessage = document.getElementById('pdfLoadingMessage');
+                if (pdfViewerFrame) pdfViewerFrame.src = '';
+                if (pdfLoadingMessage) pdfLoadingMessage.style.display = 'none';
+            });
+        }
+
+        // Modal de exportación
+        if (exportModalElement) {
+            exportModalElement.addEventListener('shown.bs.modal', loadClientesForExportModal);
+        }
+
+        // Habilitar/deshabilitar el filtro de empresa
+        const habilitarFiltro = document.getElementById('habilitar_filtro_empresa');
+        const empresaIdInput = document.getElementById('empresa_id');
+        if (habilitarFiltro && empresaIdInput) {
+            habilitarFiltro.addEventListener('change', () => {
+                empresaIdInput.disabled = !habilitarFiltro.checked;
+            });
+        }
+        
+        // Delegación de eventos para la tabla
+        $(document).on('click', '.view-pdf-btn', function(event) {
+            event.preventDefault();
+            const pdfUrl = $(this).data('pdf-url');
+            if (pdfUrl) {
+                showPdfViewer(pdfUrl);
             }
         });
+
+        $(document).on('click', '.btn-dar-de-baja', function() {
+            const id = $(this).data('id');
+            toggleClientStatus(id, 'baja', '¿Estás seguro?', '¡El cliente será dado de baja!', 'Sí, ¡dar de baja!', '¡Cliente dado de baja!', 'warning');
+        });
+
+        $(document).on('click', '.btn-dar-de-alta', function() {
+            const id = $(this).data('id');
+            toggleClientStatus(id, 'alta', '¿Estás seguro?', '¡El cliente será dado de alta de nuevo!', 'Sí, ¡dar de alta!', '¡Cliente dado de alta!', 'question');
+        });
+
+        $(document).on('click', '.btn-edit-unidad', function() {
+            const id = $(this).data('id');
+            showEditModal(id);
+        });
+
+        $(document).on('click', '.btn-view-unidad', function() {
+            const id = $(this).data('id');
+            showViewModal(id);
+        });
     }
 
-    // Eventos de modales
-    if (agregarEmpresaModalElement) {
-        agregarEmpresaModalElement.addEventListener('shown.bs.modal', () => {
-            $('#agregarEmpresa .select2').select2({ dropdownParent: agregarEmpresaModalElement });
-            contactIndex = 0;
-            $('#contact-rows-container-agregar').empty();
-            addContactRow('contact-rows-container-agregar');
-        });
-        agregarEmpresaModalElement.addEventListener('hidden.bs.modal', () => {
-            clearValidationErrors(formAgregarEmpresa);
-            formAgregarEmpresa.reset();
-            $('#agregarEmpresa .select2').select2('destroy');
-        });
-        document.getElementById('add-contact-row-agregar').addEventListener('click', () => addContactRow('contact-rows-container-agregar'));
-    }
-
-    // Evento para el modal de exportación
+    /**
+     * Carga dinámicamente la lista de clientes para el modal de exportación.
+     */
     async function loadClientesForExportModal() {
-        if (!clientesAjaxUrl) {
-            return;
-        }
         const selectElement = document.getElementById('filtroCliente');
-        if (!selectElement) {
+        if (!selectElement || typeof clientesAjaxUrl === 'undefined' || !clientesAjaxUrl) {
+            console.error('Elementos o URL de clientes para exportación no encontrados.');
             return;
         }
+
+        // Limpiar opciones previas
         $(selectElement).find('option:not(:first)').remove();
         try {
             const response = await fetch(clientesAjaxUrl);
@@ -547,72 +634,9 @@ document.addEventListener('DOMContentLoaded', function () {
             selectElement.appendChild(option);
         }
     }
-    if (exportModalElement) {
-        exportModalElement.addEventListener('shown.bs.modal', loadClientesForExportModal);
-    }
-
-    // --- Listeners para botones generados dinámicamente (usando delegación de eventos) ---
-    $(document).on('click', '.view-pdf-btn', function(event) {
-        event.preventDefault();
-        const pdfUrl = $(this).data('pdf-url');
-        if (pdfUrl) {
-            showPdfViewer(pdfUrl);
-        }
-    });
-
-    $(document).on('click', '.btn-dar-de-baja', function() {
-        const id = $(this).data('id');
-        toggleClientStatus(id, 'baja', '¿Estás seguro?', '¡El cliente será dado de baja!', 'Sí, ¡dar de baja!', '¡Cliente dado de baja!', 'warning');
-    });
-
-    $(document).on('click', '.btn-dar-de-alta', function() {
-        const id = $(this).data('id');
-        toggleClientStatus(id, 'alta', '¿Estás seguro?', '¡El cliente será dado de alta de nuevo!', 'Sí, ¡dar de alta!', '¡Cliente dado de alta!', 'question');
-    });
-
-    $(document).on('click', '.btn-edit-unidad', function() {
-        const id = $(this).data('id');
-        showEditModal(id);
-    });
-
-    $(document).on('click', '.btn-view-unidad', function() {
-        const id = $(this).data('id');
-        showViewModal(id);
-    });
-
-    // Eventos para limpiar modales al ocultarse
-    if (viewPdfModalElement) {
-        viewPdfModalElement.addEventListener('hidden.bs.modal', function() {
-            document.getElementById('pdfViewerFrame').src = '';
-            document.getElementById('pdfLoadingMessage').style.display = 'none';
-        });
-    }
-
-    if (editHistorialModalElement) {
-        $('#editHistorialModal').on('hidden.bs.modal', function() {
-            const form = document.getElementById('editarhistorial');
-            if (form) {
-                clearValidationErrors(form);
-                const motivoEdicionField = form.querySelector('#motivoEdicion');
-                if (motivoEdicionField) {
-                    motivoEdicionField.value = '';
-                }
-                $(form).find('.select2, select').select2('destroy');
-            }
-        });
-    }
-
-    if (viewHistorialModalElement) {
-        $('#viewHistorialModal').on('hidden.bs.modal', function() {
-            const form = document.getElementById('visualizarhistorialForm');
-            if (form) {
-                $(form).find('.select2, select').select2('destroy');
-            }
-        });
-    }
-
-    // Evento para habilitar/deshabilitar el filtro de empresa
-    document.getElementById('habilitar_filtro_empresa').addEventListener('change', function() {
-        document.getElementById('empresa_id').disabled = !this.checked;
-    });
+    
+    // --- Inicialización de la aplicación ---
+    initializeDataTable();
+    updateClientStats();
+    setupEventListeners();
 });
