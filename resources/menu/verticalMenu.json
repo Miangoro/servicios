@@ -59,9 +59,9 @@
           "slug": "clientes-confirmados"
         },
         {
-          "url": "clientes/confirmados",
+          "url": "/servicios/especializados",
           "name": "Especializados",
-          "slug": "clientes-confirmados"
+          "slug": "/servicios/especializados"
         }
 
       ]

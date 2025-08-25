@@ -176,6 +176,7 @@ use App\Http\Controllers\CatalogoLaboratorios;
 use App\Http\Controllers\CatalogoUnidades;
 use App\Http\Controllers\CatalogoProveedores;
 use App\Http\Controllers\historialClienteController;
+use App\Http\Controllers\serviciosEspecializadosController;
 use Barryvdh\DomPDF\Facade\pdf as PDF;
 
 // Main Page Route
@@ -568,6 +569,12 @@ Route::post('/empresas/{id}/alta', [historialClienteController::class, 'darDeAlt
 
 });
 
+//Servicios Especializados 
+Route::middleware('auth')->controller(serviciosEspecializadosController::class)->group(function () {
+Route::get('/servicios/especializados', [serviciosEspecializadosController::class, 'index'])->name('servicios.especializados.index');
+Route::get('/servicios-especializados', [serviciosEspecializadosController::class, 'index'])->name('servicios.index');
+Route::post('/servicios-especializados/store', [serviciosEspecializadosController::class, 'store'])->name('servicios.store');
+});
 
 /*obtener el editar*/
 Route::get('/cliente_confirmado/{id}/edit', [clientesConfirmadosController::class, 'editarCliente'])->name('editarCliente')->middleware(['auth']);
