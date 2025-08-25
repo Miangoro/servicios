@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.querySelector('#formResponderEncuesta'); // tu formulario
+    const form = document.querySelector('#formResponderEncuesta'); // formulario
     const selectEvaluado = document.querySelector('#a_Evaluar');
 
     form.addEventListener('submit', function (e) {

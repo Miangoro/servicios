@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\CatalogoProveedor;
 use App\Models\ProveedoresContactos;
-use App\Models\EvaluacionProveedor;
+use App\Models\RespuestasCerradas;
+use App\Models\OpcionesModel;
+use App\Models\EncuestasModel;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -86,7 +88,7 @@ class CatalogoProveedores extends Controller
                         </li>
 
                         <li>
-                                <a class="dropdown-item" href="javascript:void(0);" onclick="verGraficas(' . $row->id_proveedor . ')">' .
+                                <a class="dropdown-item" href="' . route('proveedores.graficas', $row->id_proveedor) . '">' .
                         '<i class="ri-bar-chart-box-fill ri-20px text-primary"></i> Ver gráficas de evaluación' .
                         '</a>
                         </li>
@@ -291,22 +293,96 @@ class CatalogoProveedores extends Controller
         }
     }
 
-    public function getGraficas($id)
+   public function graficas($id)
     {
-        //try {
-           /* $evaluaciones = EvaluacionProveedor::where('id_proveedor', $id)
-                ->orderBy('fecha_evaluacion', 'desc')
+        
+        try {
+            // Obtenemos las respuestas con sus relaciones anidadas
+            $respuestas = RespuestasCerradas::where('id_evaluado', $id)
+                ->with(['opcion.pregunta.encuesta'])
                 ->get();
+                Log::info('Respuestas crudas:', $respuestas->toArray());
 
-            if ($evaluaciones->isEmpty()) {
-                return response()->json(['message' => 'No hay evaluaciones registradas para este proveedor.'], 404);
+            
+            // Si no hay respuestas, retornamos la vista con un array vacío
+            if ($respuestas->isEmpty()) {
+                return view('catalogo.graficas_evaluaciones_proveedores', [
+                    'datosGraficas' => [],
+                    'id_evaluado' => $id
+                ]);
+            }
+            
+            // Filtramos las respuestas para asegurarnos de que tengan todas las relaciones
+            $respuestasValidas = $respuestas->filter(function($respuesta) {
+                return $respuesta->opcion && $respuesta->opcion->pregunta && $respuesta->opcion->pregunta->encuesta;
+            });
+            
+            // Si después de filtrar no hay respuestas válidas, retornamos array vacío
+            if ($respuestasValidas->isEmpty()) {
+                 return view('catalogo.graficas_evaluaciones_proveedores', [
+                    'datosGraficas' => [],
+                    'id_evaluado' => $id
+                ]);
+            }
+            
+            // Agrupamos las respuestas válidas por el ID de la encuesta
+            $respuestasPorEncuesta = $respuestasValidas->groupBy('opcion.pregunta.id_encuesta');
+
+            $datosGraficas = [];
+            foreach ($respuestasPorEncuesta as $id_encuesta => $respuestasDeEncuesta) {
+                $nombre_encuesta = $respuestasDeEncuesta->first()->opcion->pregunta->encuesta->encuesta;
+                
+                $datosGraficas[$id_encuesta] = [
+                    'nombre_encuesta' => $nombre_encuesta,
+                    'preguntas' => []
+                ];
+
+                // Agrupamos las respuestas por pregunta dentro de cada encuesta
+                $respuestasPorPregunta = $respuestasDeEncuesta->groupBy('opcion.pregunta.id_pregunta');
+
+                foreach ($respuestasPorPregunta as $id_pregunta => $respuestasDePregunta) {
+                    $pregunta = $respuestasDePregunta->first()->opcion->pregunta;
+                    
+                    $datosPregunta = [
+                        'nombre_pregunta' => $pregunta->pregunta,
+                        'id_pregunta' => $pregunta->id_pregunta,
+                        'opciones' => []
+                    ];
+
+                    // Obtenemos las opciones de la pregunta
+                    $opciones = OpcionesModel::where('id_pregunta', $id_pregunta)->get();
+
+                    foreach ($opciones as $opcion) {
+                        // Contamos las respuestas para esta opción específica y este evaluado
+                        $conteo = RespuestasCerradas::where('id_evaluado', $id)
+                            ->where('id_opcion', $opcion->id_opcion)
+                            ->count();
+                        
+                        $datosPregunta['opciones'][] = [
+                            'nombre_opcion' => $opcion->opcion,
+                            'conteo' => $conteo
+                        ];
+                    }
+                    
+                    // Solo agregamos la pregunta si tiene al menos una respuesta
+                    if (collect($datosPregunta['opciones'])->sum('conteo') > 0) {
+                        $datosGraficas[$id_encuesta]['preguntas'][] = $datosPregunta;
+                    }
+                }
             }
 
-            return response()->json($evaluaciones);*/
-            return view('catalogo.graficas_evaluaciones_proveedores');
-        
-        /*} catch (\Exception $e) {
+            Log::info('Respuestas encontradas:', $datosGraficas);
+
+
+
+            // Retornamos la vista con los datos preparados
+            return view('catalogo.graficas_evaluaciones_proveedores', [
+                'datosGraficas' => $datosGraficas,
+                'id_evaluado' => $id
+            ]);
+
+        } catch (\Exception $e) {
             return response()->json(['error' => 'Error al obtener las gráficas: ' . $e->getMessage()], 500);
-        }*/
+        }
     }
 }

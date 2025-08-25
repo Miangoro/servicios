@@ -72,14 +72,12 @@ class EncuestasController extends Controller
                                 <i class="ri-search-fill ri-20px text-normal"></i> Ver respuestas
                             </a>
                         </li>';
-                    } else {
-                        // Mostrar opción de Responder
-                        $btn .= '<li>
+                    }
+                    $btn .= '<li>
                             <a class="dropdown-item" href="' . route('encuestas.answer', $row->id_encuesta) . '">
                                 <i class="ri-file-check-fill ri-20px text-primary"></i> Responder
                             </a>
                         </li>';
-                    }
 
                     // Siempre mostrar editar si aplica
                     $btn .= '<li>
@@ -96,13 +94,13 @@ class EncuestasController extends Controller
                 ->make(true);
         }
 
-        return view('catalogo.encuestas');
+        return view('encuestas.encuestas');
     }
 
 
     public function create()
     {
-        return view('catalogo.crear_encuesta', [
+        return view('encuestas.crear_encuesta', [
             'encuesta' => new EncuestasModel(),
             'mode' => 'create'
         ]);
@@ -147,7 +145,7 @@ class EncuestasController extends Controller
     public function show(EncuestasModel $encuesta)
     {
         $encuesta->load('preguntas');
-        return view('catalogo.crear_encuesta', [
+        return view('encuestas.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'view'
         ]);
@@ -156,7 +154,7 @@ class EncuestasController extends Controller
     public function edit(EncuestasModel $encuesta)
     {
         $encuesta->load('preguntas');
-        return view('catalogo.crear_encuesta', [
+        return view('encuestas.crear_encuesta', [
             'encuesta' => $encuesta,
             'mode' => 'edit'
         ]);
@@ -207,9 +205,11 @@ class EncuestasController extends Controller
         return redirect()->route('encuestas.index')->with('success', 'Encuesta actualizada exitosamente');
     }
 
- public function answer($id)
+    public function answer($id)
     {
         $encuesta = EncuestasModel::with('preguntas.opciones')->findOrFail($id);
+
+        $idUsuario = Auth::id();
 
         $evaluados = match ($encuesta->tipo) {
             1 => User::where('tipo', 1)->get(),
@@ -218,12 +218,47 @@ class EncuestasController extends Controller
             default => collect(),
         };
 
-        return view('catalogo.responder_encuesta', [
+        // obtener los IDs de los evaluados que ya tienen respuestas del usuario actual para esta encuesta.
+        $preguntasIds = $encuesta->preguntas->pluck('id_pregunta');
+
+        $evaluadosYaRespondidosIds = collect();
+
+        // Buscar en RespuestasAbiertas
+        $evaluadosYaRespondidosIds = $evaluadosYaRespondidosIds->merge(
+            RespuestasAbiertas::where('id_usuario', $idUsuario)
+                ->whereIn('id_pregunta', $preguntasIds)
+                ->pluck('id_evaluado')
+                ->unique()
+        );
+
+        // Buscar en RespuestasCerradas
+        // Primero, encuentra las IDs de opciones asociadas a las preguntas de la encuesta.
+        $opcionesIds = OpcionesModel::whereIn('id_pregunta', $preguntasIds)->pluck('id_opcion');
+
+        $evaluadosYaRespondidosIds = $evaluadosYaRespondidosIds->merge(
+            RespuestasCerradas::where('id_usuario', $idUsuario)
+                ->whereIn('id_opcion', $opcionesIds)
+                ->pluck('id_evaluado')
+                ->unique()
+        );
+
+        // Filtrar la colección de 'evaluados' para dejar solo aquellos que no están en la lista de los ya respondidos.
+        $evaluadosNoRespondidos = $evaluados->filter(function ($evaluado) use ($evaluadosYaRespondidosIds, $encuesta) {
+            $evaluadoId = ($encuesta->tipo == 3) ? $evaluado->id_proveedor : $evaluado->id;
+
+            return !$evaluadosYaRespondidosIds->contains($evaluadoId);
+        });
+
+        if ($evaluadosNoRespondidos->isEmpty()) {
+            return redirect()->route('encuestas.index')->with('info', 'Ya has evaluado a todos los que te corresponden en esta encuesta. ¡Gracias por tu participación! 🎉');
+        }
+
+        return view('encuestas.responder_encuesta', [
             'encuesta' => $encuesta,
-            'modoLectura' => false, // Modo responder
+            'modoLectura' => false,
             'respuestasUsuario' => [],
-            'evaluados' => $evaluados,
-            'evaluadoNombre' => null // No es necesario en este modo, pero se inicializa para evitar errores
+            'evaluados' => $evaluadosNoRespondidos,
+            'evaluadoNombre' => null
         ]);
     }
 
@@ -240,7 +275,7 @@ class EncuestasController extends Controller
 
         foreach ($request->respuestas as $id_pregunta => $respuesta) {
             $pregunta = PreguntasModel::findOrFail($id_pregunta);
-            
+
             // Usar el tipo de la pregunta para el modelo correcto
             if ($pregunta->tipo_pregunta == 1) {
                 RespuestasAbiertas::create([
@@ -250,15 +285,13 @@ class EncuestasController extends Controller
                     'id_usuario' => $idUsuario,
                     'created_at' => now()
                 ]);
-
             } elseif ($pregunta->tipo_pregunta == 2) {
-                 RespuestasCerradas::create([
+                RespuestasCerradas::create([
                     'id_opcion' => $respuesta,
                     'id_evaluado' => $idEvaluado,
                     'id_usuario' => $idUsuario,
                     'created_at' => now()
                 ]);
-
             } elseif ($pregunta->tipo_pregunta == 3) {
                 foreach ($respuesta as $id_opcion) {
                     RespuestasCerradas::create([
@@ -286,10 +319,10 @@ class EncuestasController extends Controller
 
         if (!$primeraRespuesta) {
             $primeraRespuesta = RespuestasCerradas::where('id_usuario', $idUsuario)
-                ->whereIn('id_opcion', function($query) use ($encuesta) {
+                ->whereIn('id_opcion', function ($query) use ($encuesta) {
                     $query->select('id_opcion')
-                          ->from('preguntas_opciones')
-                          ->whereIn('id_pregunta', $encuesta->preguntas->pluck('id_pregunta'));
+                        ->from('preguntas_opciones')
+                        ->whereIn('id_pregunta', $encuesta->preguntas->pluck('id_pregunta'));
                 })
                 ->first();
         }
@@ -318,11 +351,11 @@ class EncuestasController extends Controller
         $respuestasCerradas = RespuestasCerradas::where('id_usuario', $idUsuario)
             ->whereIn('id_opcion', function ($q) use ($encuesta) {
                 $q->select('id_opcion')
-                  ->from('preguntas_opciones')
-                  ->whereIn('id_pregunta', $encuesta->preguntas->whereIn('tipo_pregunta', [2, 3])->pluck('id_pregunta'));
+                    ->from('preguntas_opciones')
+                    ->whereIn('id_pregunta', $encuesta->preguntas->whereIn('tipo_pregunta', [2, 3])->pluck('id_pregunta'));
             })
             ->get();
-        
+
         // Mapear en un formato que el blade pueda leer igual que en modo responder
         $respuestasUsuario = [];
         foreach ($encuesta->preguntas as $pregunta) {
@@ -345,7 +378,7 @@ class EncuestasController extends Controller
             }
         }
 
-        return view('catalogo.responder_encuesta', [
+        return view('encuestas.responder_encuesta', [
             'encuesta' => $encuesta,
             'modoLectura' => true, // Modo solo lectura
             'respuestasUsuario' => $respuestasUsuario,
@@ -353,5 +386,4 @@ class EncuestasController extends Controller
             'evaluados' => collect()
         ]);
     }
-
 }

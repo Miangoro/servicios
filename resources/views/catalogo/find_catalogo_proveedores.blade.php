@@ -29,6 +29,23 @@
 
 @section('content')
 <div class="container-fluid mt--7">
+
+    <div id="loading-spinner" class="modal-backdrop fade show d-flex justify-content-center align-items-center d-none" style="display: flex; justify-content: center; align-items: center; z-index: 1050;">
+        <div class="col">
+            <div class="sk-grid sk-primary">
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+                <div class="sk-grid-cube"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col">
             <div class="card shadow">

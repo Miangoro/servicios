@@ -82,7 +82,13 @@
       "slug": "find_roles",
       "can" : "Visualizar roles"
     },
-
+    {
+      "name": "Encuestas",
+      "url": "/encuestas",
+      "icon": "menu-icon ri-survey-fill",
+      "slug": "find_Encuestas",
+      "can" : "Visualizar encuestas"
+    },
     {
       "name": "Laboratorios",
       "icon": "menu-icon ri-user-follow-fill",
@@ -129,17 +135,10 @@
           "url": "catalogos/proveedores",
           "name": "Proveedores",
           "slug": "proveedores"
-        },
-        {
-          "url": "/encuestas",
-          "name": "Encuestas",
-          "slug": "encuestas"
         }
        
       ]
     },
-
-    
 
     {
       "name": "Solicitud de compras",

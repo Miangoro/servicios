@@ -23,6 +23,6 @@ class PreguntasModel extends Model
 
         public function encuesta()
     {
-        return $this->belongsTo(EncuestasModel::class);
+        return $this->belongsTo(EncuestasModel::class, 'id_encuesta', 'id_encuesta');
     }
 }
