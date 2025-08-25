@@ -8,7 +8,6 @@ use App\Models\ProveedoresContactos;
 use App\Models\RespuestasCerradas;
 use App\Models\OpcionesModel;
 use App\Models\EncuestasModel;
-use App\Models\EvaluacionProveedor;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;

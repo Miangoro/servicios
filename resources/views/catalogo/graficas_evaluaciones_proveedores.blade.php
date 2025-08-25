@@ -45,9 +45,9 @@
                 <div class="card shadow">
                     <div class="card-header border-0 pb-1">
                         <div class="row align-items-center">
-                            <div class="col-6">
+                            <div class="col-10">
                                 <div class="d-flex flex-row align-items-center">
-                                    <i class="ri-survey-fill ri-40px"></i>
+                                    <i class="ri-bar-chart-fill ri-40px"></i>
                                     <h3 class="mb-0 m-1"><b>Gráficas de las encuestas de satisfacción del proveedor</b></h3>
                                 </div>
 
@@ -61,6 +61,11 @@
 
                     <div class="card-body">
                         <div class="nav-align-top">
+                            @if ($datosGraficas === [])
+                                <div class="alert alert-warning" role="alert">
+                                    No hay datos disponibles para mostrar.
+                                </div>
+                            @endif
                             <ul class="nav nav-tabs" role="tablist" id="graficas-tabs">
                                 @foreach($datosGraficas as $id_encuesta => $data)
                                     <li class="nav-item">
