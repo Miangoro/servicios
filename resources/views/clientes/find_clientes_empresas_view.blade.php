@@ -3,21 +3,21 @@
 @section('title', 'ClientesEmpresas')
 
 @section('vendor-style')
-    @vite([
-        'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
-        'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
-        'resources/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.scss',
-        'resources/assets/vendor/libs/select2/select2.scss',
-        'resources/assets/vendor/libs/form-validation/form-validation.scss',
-        'resources/assets/vendor/libs/animate-css/animate.scss',
-        'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-        'resources/assets/vendor/libs/spinkit/spinkit.scss',
-        'resources/assets/vendor/libs/select2/select2.scss',
-        'resources/assets/vendor/libs/tagify/tagify.scss',
-        'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss',
-        'resources/assets/vendor/libs/typeahead-js/typeahead.scss'
-    ])
-    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+@vite([
+    'resources/assets/vendor/libs/datatables-bs5/datatables.bootstrap5.scss',
+    'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
+    'resources/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.scss',
+    'resources/assets/vendor/libs/select2/select2.scss',
+    'resources/assets/vendor/libs/form-validation/form-validation.scss',
+    'resources/assets/vendor/libs/animate-css/animate.scss',
+    'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
+    'resources/assets/vendor/libs/spinkit/spinkit.scss',
+    'resources/assets/vendor/libs/select2/select2.scss',
+    'resources/assets/vendor/libs/tagify/tagify.scss',
+    'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss',
+    'resources/assets/vendor/libs/typeahead-js/typeahead.scss',
+])
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 @endsection
 
 @section('vendor-script')
@@ -70,8 +70,9 @@
                     animateCounter('#otrosRegimenesCount', response.otrosRegimenes);
                     animateCounter('#clientesInactivosCount', response.clientesInactivos);
                     
+                    // Animar el contador total
                     const total = response.total;
-                    $('#totalEmpresasCount').text(total);
+                    animateCounter('#totalEmpresasCount', total);
                 } else {
                     console.error('Error en la respuesta:', response.message);
                     mostrarValoresPorDefecto();
@@ -228,7 +229,6 @@
         });
     }
 
-    // Cargar estadísticas al inicializar la página
     $(document).ready(function() {
         cargarEstadisticasClientes();
         
@@ -253,12 +253,17 @@
                 { data: 'estado', name: 'estado' },
                 { data: 'regimen_fiscal', name: 'regimen_fiscal' },
                 { data: 'credito', name: 'credito' },
-                // 👇 **Posición corregida**
                 { data: 'constancia_fiscal', name: 'constancia_fiscal' },
                 { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
-                // 👆 **Posición corregida**
             ],
-            // Configuración del filtro de búsqueda
+            autoWidth: false,
+            scrollX: false,
+            // Eliminamos la configuración de anchos fijos de DataTables
+            // columnDefs: [
+            //     { width: '5%', targets: 0 },
+            //     { width: '10%', targets: 1 },
+            //     ...
+            // ],
             initComplete: function () {
                 // Clona los botones originales
                 var addButton = $('#agregarClienteBtn').clone();
@@ -297,14 +302,26 @@
 
 @section('content')
 <style>
-/* ... (el mismo CSS que proporcionaste) ... */
-.constancia{
-    width: auto;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+/* -------------------------------------------
+    Ajustes de la tabla
+    ------------------------------------------- */
+
+/* Estilos para el tamaño de letra del cuerpo de la tabla */
+.table.table-sm tbody tr td {
+    font-size: 0.85rem; /* Ajusta el tamaño de la letra para que no sea tan pequeña */
 }
+
+/* Estilos para las celdas de la tabla */
+.table td, .table th {
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    font-size: 0.85rem;
+}
+
+/* -------------------------------------------
+    Fin de ajustes de la tabla
+    ------------------------------------------- */
 
 /* Estilos para mostrar la cantidad total de clientes */
 .total-clientes-count {
@@ -564,15 +581,15 @@
                     <div class="stats-card-percentage" id="porcentajeInactivos" style="display: none;">
                         <i class="ri-arrow-up-line"></i>
                         0%
+                    </div>
                 </div>
-            </div>
                 <div class="stats-card-loading">
                     <div class="spinner"></div>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <div class="row">
         <div class="col">
             <div class="card shadow">
@@ -584,16 +601,25 @@
                                 Clientes total registrados: <span id="totalEmpresasCount">{{ ($clientesActivos ?? 0) + ($clientesInactivos ?? 0) }}</span>
                             </div>
                         </div>
-                       
+                        
                     </div>
                 </div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 <div class="table-responsive p-3">
+                    {{-- Botones que serán movidos por JavaScript --}}
+                    <div style="display: none;">
+                        <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarHistorialModal" id="agregarClienteBtn">
+                            <span class="d-none d-sm-inline-block">Agregar cliente</span>
+                        </a>
+                        <button class="btn btn-secondary" id="exportarClientesBtn" data-bs-toggle="modal" data-bs-target="#exportarClientesModal">
+                            <span class="d-none d-sm-inline-block">Exportar</span>
+                        </button>
+                    </div>
                     <table id="tablaHistorial" class="table table-flush table-bordered tablaHistorial_datatable table-striped table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>NO</th>
-                                <th style="width: 80px;">Empresa</th>
+                                <th>Empresa</th>
                                 <th>RFC</th>
                                 <th>Calle</th>
                                 <th>Colonia</th>
@@ -602,10 +628,8 @@
                                 <th>Estado</th>
                                 <th>Régimen Fiscal</th>
                                 <th>Crédito</th>
-                                {{-- 👇 **Posición corregida** --}}
-                                <th class="constancia">Constancia</th>
-                                <th class="text-center" style="width: 120px;">Acciones</th>
-                                {{-- 👆 **Posición corregida** --}}
+                                <th>Constancia</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
