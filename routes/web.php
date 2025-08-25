@@ -265,6 +265,10 @@ Route:: get('/PDFRecibodePago', function ( ){
     return $pdf->stream();
 });
 
+Route:: get('/PDFFormatoCompras', function ( ){
+    $pdf = PDF :: loadView( 'pdfs.pdf_formato_compras' )->setPaper('A4', 'landscape');
+    return $pdf->stream();
+});
 
 
 
