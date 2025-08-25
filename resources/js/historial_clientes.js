@@ -460,15 +460,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     name: 'action',
                     orderable: false,
                     searchable: false,
-                    width: '140px',
-                    className: 'text-center',
+                    width: '1%',
+                    className: 'text-center acciones-col',
                     render: (data) => {
                         const actionButton = data.estado_cliente === 0
                             ? `<li><a href="javascript:void(0)" class="dropdown-item text-success btn-dar-de-alta" data-id="${data.id}"><i class="ri-check-line me-1"></i> Dar de Alta</a></li>`
                             : `<li><a href="javascript:void(0)" class="dropdown-item text-danger btn-dar-de-baja" data-id="${data.id}"><i class="ri-delete-bin-line me-1"></i> Dar de Baja</a></li>`;
 
                         return `<div class="dropdown">
-                            <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                            <button class="btn btn-sm btn-info dropdown-toggle hide-arrow btn-acciones" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;<span class="d-none d-lg-inline-block">Opciones</span> <i class="ri-arrow-down-s-fill ri-16px"></i></button>
                             <ul class="dropdown-menu dropdown-menu-end p-0">
                                 <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-view-unidad" data-id="${data.id}"><i class="ri-search-line me-1 text-muted"></i> Visualizar</a></li>
                                 <li><a href="javascript:void(0)" class="dropdown-item py-2 btn-edit-unidad" data-id="${data.id}"><i class="ri-edit-box-line me-1 text-info"></i> Editar</a></li>
