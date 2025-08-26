@@ -240,6 +240,16 @@ Route::middleware('auth')->controller(App\Http\Controllers\EncuestasController::
     Route::get('/encuestas/{id}/verRespuestas', 'verRespuestas')->name('encuestas.verRespuestas');
 });
 
+//Rutas para Servicios de Catálogo
+Route::middleware('auth')->controller(App\Http\Controllers\ServiciosCatalogoController::class)->group(function () {
+    Route::get('/serviciosCatalogo', 'index')->name('serviciosCatalogo.index');
+    Route::get('/serviciosCatalogo/create', 'create')->name('serviciosCatalogo.create');
+    Route::post('/serviciosCatalogo', 'store')->name('serviciosCatalogo.store');
+    Route::get('/serviciosCatalogo/{id}', 'show')->name('serviciosCatalogo.show');
+    Route::get('/serviciosCatalogo/{id}/edit',  'edit')->name('serviciosCatalogo.edit');
+    Route::put('/serviciosCatalogo/{id}',  'update')->name('serviciosCatalogo.update');
+});
+
 //Para documentos
 Route::get('files/{filename}', [FileController::class, 'show'])
     ->name('file.show')

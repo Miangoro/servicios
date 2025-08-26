@@ -54,9 +54,9 @@
       "submenu": [
  
         {
-          "url": "clientes/confirmados",
+          "url": "/serviciosCatalogo",
           "name": "De catálogo",
-          "slug": "clientes-confirmados"
+          "slug": "/serviciosCatalogo"
         },
         {
           "url": "/servicios/especializados",
