@@ -41,6 +41,7 @@
 
 @section('page-script')
 @vite([
+    'resources/js/servicios_especializados.js',
     'resources/assets/js/forms-selects.js',
     'resources/assets/js/forms-tagify.js',
     'resources/assets/js/forms-typeahead.js'
