@@ -49,58 +49,9 @@
 <script>
     // Define la URL de la ruta para la tabla
     var dataTableAjaxUrl = "{{ route('servicios.index') }}";
-
-    $(document).ready(function() {
-        // Inicializar la tabla de servicios
-        var tablaHistorial = $('#tablaHistorial').DataTable({
-            language: {
-                url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
-            },
-            dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center"l<"botones_datatable_clientes d-flex align-items-center">>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-            processing: true,
-            serverSide: true,
-            responsive: true,
-            ajax: dataTableAjaxUrl,
-            columns: [
-                { data: 'id', name: 'id' },
-                { data: 'clave', name: 'clave' },
-                { data: 'nombre', name: 'nombre' },
-                { data: 'precio', name: 'precio' },
-                { data: 'laboratorio', name: 'laboratorio' },
-                { data: 'duracion', name: 'duracion' },
-                { data: 'estatus', name: 'estatus' },
-                { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
-            ],
-            autoWidth: false,
-            scrollX: false,
-            initComplete: function () {
-                var addButton = $('#agregarClienteBtn').clone();
-                var exportButton = $('#exportarClientesBtn').clone();
-                
-                $('.botones_datatable_clientes').append(addButton);
-                $('.botones_datatable_clientes').append(exportButton);
-                
-                exportButton.addClass('ms-2');
-                
-                $('#agregarClienteBtn').remove();
-                $('#exportarClientesBtn').remove();
-                
-                $('.dataTables_length label').contents().filter(function() {
-                    return this.nodeType === 3;
-                }).remove();
-                
-                var searchDiv = $('.dataTables_filter');
-                searchDiv.css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
-                });
-            }
-        });
-    });
 </script>
 
-@vite(['resources/js/historial_clientes.js'])
+
 @endsection
 
 @section('content')
@@ -136,15 +87,15 @@
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 <div class="table-responsive p-3">
                     {{-- Botones que serán movidos por JavaScript --}}
-                    <div style="display: none;">
-                        <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarHistorialModal" id="agregarServicioBtn">
+                    <div id="botones_ocultos" style="display: none;">
+                        <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarServicioModal" id="agregarServicioBtn">
                             <span class="d-none d-sm-inline-block">Agregar Servicio</span>
                         </a>
-                        <button class="btn btn-secondary" id="exportarClientesBtn" data-bs-toggle="modal" data-bs-target="#exportarServiciosModal">
+                        <button class="btn btn-secondary" id="exportarServiciosBtn" data-bs-toggle="modal" data-bs-target="#exportarServiciosModal">
                             <span class="d-none d-sm-inline-block">Exportar</span>
                         </button>
                     </div>
-                    <table id="tablaHistorial" class="table table-flush table-bordered tablaHistorial_datatable table-striped table-sm">
+                    <table id="tablaServicios" class="table table-flush table-bordered tablaServicios_datatable table-striped table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>NO</th>
@@ -171,9 +122,9 @@
 </div>
 
 
-<div class="modal fade" id="editHistorialModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editServicioModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-add-new-role">
-        <div class="modal-content" id="editHistorialModalContent">
+        <div class="modal-content" id="editServicioModalContent">
             <div class="modal-body text-center py-5">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Cargando...</span>
@@ -184,13 +135,13 @@
     </div>
 </div>
 
-<div class="modal fade" id="viewHistorialModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="viewServicioModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" id="viewHistorialModalContent">
+        <div class="modal-content" id="viewServicioModalContent">
             </div>
     </div>
 </div>
-@include('_partials/_modals/modal-add-agregar_servicios_especializados')
-@include('_partials/_modals/modal-add-export_clientes_empresas')
-@include('_partials/_modals/modal-add-view-pdf')
+@include('_partials._modals.modal-add-agregar_servicios_especializados')
+@include('_partials._modals.modal-add-export_clientes_empresas')
+@include('_partials._modals.modal-add-view-pdf')
 @endsection
