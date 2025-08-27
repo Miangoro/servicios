@@ -185,6 +185,11 @@
       "slug": "revision",
       "submenu": [
         {
+          "url": "/personal/regular",
+          "name": "Personal regular",
+          "slug": "/personal/regular"
+        },
+        {
           "url": "/revision/personal",
           "name": "Expediente",
           "slug": "revision-personal",

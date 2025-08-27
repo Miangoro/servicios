@@ -250,6 +250,16 @@ Route::middleware('auth')->controller(App\Http\Controllers\ServiciosCatalogoCont
     Route::put('/serviciosCatalogo/{id}',  'update')->name('serviciosCatalogo.update');
 });
 
+//Rutas para personal regular
+Route::middleware('auth')->controller(App\Http\Controllers\PersonalRegularController::class)->group(function () {
+    Route::get('/personal/regular', 'index')->name('personalRegular.index');
+    Route::get('/personal/regular/create', 'create')->name('personalRegular.create');
+    Route::post('/personal/regular', 'store')->name('personalRegular.store');
+    Route::get('/personal/regular/{id}', 'show')->name('personalRegular.show');
+    Route::get('/personal/regular/{id}/edit',  'edit')->name('personalRegular.edit');
+    Route::put('/personal/regular/{id}',  'update')->name('personalRegular.update');
+});
+
 //Para documentos
 Route::get('files/{filename}', [FileController::class, 'show'])
     ->name('file.show')
