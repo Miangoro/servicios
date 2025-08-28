@@ -20,22 +20,61 @@
                         </div>
 
                         <div class="form-floating form-floating-outline col-md-4">
-                            <input type="text" class="form-control" id="floatingInput" placeholder="Escriba el nombre del servicio" aria-describedby="floatingInputHelp" />
+                            <input type="text" class="form-control" id="" placeholder="Escriba el nombre del servicio" aria-describedby="floatingInputHelp" />
                             <label for="floatingInput">Nombre del servicio</label>
                         </div>
                     </div>
                     
-                     <div class="row col-md-12 mb-5">
+                    <div class="row col-md-12 mb-5">
+
+                        <div class="form-floating form-floating-outline col-md-4">
+                            <input type="text" class="form-control" id="" placeholder="Escriba la duración del servicio" aria-describedby="floatingInputHelp" />
+                            <label for="floatingInput">Duración del servicio</label>
+                        </div>
+
                         <div class="form-floating form-floating-outline col-md-4">
                             <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
-                                <option value="">Seleccione la duración</option>
-                                <option>1 día</option>
-                                <option>2 días</option>
+                                <option>Seleccione una opción</option>
+                                <option>Sí</option>
+                                <option>No</option>
                             </select>
-                            <label for="selectpickerBasic">Duración</label>
+                            <label for="selectpickerBasic">¿Se requiere muestra?</label>
                         </div>
+
+                        <div class="form-floating form-floating-outline col-md-4">
+                            <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
+                                <option>Habilitado</option>
+                                <option>No habilitado</option>
+                                <option>Observado</option>
+                            </select>
+                            <label for="selectpickerBasic">Estatus</label>
+                        </div>
+
                     </div>
 
+                    <div class="row col-md-12 mb-5">
+
+                        <div class="form-floating form-floating-outline col-md-4">
+                            <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
+                                <option>No acreditado</option>
+                                <option>Acreditado para alimentos</option>
+                                <option>Acreditado para sanidad</option>
+                                <option>Acreditado para información comercial</option>
+                            </select>
+                            <label for="selectpickerBasic">Acreditación</label>
+                        </div>
+
+                        <div class="form-floating form-floating-outline col-md-4">
+                            <input type="text" class="form-control" id="" placeholder="" aria-describedby="floatingInputHelp" />
+                            <label for="floatingInput">Análisis</label>
+                        </div>
+
+                        <div class="form-floating form-floating-outline col-md-4">
+                            <input type="text" class="form-control" id="" placeholder="Escriba la duración del servicio" aria-describedby="floatingInputHelp" />
+                            <label for="floatingInput">Duración del servicio</label>
+                        </div>
+
+                    </div>
                 </div>
             </form>
         </div>
