@@ -1,6 +1,12 @@
-document.addEventListener('DOMContentLoaded', function () {
+/**
+ * Este script maneja la lógica para dos partes de la aplicación:
+ * 1. La inicialización y el comportamiento de la tabla de servicios DataTables.
+ * 2. La validación y el envío del formulario para agregar un nuevo servicio.
+ */
+document.addEventListener('DOMContentLoaded', function() {
     // Definición de elementos principales del formulario de agregar servicio
     const formAgregarServicio = document.getElementById('formAgregarServicio');
+    const formEditServicio = document.getElementById('editServicioForm');
     const selectClave = document.getElementById('clave');
     const precioInput = document.getElementById('precio');
     const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
@@ -12,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const tipoMuestraField = document.getElementById('tipoMuestraField');
     const tipoMuestraInput = document.getElementById('tipoMuestra');
     const acreditacionSelect = document.getElementById('acreditacion');
+
+    // Variable para la instancia de DataTables, se inicializará más tarde
+    let dt_servicios = null;
 
     // Cargar los datos de laboratorios desde el atributo data del formulario
     let laboratoriosData = [];
@@ -134,8 +143,9 @@ document.addEventListener('DOMContentLoaded', function () {
      * Envía una petición de formulario mediante AJAX.
      * @param {HTMLFormElement} form - El formulario a enviar.
      * @param {string} url - La URL del endpoint.
+     * @param {string} method - El método HTTP ('POST' o 'PUT').
      */
-    async function submitForm(form, url) {
+    async function submitForm(form, url, method = 'POST') {
         const submitButton = form.querySelector('button[type="submit"]');
         if (!submitButton) return false;
 
@@ -148,9 +158,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const finalFormData = new FormData(form);
+            
+            // Añadir el método de sobreescritura para PUT
+            if (method === 'PUT') {
+                finalFormData.append('_method', 'PUT');
+            }
 
             const response = await fetch(url, {
-                method: 'POST',
+                method: 'POST', // Siempre usamos POST para enviar el FormData
                 body: finalFormData,
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -173,6 +188,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: '¡Éxito!',
                     text: responseData.message,
                     customClass: { confirmButton: 'btn btn-success' }
+                }).then(() => {
+                    // Redirigir solo si la acción fue exitosa y estamos en la vista de edición
+                    if (method === 'PUT') {
+                        window.location.href = "{{ route('servicios.index') }}";
+                    } else if (dt_servicios) {
+                        // Recargar la tabla si estamos en la vista de agregar servicio
+                        dt_servicios.ajax.reload();
+                    }
+                    // Limpiar el formulario para permitir un nuevo registro
+                    if (form.id === 'formAgregarServicio') {
+                        form.reset();
+                        clearValidationErrors(form);
+                        // Restablecer Select2 si es necesario
+                        $('.select2').val(null).trigger('change');
+                        // Restablecer campos dinámicos a su estado inicial
+                        laboratoriosContenedor.innerHTML = '';
+                        requisitosContenedor.innerHTML = '';
+                        // Se puede agregar un laboratorio por defecto si es necesario
+                        agregarLaboratorioBtn.click();
+                        // Actualizar el precio total
+                        updatePrecioTotal();
+                    }
                 });
                 return true;
             }
@@ -186,11 +223,22 @@ document.addEventListener('DOMContentLoaded', function () {
         return false;
     }
 
-    // Asocia los eventos al formulario
+    // Asocia los eventos al formulario de Agregar
     if (formAgregarServicio) {
         formAgregarServicio.addEventListener('submit', async function(event) {
             event.preventDefault();
-            await submitForm(this, this.action);
+            await submitForm(this, this.action, 'POST');
+        });
+    }
+
+    // Asocia los eventos al formulario de Editar
+    if (formEditServicio) {
+        formEditServicio.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const servicioId = this.querySelector('input[name="id_servicio"]').value;
+            // Asegúrate de que la URL de edición esté correctamente definida en tu HTML/Blade
+            const editUrl = this.action || `/servicios/${servicioId}`;
+            await submitForm(this, editUrl, 'PUT');
         });
     }
 
@@ -254,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function () {
             clonedItem.classList.add('input-group', 'mb-3', 'laboratorio-item');
             clonedItem.innerHTML = `
                 <div class="form-floating form-floating-outline flex-grow-1">
-                    <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" />
+                    <input type="number" step="0.01" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" />
                     <label>Precio *</label>
                 </div>
                 <div class="form-floating form-floating-outline flex-grow-1 ms-2">
@@ -376,58 +424,191 @@ document.addEventListener('DOMContentLoaded', function () {
         handleMuestraSelection();
     }
 
+    // Inicializa todos los selects con select2
     $('.select2').select2();
 
-    // Agrega el código de DataTables aquí
-    const dt_servicios_table = $('.tablaServicios_datatable');
+    // --- CÓDIGO DE DATATABLES ---
+    const dt_servicios_table = $('#tablaServicios');
 
     if (dt_servicios_table.length) {
-        const dt_servicios = dt_servicios_table.DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: dataTableAjaxUrl,
-                type: 'GET'
-            },
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                { data: 'clave', name: 'clave' },
-                { data: 'nombre', name: 'nombre' },
-                { data: 'precio', name: 'precio' },
-                { data: 'laboratorio', name: 'laboratorio', orderable: false, searchable: false },
-                { data: 'duracion', name: 'duracion' },
-                { data: 'id_habilitado', name: 'id_habilitado' },
-                { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
-            ],
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-            },
+        try {
+            // Verifica si 'dataTableAjaxUrl' está definido antes de usarlo
+            if (typeof dataTableAjaxUrl === 'undefined') {
+                console.error("La variable 'dataTableAjaxUrl' no está definida. Asegúrate de que se pase desde tu plantilla Blade.");
+                showSweetAlertError('Error de Configuración', `La URL para cargar la tabla de servicios no está definida.`);
+                return;
+            }
 
-            // --- MODIFICACIÓN CLAVE AQUÍ ---
-            // Solo muestra la tabla, la información y la paginación.
-            // Los elementos 'l' (length) y 'f' (filter) se eliminan de la configuración.
-            dom: 't<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-
-            // Se eliminan los botones ya que se usará un botón manual en el HTML
-            buttons: [],
-
-            responsive: true
-        });
-
-        // Event listener para el campo de búsqueda manual
-        const searchInput = document.getElementById('buscar');
-        if (searchInput) {
-            searchInput.addEventListener('keyup', function() {
-                dt_servicios.search(this.value).draw();
+            dt_servicios = dt_servicios_table.DataTable({
+                processing: true,
+                serverSide: true,
+                ajax: {
+                    url: dataTableAjaxUrl,
+                    type: 'GET',
+                    // Manejo de errores en la petición AJAX
+                    error: function(xhr, error, thrown) {
+                        console.error("Error al cargar datos con DataTables:", thrown);
+                        console.log("Respuesta del servidor:", xhr.responseText);
+                        showSweetAlertError('Error de Carga', `Hubo un problema al cargar los datos de la tabla. Revisa la consola para más detalles. Error: ${thrown}`);
+                    }
+                },
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'clave',
+                        name: 'clave'
+                    },
+                    {
+                        data: 'nombre',
+                        name: 'nombre'
+                    },
+                    {
+                        data: 'precio',
+                        name: 'precio'
+                    },
+                    {
+                        data: 'laboratorio',
+                        name: 'laboratorio',
+                        orderable: false,
+                        searchable: false
+                    },
+                    {
+                        data: 'duracion',
+                        name: 'duracion'
+                    },
+                    {
+                        data: 'id_habilitado',
+                        name: 'id_habilitado'
+                    },
+                    {
+                        // Modificación para el nuevo botón de acciones
+                        data: 'acciones',
+                        name: 'acciones',
+                        orderable: false,
+                        searchable: false,
+                        render: function(data, type, row) {
+                            return `
+                            <div class="d-flex justify-content-center">
+                                <div class="dropdown">
+                                    <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenuActions_${row.id_servicio}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        Opciones
+                                    </button>
+                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuActions_${row.id_servicio}">
+                                        <li>
+                                            <a href="{{ url('servicios') }}/${row.id_servicio}" class="dropdown-item btn-view-servicio">
+                                                <i class="ri-eye-line me-1"></i> Visualizar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a href="{{ url('servicios') }}/${row.id_servicio}/edit" class="dropdown-item btn-edit-servicio">
+                                                <i class="ri-pencil-line me-1"></i> Editar
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <button class="dropdown-item btn-disable-servicio" data-id="${row.id_servicio}">
+                                                <i class="ri-delete-bin-line me-1"></i> Deshabilitar
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                            `;
+                        }
+                    }
+                ],
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                },
+                // Configuración del DOM para la tabla
+                // 't': Tabla, 'i': Información, 'p': Paginación.
+                // Eliminamos 'l' (length) y 'f' (filter) para usar los controles manuales en el HTML
+                dom: 't<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                responsive: true
             });
-        }
 
-        // Event listener para el select de "Mostrar x registros"
-        const lengthSelect = document.querySelector('select[name="tablaServicios_length"]');
-        if (lengthSelect) {
-            $(lengthSelect).on('change', function() {
-                dt_servicios.page.len(this.value).draw();
+            // Event listener para el campo de búsqueda manual
+            const searchInput = document.getElementById('buscar');
+            if (searchInput) {
+                searchInput.addEventListener('keyup', function() {
+                    dt_servicios.search(this.value).draw();
+                });
+            }
+
+            // Event listener para el select de "Mostrar x registros"
+            const lengthSelect = document.querySelector('select[name="tablaServicios_length"]');
+            if (lengthSelect) {
+                $(lengthSelect).on('change', function() {
+                    dt_servicios.page.len(this.value).draw();
+                });
+            }
+
+            // --- LÓGICA AGREGADA: MANEJO DEL BOTÓN DE DESHABILITAR ---
+            dt_servicios_table.on('click', '.btn-disable-servicio', function() {
+                const servicioId = $(this).data('id');
+
+                Swal.fire({
+                    title: '¿Estás seguro?',
+                    text: "¡No podrás revertir esto!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, ¡deshabilitar!',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'btn btn-danger me-3',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Enviamos la petición AJAX para deshabilitar el servicio
+                        const url = `/servicios/${servicioId}`; // Asegúrate de que esta URL exista
+                        fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(errorData => {
+                                    throw new Error(errorData.message || 'Error al deshabilitar el servicio.');
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Deshabilitado!',
+                                text: data.message,
+                                customClass: { confirmButton: 'btn btn-success' }
+                            });
+                            // Recargar la tabla para reflejar el cambio
+                            dt_servicios.ajax.reload();
+                        })
+                        .catch(error => {
+                            showSweetAlertError('Error de Deshabilitación', `Hubo un problema: ${error.message}`);
+                        });
+                    }
+                });
             });
+
+            // Manejo de clic para el botón de editar
+            dt_servicios_table.on('click', '.btn-edit-servicio', function(e) {
+                e.preventDefault();
+                const url = $(this).attr('href');
+                window.location.href = url;
+            });
+
+        } catch (error) {
+            console.error('Error al inicializar la tabla de DataTables:', error);
+            showSweetAlertError('Error de Inicialización', `Hubo un problema al inicializar la tabla de servicios. Revisa la consola para más detalles.`);
         }
     }
 });

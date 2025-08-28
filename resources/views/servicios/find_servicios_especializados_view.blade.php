@@ -49,6 +49,29 @@
 <script>
     // Define la URL de la ruta para la tabla
     var dataTableAjaxUrl = "{{ route('servicios.index') }}";
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const exportarBtn = document.getElementById('exportarBtn');
+        const exportForm = document.getElementById('exportForm');
+        
+        // Listener para el formulario de exportación
+        exportForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Evita el envío del formulario por defecto
+            
+            const formData = new FormData(exportForm);
+            const data = {};
+            formData.forEach((value, key) => (data[key] = value));
+
+            // Aquí puedes agregar la lógica para enviar los datos a una ruta de Laravel
+            // que se encargará de generar y descargar el archivo Excel
+            console.log('Datos a exportar:', data);
+    
+            const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
+            if (exportModal) {
+                exportModal.hide();
+            }
+        });
+    });
 </script>
 @endsection
 
@@ -91,6 +114,12 @@
                                 <option value="50">50</option>
                                 <option value="100">100</option>
                             </select>
+                            <!-- Botón de Exportar que abre el modal -->
+                            <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#exportModal">
+                                <i class="ri-file-excel-2-line align-middle"></i>
+                                Exportar
+                            </button>
+                            <!-- Botón de Agregar Cliente (original) -->
                             <a href="{{ route('servicios.create') }}" class="btn btn-success me-2">
                                 <i class="ri-add-line align-middle"></i>
                                 Agregar Cliente
@@ -146,7 +175,5 @@
             </div>
     </div>
 </div>
-@include('_partials._modals.modal-add-agregar_servicios_especializados')
-@include('_partials._modals.modal-add-export_clientes_empresas')
-@include('_partials._modals.modal-add-view-pdf')
+@include('_partials/_modals/modal-add-export_servcios_Especializados')
 @endsection

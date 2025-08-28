@@ -3,31 +3,23 @@
 @section('title', 'Agregar Nuevo Servicio')
 
 @section('vendor-style')
-    @vite([
-        'resources/assets/vendor/libs/select2/select2.scss',
-        'resources/assets/vendor/libs/form-validation/form-validation.scss',
-        'resources/assets/vendor/libs/animate-css/animate.scss',
-        'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-        'resources/assets/vendor/libs/spinkit/spinkit.scss'
-    ])
+    @vite('resources/assets/vendor/libs/select2/select2.scss')
+    @vite('resources/assets/vendor/libs/form-validation/form-validation.scss')
+    @vite('resources/assets/vendor/libs/animate-css/animate.scss')
+    @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.scss')
+    @vite('resources/assets/vendor/libs/spinkit/spinkit.scss')
 @endsection
 
 @section('vendor-script')
-    @vite([
-        'resources/assets/vendor/libs/select2/select2.js',
-        'resources/assets/vendor/libs/form-validation/form-validation.js',
-        'resources/assets/vendor/libs/form-validation/popular.js',
-        'resources/assets/vendor/libs/form-validation/bootstrap5.js',
-        'resources/assets/vendor/libs/form-validation/auto-focus.js',
-        'resources/assets/vendor/libs/sweetalert2/sweetalert2.js'
-    ])
+    @vite('resources/assets/vendor/libs/select2/select2.js')
+    @vite('resources/assets/vendor/libs/form-validation/form-validation.js')
+    @vite('resources/assets/vendor/libs/form-validation/auto-focus.js')
+    @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.js')
 @endsection
 
 @section('page-script')
-    @vite([
-        'resources/js/servicios_create.js',
-        'resources/assets/js/forms-selects.js'
-    ])
+    @vite('resources/js/servicios_create.js')
+    @vite('resources/assets/js/forms-selects.js')
 @endsection
 
 @section('content')
@@ -40,7 +32,7 @@
                 <div class="card-body">
                     <form id="formAgregarServicio" class="row g-5" action="{{ route('servicios.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        {{-- Fila 1 --}}
+                        {{-- Fila 1: Clave, Clave Adicional, Nombre del Servicio, Precio --}}
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
                                 <select id="clave" name="clave" class="select2 form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
@@ -79,7 +71,7 @@
                             </div>
                         </div>
 
-                        {{-- Fila 2 --}}
+                        {{-- Fila 2: Duración, ¿Se requiere muestra?, Acreditación, Estatus --}}
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
                                 <input type="text" id="duracion" name="duracion" class="form-control" placeholder=" " />
@@ -100,9 +92,7 @@
                             <div class="form-floating form-floating-outline">
                                 <select id="acreditacion" name="acreditacion" class="select2 form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="No acreditado">No acreditado</option>
-                                    <option value="Acreditado para alimentos">Acreditado para alimentos</option>
-                                    <option value="Acreditado para sanidad">Acreditado para sanidad</option>
-                                    <option value="Acreditado para Información Comercial">Acreditado para Información Comercial</option>
+                                    <option value="Acreditado">Acreditado</option>
                                 </select>
                                 <label for="acreditacion">Acreditación</label>
                             </div>
@@ -118,67 +108,51 @@
                             </div>
                         </div>
 
-                        {{-- Fila 3 --}}
-                        <div class="col-12 col-md-4">
+                        {{-- Fila 3: Análisis --}}
+                        <div class="col-12">
                             <div class="form-floating form-floating-outline">
                                 <input type="text" id="analisis" name="analisis" class="form-control" placeholder="Ejemplo: Coliformes Totales" />
                                 <label for="analisis">Análisis</label>
                             </div>
                         </div>
-                        <div class="col-12 col-md-4">
+
+                        {{-- Fila 4: Unidades --}}
+                        <div class="col-12">
                             <div class="form-floating form-floating-outline">
                                 <input type="text" id="unidades" name="unidades" class="form-control" placeholder="Ejemplo: NMP/100mL" />
                                 <label for="unidades">Unidades</label>
                             </div>
                         </div>
-                        <div class="col-12" id="metodoField" style="display: none;">
+
+                        {{-- Fila 5: Nombre de la Acreditación (oculto por defecto) --}}
+                        <div class="col-12" id="campoNombreAcreditacion" style="display: none;">
                             <div class="form-floating form-floating-outline">
-                                <input type="text" id="metodo" name="metodo" class="form-control" placeholder="Ejemplo: Método NXHGS (Acreditado bajo la norma 763CS de la EMA)" />
-                                <label for="metodo">Método (Especificar si está acreditado si es el caso) *</label>
-                            </div>
-                        </div>
-                        
-                        {{-- Campo Tipo de Muestra, ahora como textarea y con el estilo solicitado --}}
-                        <div class="col-12" id="tipoMuestraField" style="display: none;">
-                            <div class="form-floating form-floating-outline">
-                                <textarea id="tipoMuestra" name="tipo_muestra" class="form-control" placeholder="Tipo de Muestra"></textarea>
-                                <label for="tipoMuestra">Tipo de Muestra</label>
+                                <input type="text" id="nombreAcreditacion" name="nombre_acreditacion" class="form-control" placeholder="Nombre de la Acreditación" />
+                                <label for="nombreAcreditacion">Nombre de la Acreditación</label>
                             </div>
                         </div>
 
+                        {{-- Fila 6: Descripción de la Acreditación (oculto por defecto) --}}
+                        <div class="col-12" id="campoDescripcionAcreditacion" style="display: none;">
+                            <div class="form-floating form-floating-outline">
+                                <input type="text" id="descripcionAcreditacion" name="descripcion_acreditacion" class="form-control" placeholder="Descripción de la Acreditación" />
+                                <label for="descripcionAcreditacion">Descripción de la Acreditación</label>
+                            </div>
+                        </div>
+                        
+                        {{-- Fila 7: Prueba --}}
                         <div class="col-12">
                             <div class="form-floating form-floating-outline">
-                                <textarea id="prueba" name="prueba" class="form-control" placeholder="Prueba"></textarea>
+                                <textarea id="prueba" name="prueba" class="form-control" placeholder="Prueba" required></textarea>
                                 <label for="prueba">Prueba</label>
                             </div>
                         </div>
 
-                        {{-- Sección de Requisitos --}}
-                        <div class="col-12">
-                            <div class="d-flex align-items-center mb-3">
-                                <span class="fs-5 fw-bold text-dark me-2">Requisitos</span>
-                                <button type="button" class="btn btn-success" id="agregar-requisito-btn">
-                                    <i class="ri-add-line"></i>
-                                </button>
-                            </div>
-                            <div id="requisitos-contenedor">
-                                <div class="input-group mb-3 requisito-item">
-                                    <div class="form-floating form-floating-outline flex-grow-1">
-                                        <input type="text" class="form-control" name="requisitos[]" placeholder="Requisitos" />
-                                        <label>Requisitos</label>
-                                    </div>
-                                    <button type="button" class="btn btn-danger eliminar-requisito-btn ms-2">
-                                        <i class="ri-subtract-line"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Sección para subir archivo --}}
-                        <div class="col-12">
-                            <div class="mb-3">
-                                <label for="file_requisitos" class="form-label fw-bold">Archivo WORD-PDF de requisitos(Opcional)</label>
-                                <input class="form-control" type="file" id="file_requisitos" name="file_requisitos">
+                        {{-- Fila 8: Descripción de Muestra --}}
+                        <div class="col-12" id="descripcionMuestraField" style="display: none;">
+                            <div class="form-floating form-floating-outline">
+                                <textarea id="descripcionMuestra" name="descripcion_muestra" class="form-control" placeholder="Descripción de Muestra"></textarea>
+                                <label for="descripcionMuestra">Descripción de Muestra</label>
                             </div>
                         </div>
 
@@ -231,14 +205,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('formAgregarServicio');
             const claveSelect = $('#clave');
             const precioTotalInput = document.getElementById('precio');
             const requiereMuestraSelect = $('#requiereMuestra');
-            const tipoMuestraField = document.getElementById('tipoMuestraField');
+            const descripcionMuestraField = document.getElementById('descripcionMuestraField'); // Renamed ID
+            
             const acreditacionSelect = $('#acreditacion');
-            const metodoField = document.getElementById('metodoField');
-            const agregarRequisitoBtn = document.getElementById('agregar-requisito-btn');
-            const requisitosContenedor = document.getElementById('requisitos-contenedor');
+            const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
+            const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
+
             const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
             const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
 
@@ -261,30 +237,32 @@
                 }
             });
 
-            // Lógica para mostrar/ocultar el campo "Tipo de Muestra"
-            function toggleTipoMuestraField() {
+            // Lógica para mostrar/ocultar el campo "Descripción de Muestra"
+            function toggleDescripcionMuestraField() {
                 if (requiereMuestraSelect.val() === 'si') {
-                    tipoMuestraField.style.display = 'block';
+                    descripcionMuestraField.style.display = 'block'; // Renamed variable
                 } else {
-                    tipoMuestraField.style.display = 'none';
+                    descripcionMuestraField.style.display = 'none'; // Renamed variable
                 }
             }
-            toggleTipoMuestraField();
+            toggleDescripcionMuestraField();
             requiereMuestraSelect.on('change.select2', function() {
-                toggleTipoMuestraField();
+                toggleDescripcionMuestraField();
             });
 
-            // Lógica para mostrar/ocultar el campo "Método"
-            function toggleMetodoField() {
-                if (acreditacionSelect.val().includes('Acreditado')) {
-                    metodoField.style.display = 'block';
+            // Lógica para mostrar/ocultar los campos de acreditación
+            function toggleAcreditacionFields() {
+                if (acreditacionSelect.val() === 'Acreditado') {
+                    campoNombreAcreditacion.style.display = 'block';
+                    campoDescripcionAcreditacion.style.display = 'block';
                 } else {
-                    metodoField.style.display = 'none';
+                    campoNombreAcreditacion.style.display = 'none';
+                    campoDescripcionAcreditacion.style.display = 'none';
                 }
             }
-            toggleMetodoField();
+            toggleAcreditacionFields();
             acreditacionSelect.on('change.select2', function() {
-                toggleMetodoField();
+                toggleAcreditacionFields();
             });
 
             // Lógica de suma para los precios
@@ -301,31 +279,6 @@
             laboratoriosContenedor.addEventListener('input', function(e) {
                 if (e.target.classList.contains('precio-lab')) {
                     calcularTotal();
-                }
-            });
-
-            // Lógica para agregar y eliminar campos de "Requisitos"
-            agregarRequisitoBtn.addEventListener('click', function() {
-                const nuevoRequisito = document.createElement('div');
-                nuevoRequisito.classList.add('input-group', 'mb-3', 'requisito-item');
-                nuevoRequisito.innerHTML = `
-                    <div class="form-floating form-floating-outline flex-grow-1">
-                        <input type="text" class="form-control" name="requisitos[]" placeholder="Requisitos" />
-                        <label>Requisitos</label>
-                    </div>
-                    <button type="button" class="btn btn-danger eliminar-requisito-btn ms-2">
-                        <i class="ri-subtract-line"></i>
-                    </button>
-                `;
-                requisitosContenedor.appendChild(nuevoRequisito);
-            });
-
-            requisitosContenedor.addEventListener('click', function(e) {
-                if (e.target.closest('.eliminar-requisito-btn')) {
-                    const item = e.target.closest('.requisito-item');
-                    if (item) {
-                        item.remove();
-                    }
                 }
             });
 
@@ -373,6 +326,86 @@
             });
 
             calcularTotal();
+
+            // Lógica de validación y mensajes del formulario
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                let camposVacios = false;
+                const camposRequeridos = [
+                    'clave', 
+                    'nombre', 
+                    'duracion', 
+                    'requiere_muestra', 
+                    'analisis', 
+                    'unidades',
+                    'prueba'
+                ];
+                
+                // Validar campos principales
+                camposRequeridos.forEach(campo => {
+                    const input = document.querySelector(`[name="${campo}"]`);
+                    if (input && !input.value.trim()) {
+                        camposVacios = true;
+                    }
+                });
+
+                // Validar el campo de "Descripción de Muestra" si es visible
+                if (requiereMuestraSelect.val() === 'si') {
+                    const descripcionMuestra = document.getElementById('descripcionMuestra');
+                    if (!descripcionMuestra.value.trim()) {
+                        camposVacios = true;
+                    }
+                }
+
+                // Validar campos de acreditación si están visibles
+                if (acreditacionSelect.val() === 'Acreditado') {
+                    const nombreAcreditacion = document.getElementById('nombreAcreditacion');
+                    const descripcionAcreditacion = document.getElementById('descripcionAcreditacion');
+                    if (!nombreAcreditacion.value || !descripcionAcreditacion.value) {
+                        camposVacios = true;
+                    }
+                }
+
+                // Validar campos de laboratorios
+                const preciosLab = document.querySelectorAll('.precio-lab');
+                const laboratoriosResp = document.querySelectorAll('[name="laboratorios_responsables[]"]');
+                if (preciosLab.length === 0) {
+                    camposVacios = true;
+                } else {
+                    for (let i = 0; i < preciosLab.length; i++) {
+                        if (!preciosLab[i].value.trim() || !laboratoriosResp[i].value.trim()) {
+                            camposVacios = true;
+                            break;
+                        }
+                    }
+                }
+
+                // Mostrar mensajes de alerta
+                if (camposVacios) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'Faltan campos por llenar.',
+                        icon: 'error',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                    });
+                } else {
+                    // Si todo está lleno, enviar el formulario
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Servicio agregado correctamente.',
+                        icon: 'success',
+                        customClass: {
+                            confirmButton: 'btn btn-success'
+                        },
+                        buttonsStyling: false
+                    }).then(() => {
+                        form.submit();
+                    });
+                }
+            });
         });
     </script>
 @endsection

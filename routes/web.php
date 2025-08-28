@@ -601,6 +601,10 @@ Route::post('/servicios-especializados/store', [serviciosEspecializadosControlle
 Route::get('/servicios-especializados/create', [serviciosEspecializadosController::class, 'create'])->name('servicios.create');
 Route::get('/servicios/agregar', [serviciosEspecializadosController::class, 'create'])->name('servicios.create');
 Route::post('/servicios', [serviciosEspecializadosController::class, 'store'])->name('servicios.store');
+Route::resource('servicios', serviciosEspecializadosController::class);
+Route::get('/servicios/datatable', [serviciosEspecializadosController::class, 'tuMetodo'])->name('servicios.datatable');
+Route::post('/servicios/exportar', [serviciosEspecializadosController::class, 'exportar'])->name('servicios.exportar');
+Route::get('/servicios/{id}/edit', [serviciosEspecializadosController::class, 'edit'])->name('servicios.edit');
 });
 
 /*obtener el editar*/

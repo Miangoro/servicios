@@ -37,7 +37,7 @@ class Servicio extends Model
         'id_acreditacion',
         'id_categoria',
         'cant_muestra',
-        'requisitos' // Agrega esta columna si existe en la BD
+       
     ];
 
     /**
