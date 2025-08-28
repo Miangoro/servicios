@@ -15,7 +15,7 @@
     'resources/assets/vendor/libs/select2/select2.scss',
     'resources/assets/vendor/libs/tagify/tagify.scss',
     'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.scss',
-    'resources/assets/vendor/libs/typeahead-js/typeahead.scss',
+    'resources/assets/vendor/libs/typeahead-js/typeahead.scss'
 ])
 <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
 @endsection
@@ -50,8 +50,6 @@
     // Define la URL de la ruta para la tabla
     var dataTableAjaxUrl = "{{ route('servicios.index') }}";
 </script>
-
-
 @endsection
 
 @section('content')
@@ -78,23 +76,30 @@
         <div class="col">
             <div class="card shadow">
                 <div class="card-header border-0 pb-1">
-                    <div class="row align-items-center">
-                        <div class="col-sm-6">
-                            <h3 class="mb-3"><b>Servicios Especializados del CIDAM</b></h3>
+                    <h3 class="mb-3"><b>Servicios Especializados del CIDAM</b></h3>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <label for="buscar" class="me-2">Buscar:</label>
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                                <input type="text" class="form-control" id="buscar" placeholder="" aria-label="Buscar">
+                            </div>
+                        </div>
+                        <div>
+                            <select class="form-select me-2" style="width: 80px; display: inline-block;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <a href="{{ route('servicios.create') }}" class="btn btn-success me-2">
+                                <i class="ri-add-line align-middle"></i>
+                                Agregar Cliente
+                            </a>
                         </div>
                     </div>
                 </div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 <div class="table-responsive p-3">
-                    {{-- Botones que serán movidos por JavaScript --}}
-                    <div id="botones_ocultos" style="display: none;">
-                        <a href="#" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agregarServicioModal" id="agregarServicioBtn">
-                            <span class="d-none d-sm-inline-block">Agregar Servicio</span>
-                        </a>
-                        <button class="btn btn-secondary" id="exportarServiciosBtn" data-bs-toggle="modal" data-bs-target="#exportarServiciosModal">
-                            <span class="d-none d-sm-inline-block">Exportar</span>
-                        </button>
-                    </div>
                     <table id="tablaServicios" class="table table-flush table-bordered tablaServicios_datatable table-striped table-sm">
                         <thead class="table-dark">
                             <tr>
