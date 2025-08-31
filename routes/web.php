@@ -598,13 +598,19 @@ Route::middleware('auth')->controller(serviciosEspecializadosController::class)-
 Route::get('/servicios/especializados', [serviciosEspecializadosController::class, 'index'])->name('servicios.especializados.index');
 Route::get('/servicios-especializados', [serviciosEspecializadosController::class, 'index'])->name('servicios.index');
 Route::post('/servicios-especializados/store', [serviciosEspecializadosController::class, 'store'])->name('servicios.store');
+
 Route::get('/servicios-especializados/create', [serviciosEspecializadosController::class, 'create'])->name('servicios.create');
 Route::get('/servicios/agregar', [serviciosEspecializadosController::class, 'create'])->name('servicios.create');
 Route::post('/servicios', [serviciosEspecializadosController::class, 'store'])->name('servicios.store');
 Route::resource('servicios', serviciosEspecializadosController::class);
+
 Route::get('/servicios/datatable', [serviciosEspecializadosController::class, 'tuMetodo'])->name('servicios.datatable');
 Route::post('/servicios/exportar', [serviciosEspecializadosController::class, 'exportar'])->name('servicios.exportar');
-Route::get('/servicios/{id}/edit', [serviciosEspecializadosController::class, 'edit'])->name('servicios.edit');
+Route::get('/servicios-especializados/exportar', [ServiciosEspecializadosController::class, 'exportExcel'])->name('servicios.exportExcel');
+Route::get('/servicios/{servicio}', [serviciosEspecializadosController::class, 'show'])->name('servicios.show');
+Route::get('/servicios/{servicio}/edit', [serviciosEspecializadosController::class, 'edit'])->name('servicios.edit');
+Route::put('servicios/{servicio}', [serviciosEspecializadosController::class, 'update'])->name('servicios.update');
+
 });
 
 /*obtener el editar*/

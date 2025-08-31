@@ -1,38 +1,35 @@
 /**
- * Este script maneja la lógica para dos partes de la aplicación:
- * 1. La inicialización y el comportamiento de la tabla de servicios DataTables.
- * 2. La validación y el envío del formulario para agregar un nuevo servicio.
+ * Este script maneja la lógica para la inicialización y el comportamiento de la tabla de servicios DataTables,
+ * y la validación y envío del formulario para agregar o editar un servicio.
  */
-document.addEventListener('DOMContentLoaded', function() {
-    // Definición de elementos principales del formulario de agregar servicio
-    const formAgregarServicio = document.getElementById('formAgregarServicio');
-    const formEditServicio = document.getElementById('editServicioForm');
-    const selectClave = document.getElementById('clave');
-    const precioInput = document.getElementById('precio');
-    const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
-    const agregarRequisitoBtn = document.getElementById('agregar-requisito-btn');
-    const requisitosContenedor = document.getElementById('requisitos-contenedor');
-    const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
-    const requiereMuestraSelect = document.getElementById('requiereMuestra');
-    const metodoField = document.getElementById('metodoField');
-    const tipoMuestraField = document.getElementById('tipoMuestraField');
-    const tipoMuestraInput = document.getElementById('tipoMuestra');
-    const acreditacionSelect = document.getElementById('acreditacion');
+document.addEventListener("DOMContentLoaded", () => {
+    // Definición de elementos principales y variables
+    const formAgregarServicio = document.getElementById("formAgregarServicio");
+    const formEditServicio = document.getElementById("editServicioForm");
+    const selectClave = document.getElementById("clave");
+    const precioInput = document.getElementById("precio");
+    const laboratoriosContenedor = document.getElementById("laboratorios-contenedor");
+    const requisitosContenedor = document.getElementById("requisitos-contenedor");
+    const agregarLaboratorioBtn = document.getElementById("agregar-laboratorio-btn");
+    const agregarRequisitoBtn = document.getElementById("agregar-requisito-btn");
+    const requiereMuestraSelect = document.getElementById("requiereMuestra");
+    const metodoField = document.getElementById("metodoField");
+    const tipoMuestraField = document.getElementById("tipoMuestraField");
+    const tipoMuestraInput = document.getElementById("tipoMuestra");
+    const acreditacionSelect = document.getElementById("acreditacion");
 
-    // Variable para la instancia de DataTables, se inicializará más tarde
     let dt_servicios = null;
-
-    // Cargar los datos de laboratorios desde el atributo data del formulario
     let laboratoriosData = [];
-    if (formAgregarServicio) {
-        try {
-            const dataString = formAgregarServicio.getAttribute('data-laboratorios');
-            if (dataString) {
-                laboratoriosData = JSON.parse(dataString);
-            }
-        } catch (error) {
-            console.error('Error al parsear los datos de laboratorios del formulario:', error);
-        }
+
+    // SweetAlert and jQuery
+    const Swal = window.Swal;
+    const $ = window.$;
+
+    try {
+        const dataString = formAgregarServicio?.getAttribute("data-laboratorios");
+        if (dataString) laboratoriosData = JSON.parse(dataString);
+    } catch (error) {
+        console.error("Error al parsear los datos de laboratorios:", error);
     }
 
     /**
@@ -40,104 +37,70 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} title - El título del error.
      * @param {string} message - El mensaje de error.
      */
-    function showSweetAlertError(title, message) {
+    const showSweetAlertError = (title, message) => {
         Swal.fire({
-            icon: 'error',
-            title: title,
+            icon: "error",
+            title,
             html: message,
-            customClass: { confirmButton: 'btn btn-danger' }
+            customClass: { confirmButton: "btn btn-danger" },
         });
-    }
+    };
 
     /**
-     * Limpia los mensajes de error y las clases 'is-invalid' de un formulario.
+     * Limpia los errores de validación de un formulario.
      * @param {HTMLElement} formElement - El elemento del formulario.
      */
-    function clearValidationErrors(formElement) {
+    const clearValidationErrors = (formElement) => {
         if (!formElement) return;
-        formElement.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-        $(formElement).find('.select2-container .select2-selection--single').removeClass('is-invalid');
-        formElement.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
-    }
+        formElement.querySelectorAll(".is-invalid").forEach((el) => el.classList.remove("is-invalid"));
+        $(formElement).find(".select2-container .select2-selection--single").removeClass("is-invalid");
+        formElement.querySelectorAll(".invalid-feedback").forEach((el) => el.remove());
+    };
 
     /**
-     * Muestra los errores de validación en el formulario.
-     * @param {object} errors - Objeto con los errores de validación (campo: [mensajes]).
-     * @param {HTMLElement} formElement - El elemento del formulario.
+     * Muestra los errores de validación.
+     * @param {object} errors - Objeto con los errores.
+     * @param {HTMLElement} formElement - El formulario.
      */
-    function displayValidationErrors(errors, formElement) {
+    const displayValidationErrors = (errors, formElement) => {
         clearValidationErrors(formElement);
         let firstInvalidField = null;
 
         for (const [fieldName, messages] of Object.entries(errors)) {
-            let inputElement = null;
+            let inputElement = formElement.querySelector(`[name="${fieldName}"]`);
 
-            if (fieldName.includes('.')) {
-                // Manejar campos dinámicos (e.g., precios_laboratorio.0)
-                const parts = fieldName.split('.');
-                const baseName = parts[0];
+            if (fieldName.includes(".")) {
+                const parts = fieldName.split(".");
                 const index = parts[1];
-
-                if (baseName === 'precios_laboratorio') {
-                    const precioItems = formElement.querySelectorAll('.precio-lab');
-                    if (precioItems[index]) {
-                        inputElement = precioItems[index];
-                    }
-                } else if (baseName === 'laboratorios_responsables') {
-                    const labSelects = formElement.querySelectorAll('.laboratorio-item select');
-                    if (labSelects[index]) {
-                        inputElement = labSelects[index];
-                    }
-                } else if (baseName === 'requisitos') {
-                    const requisitoInputs = formElement.querySelectorAll('input[name="requisitos[]"]');
-                    if (requisitoInputs[index]) {
-                        inputElement = requisitoInputs[index];
-                    }
+                if (parts[0] === "precios_laboratorio") {
+                    inputElement = formElement.querySelectorAll(".precio-lab")[index];
+                } else if (parts[0] === "laboratorios_responsables") {
+                    inputElement = formElement.querySelectorAll(".laboratorio-item select")[index];
+                } else if (parts[0] === "requisitos") {
+                    inputElement = formElement.querySelectorAll('input[name="requisitos[]"]')[index];
                 }
-            } else {
-                // Manejar campos estándar
-                inputElement = formElement.querySelector(`[name="${fieldName}"]`);
             }
 
             if (inputElement) {
-                // Marcar el campo como inválido
-                inputElement.classList.add('is-invalid');
+                inputElement.classList.add("is-invalid");
+                $(inputElement).hasClass("select2") && $(inputElement).next(".select2-container").find(".select2-selection--single").addClass("is-invalid");
 
-                // Si es un select2, también marcar el contenedor del select2
-                if ($(inputElement).hasClass('select2') || $(inputElement).is('select')) {
-                    const select2Container = $(inputElement).next('.select2-container');
-                    if (select2Container.length) {
-                        select2Container.find('.select2-selection--single').addClass('is-invalid');
-                    }
-                }
-
-                // Buscar o crear el elemento para el mensaje de error
                 let feedbackElement = inputElement.nextElementSibling;
-                if (!feedbackElement || !feedbackElement.classList.contains('invalid-feedback')) {
-                    const newFeedback = document.createElement('div');
-                    newFeedback.classList.add('invalid-feedback');
-                    inputElement.parentNode.insertBefore(newFeedback, inputElement.nextSibling);
-                    feedbackElement = newFeedback;
+                if (!feedbackElement || !feedbackElement.classList.contains("invalid-feedback")) {
+                    feedbackElement = document.createElement("div");
+                    feedbackElement.classList.add("invalid-feedback");
+                    inputElement.parentNode.insertBefore(feedbackElement, inputElement.nextSibling);
                 }
-                feedbackElement.innerHTML = messages.join('<br>');
+                feedbackElement.innerHTML = messages.join("<br>");
 
-                if (!firstInvalidField) {
-                    firstInvalidField = inputElement;
-                }
+                if (!firstInvalidField) firstInvalidField = inputElement;
             } else {
                 console.warn(`Elemento HTML no encontrado para el campo: ${fieldName}`);
             }
         }
-
-        if (firstInvalidField) {
-            firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            if (firstInvalidField.tagName.toLowerCase() === 'select') {
-                $(firstInvalidField).next('.select2-container').find('.select2-selection--single').focus();
-            } else {
-                firstInvalidField.focus();
-            }
-        }
-    }
+        firstInvalidField?.scrollIntoView({ behavior: "smooth", block: "center" });
+        firstInvalidField?.focus();
+    };
 
     /**
      * Envía una petición de formulario mediante AJAX.
@@ -145,470 +108,477 @@ document.addEventListener('DOMContentLoaded', function() {
      * @param {string} url - La URL del endpoint.
      * @param {string} method - El método HTTP ('POST' o 'PUT').
      */
-    async function submitForm(form, url, method = 'POST') {
+    const submitForm = async (form, url, method = "POST") => {
         const submitButton = form.querySelector('button[type="submit"]');
         if (!submitButton) return false;
 
         const originalButtonHtml = submitButton.innerHTML;
         const loadingHtml = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Guardando...';
-
         submitButton.innerHTML = loadingHtml;
         submitButton.disabled = true;
         clearValidationErrors(form);
 
         try {
             const finalFormData = new FormData(form);
-            
-            // Añadir el método de sobreescritura para PUT
-            if (method === 'PUT') {
-                finalFormData.append('_method', 'PUT');
-            }
+            if (method === "PUT") finalFormData.append("_method", "PUT");
 
             const response = await fetch(url, {
-                method: 'POST', // Siempre usamos POST para enviar el FormData
+                method: "POST",
                 body: finalFormData,
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                }
+                headers: { "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"), Accept: "application/json" },
             });
 
             const responseData = await response.json();
-
             if (!response.ok) {
                 if (response.status === 422 && responseData.errors) {
                     displayValidationErrors(responseData.errors, form);
-                    showSweetAlertError('Faltan campos', 'Por favor, completa los campos obligatorios. Los campos con errores han sido marcados en rojo. 🚨');
+                    showSweetAlertError("Faltan campos", "Por favor, completa los campos obligatorios. 🚨");
                 } else {
-                    throw new Error(responseData.message || 'Error inesperado.');
+                    throw new Error(responseData.message || "Error inesperado.");
                 }
             } else {
                 Swal.fire({
-                    icon: 'success',
-                    title: '¡Éxito!',
+                    icon: "success",
+                    title: "¡Éxito!",
                     text: responseData.message,
-                    customClass: { confirmButton: 'btn btn-success' }
+                    customClass: { confirmButton: "btn btn-success" },
                 }).then(() => {
-                    // Redirigir solo si la acción fue exitosa y estamos en la vista de edición
-                    if (method === 'PUT') {
-                        window.location.href = "{{ route('servicios.index') }}";
+                    // Si se está editando y todo sale bien, redirige o recarga la página.
+                    if (method === "PUT") {
+                        // Aquí puedes decidir si rediriges o simplemente recargas la página para ver los cambios.
+                        window.location.reload(); 
                     } else if (dt_servicios) {
-                        // Recargar la tabla si estamos en la vista de agregar servicio
                         dt_servicios.ajax.reload();
                     }
-                    // Limpiar el formulario para permitir un nuevo registro
-                    if (form.id === 'formAgregarServicio') {
+                    if (form.id === "formAgregarServicio") {
                         form.reset();
                         clearValidationErrors(form);
-                        // Restablecer Select2 si es necesario
-                        $('.select2').val(null).trigger('change');
-                        // Restablecer campos dinámicos a su estado inicial
-                        laboratoriosContenedor.innerHTML = '';
-                        requisitosContenedor.innerHTML = '';
-                        // Se puede agregar un laboratorio por defecto si es necesario
+                        $(".select2").val(null).trigger("change");
+                        laboratoriosContenedor.innerHTML = "";
+                        requisitosContenedor.innerHTML = "";
                         agregarLaboratorioBtn.click();
-                        // Actualizar el precio total
                         updatePrecioTotal();
                     }
                 });
                 return true;
             }
         } catch (error) {
-            console.error('Error en la petición:', error);
-            showSweetAlertError('¡Error!', `Hubo un problema al guardar los datos: ${error.message}`);
+            console.error("Error en la petición:", error);
+            showSweetAlertError("¡Error!", `Hubo un problema al guardar los datos: ${error.message}`);
         } finally {
             submitButton.innerHTML = originalButtonHtml;
             submitButton.disabled = false;
         }
         return false;
-    }
+    };
 
-    // Asocia los eventos al formulario de Agregar
-    if (formAgregarServicio) {
-        formAgregarServicio.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            await submitForm(this, this.action, 'POST');
-        });
-    }
+    // Asocia los eventos a los formularios
+    formAgregarServicio?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitForm(e.target, e.target.action, "POST");
+    });
 
-    // Asocia los eventos al formulario de Editar
-    if (formEditServicio) {
-        formEditServicio.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const servicioId = this.querySelector('input[name="id_servicio"]').value;
-            // Asegúrate de que la URL de edición esté correctamente definida en tu HTML/Blade
-            const editUrl = this.action || `/servicios/${servicioId}`;
-            await submitForm(this, editUrl, 'PUT');
-        });
-    }
+    formEditServicio?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const servicioId = e.target.querySelector('input[name="id_servicio"]').value;
+        const editUrl = e.target.action || `/servicios/${servicioId}`;
+        submitForm(e.target, editUrl, "PUT");
+    });
 
     // --- Lógica de campos dinámicos: Requisitos y Laboratorios ---
-    if (agregarRequisitoBtn && requisitosContenedor) {
-        agregarRequisitoBtn.addEventListener('click', function() {
-            const nuevoRequisito = document.createElement('div');
-            nuevoRequisito.classList.add('input-group', 'mb-3', 'requisito-item');
-            nuevoRequisito.innerHTML = `
-                <div class="form-floating form-floating-outline flex-grow-1">
-                    <input type="text" class="form-control" name="requisitos[]" placeholder="Requisitos" />
-                    <label>Requisitos</label>
-                </div>
-                <button type="button" class="btn btn-danger eliminar-requisito-btn ms-2">
-                    <i class="ri-subtract-line"></i>
-                </button>
-            `;
-            requisitosContenedor.appendChild(nuevoRequisito);
-        });
-
-        requisitosContenedor.addEventListener('click', function(e) {
-            if (e.target.closest('.eliminar-requisito-btn')) {
-                const btn = e.target.closest('.eliminar-requisito-btn');
-                const item = btn.closest('.requisito-item');
-                item.remove();
-            }
-        });
-    }
-
-    function updatePrecioTotal() {
-        let total = 0;
-        laboratoriosContenedor.querySelectorAll('.precio-lab').forEach(input => {
-            const value = parseFloat(input.value) || 0;
-            total += value;
-        });
+    const updatePrecioTotal = () => {
+        const total = Array.from(laboratoriosContenedor.querySelectorAll(".precio-lab")).reduce(
+            (sum, input) => sum + (Number.parseFloat(input.value) || 0), 0);
         if (precioInput) {
             precioInput.value = total.toFixed(2);
         }
-    }
+    };
 
     if (precioInput) {
         precioInput.disabled = true;
         precioInput.readOnly = true;
     }
 
-    if (agregarLaboratorioBtn && laboratoriosContenedor) {
-        agregarLaboratorioBtn.addEventListener('click', function() {
-            const nuevoLaboratorio = document.createElement('div');
-            nuevoLaboratorio.classList.add('input-group', 'mb-3', 'laboratorio-item');
+    const addRequisito = () => {
+        const nuevoRequisito = document.createElement("div");
+        nuevoRequisito.classList.add("input-group", "mb-3", "requisito-item");
+        nuevoRequisito.innerHTML = `
+            <div class="form-floating form-floating-outline flex-grow-1">
+                <input type="text" class="form-control" name="requisitos[]" placeholder="Requisitos" />
+                <label>Requisitos</label>
+            </div>
+            <button type="button" class="btn btn-danger eliminar-requisito-btn ms-2">
+                <i class="ri-subtract-line"></i>
+            </button>
+        `;
+        requisitosContenedor?.appendChild(nuevoRequisito);
+    };
 
-            let optionsHtml = '<option value="">Seleccione un laboratorio</option>';
-            if (Array.isArray(laboratoriosData) && laboratoriosData.length > 0) {
-                laboratoriosData.forEach(lab => {
-                    optionsHtml += `<option value="${lab.id_laboratorio}">${lab.laboratorio}</option>`;
-                });
-            } else {
-                console.warn('No se encontraron datos de laboratorios para generar el select.');
-            }
+    const addLaboratorio = () => {
+        const nuevoLaboratorio = document.createElement("div");
+        nuevoLaboratorio.classList.add("input-group", "mb-3", "laboratorio-item");
+        const optionsHtml = laboratoriosData.map(lab => `<option value="${lab.id_laboratorio}">${lab.laboratorio}</option>`).join("");
+        
+        nuevoLaboratorio.innerHTML = `
+            <div class="form-floating form-floating-outline flex-grow-1">
+                <input type="number" step="0.01" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" />
+                <label>Precio *</label>
+            </div>
+            <div class="form-floating form-floating-outline flex-grow-1 ms-2">
+                <select class="form-select select2-laboratorio" name="laboratorios_responsables[]">
+                    <option value="">Seleccione un laboratorio</option>
+                    ${optionsHtml}
+                </select>
+                <label for="select2-laboratorio">Laboratorio responsable *</label>
+            </div>
+            <button type="button" class="btn btn-danger eliminar-laboratorio-btn ms-2">
+                <i class="ri-subtract-line"></i>
+            </button>
+        `;
+        laboratoriosContenedor?.appendChild(nuevoLaboratorio);
 
-            const clonedItem = document.createElement('div');
-            clonedItem.classList.add('input-group', 'mb-3', 'laboratorio-item');
-            clonedItem.innerHTML = `
-                <div class="form-floating form-floating-outline flex-grow-1">
-                    <input type="number" step="0.01" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" />
-                    <label>Precio *</label>
-                </div>
-                <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                    <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true">
-                        ${optionsHtml}
-                    </select>
-                    <label for="select2-laboratorio">Laboratorio responsable *</label>
-                </div>
-                <button type="button" class="btn btn-danger eliminar-laboratorio-btn ms-2">
-                    <i class="ri-subtract-line"></i>
-                </button>
-            `;
-
-            laboratoriosContenedor.appendChild(clonedItem);
-
-            const newSelect = clonedItem.querySelector('.select2-laboratorio');
-            $(newSelect).select2({
-                placeholder: 'Seleccione un laboratorio',
-                allowClear: true
-            });
-
-            const newPrecioInput = clonedItem.querySelector('.precio-lab');
-            if (newPrecioInput) {
-                newPrecioInput.addEventListener('input', updatePrecioTotal);
-            }
-            updatePrecioTotal();
-        });
-
-        laboratoriosContenedor.addEventListener('click', function(e) {
-            if (e.target.closest('.eliminar-laboratorio-btn')) {
-                const btn = e.target.closest('.eliminar-laboratorio-btn');
-                const item = btn.closest('.laboratorio-item');
-                if (laboratoriosContenedor.children.length > 1) {
-                    item.remove();
-                    updatePrecioTotal();
-                } else {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'No se puede eliminar',
-                        text: 'Debe haber al menos un laboratorio responsable.',
-                        customClass: { confirmButton: 'btn btn-warning' }
-                    });
-                }
-            }
-        });
-
-        laboratoriosContenedor.addEventListener('input', function(e) {
-            if (e.target.classList.contains('precio-lab')) {
-                updatePrecioTotal();
-            }
-        });
-
+        const newSelect = nuevoLaboratorio.querySelector(".select2-laboratorio");
+        $(newSelect).select2({ placeholder: "Seleccione un laboratorio", allowClear: true });
+        newSelect?.addEventListener("change", updatePrecioTotal);
         updatePrecioTotal();
-    }
+    };
 
-    // Lógica para la selección de clave y autocompletado del laboratorio responsable
-    if (selectClave) {
-        $(selectClave).on('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            if (selectedOption.value !== "") {
-                const idLaboratorio = selectedOption.getAttribute('data-id-lab');
-                const laboratorioResponsableInput = document.getElementById('laboratorioResponsableInput');
-                const laboratorioResponsableId = document.getElementById('laboratorioResponsableId');
+    agregarRequisitoBtn?.addEventListener("click", addRequisito);
+    agregarLaboratorioBtn?.addEventListener("click", addLaboratorio);
 
-                if (laboratorioResponsableInput && laboratorioResponsableId) {
-                    laboratorioResponsableInput.value = selectedOption.getAttribute('data-nombre-lab');
-                    laboratorioResponsableId.value = idLaboratorio;
-                }
+    requisitosContenedor?.addEventListener("click", (e) => e.target.closest(".eliminar-requisito-btn")?.closest(".requisito-item")?.remove());
 
-                const firstLabSelect = document.querySelector('#laboratorios-contenedor select[name="laboratorios_responsables[]"]');
-                if (firstLabSelect) {
-                    $(firstLabSelect).val(idLaboratorio).trigger('change');
-                }
+    laboratoriosContenedor?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".eliminar-laboratorio-btn");
+        if (btn) {
+            if (laboratoriosContenedor.children.length > 1) {
+                btn.closest(".laboratorio-item")?.remove();
+                updatePrecioTotal();
             } else {
-                const laboratorioResponsableInput = document.getElementById('laboratorioResponsableInput');
-                const laboratorioResponsableId = document.getElementById('laboratorioResponsableId');
-                if (laboratorioResponsableInput && laboratorioResponsableId) {
-                    laboratorioResponsableInput.value = '';
-                    laboratorioResponsableId.value = '';
-                }
-
-                const firstLabSelect = document.querySelector('#laboratorios-contenedor select[name="laboratorios_responsables[]"]');
-                if (firstLabSelect) {
-                    $(firstLabSelect).val('').trigger('change');
-                }
+                Swal.fire({
+                    icon: "warning",
+                    title: "No se puede eliminar",
+                    text: "Debe haber al menos un laboratorio responsable.",
+                    customClass: { confirmButton: "btn btn-warning" },
+                });
             }
-        });
-    }
+        }
+    });
+
+    laboratoriosContenedor?.addEventListener("input", (e) => {
+        if (e.target.classList.contains("precio-lab")) updatePrecioTotal();
+    });
+
+    // Lógica para la selección de clave y autocompletado del laboratorio
+    selectClave?.addEventListener("change", (e) => {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        const idLaboratorio = selectedOption?.getAttribute("data-id-lab");
+        const nombreLaboratorio = selectedOption?.getAttribute("data-nombre-lab");
+
+        const laboratorioResponsableInput = document.getElementById("laboratorioResponsableInput");
+        const laboratorioResponsableId = document.getElementById("laboratorioResponsableId");
+        const firstLabSelect = document.querySelector('select[name="laboratorios_responsables[]"]');
+
+        if (selectedOption?.value) {
+            if (laboratorioResponsableInput) laboratorioResponsableInput.value = nombreLaboratorio;
+            if (laboratorioResponsableId) laboratorioResponsableId.value = idLaboratorio;
+            if (firstLabSelect) $(firstLabSelect).val(idLaboratorio).trigger("change");
+        } else {
+            if (laboratorioResponsableInput) laboratorioResponsableInput.value = "";
+            if (laboratorioResponsableId) laboratorioResponsableId.value = "";
+            if (firstLabSelect) $(firstLabSelect).val("").trigger("change");
+        }
+    });
 
     // Lógica para mostrar/ocultar campos de muestra y método
-    function handleMuestraSelection() {
-        if (!requiereMuestraSelect || !tipoMuestraField || !tipoMuestraInput || !acreditacionSelect) return;
+    const handleMuestraSelection = () => {
+        const isSiSelected = requiereMuestraSelect?.value === "si";
+        const isAcreditadoSelected = acreditacionSelect?.value.includes("Acreditado");
 
-        const isSiSelected = requiereMuestraSelect.value === 'si';
-        const isAcreditadoSelected = acreditacionSelect.value.includes('Acreditado');
-
-        if (isSiSelected) {
-            tipoMuestraField.style.display = 'block';
-            tipoMuestraInput.disabled = false;
-        } else {
-            tipoMuestraField.style.display = 'none';
-            tipoMuestraInput.disabled = true;
-            tipoMuestraInput.value = '';
+        if (tipoMuestraField && tipoMuestraInput) {
+            tipoMuestraField.style.display = isSiSelected ? "block" : "none";
+            tipoMuestraInput.disabled = !isSiSelected;
+            if (!isSiSelected) tipoMuestraInput.value = "";
         }
 
-        if (isAcreditadoSelected) {
-            metodoField.style.display = 'block';
-        } else {
-            metodoField.style.display = 'none';
+        if (metodoField) metodoField.style.display = isAcreditadoSelected ? "block" : "none";
+    };
+
+    requiereMuestraSelect?.addEventListener("change", handleMuestraSelection);
+    acreditacionSelect?.addEventListener("change", handleMuestraSelection);
+    handleMuestraSelection();
+
+    // Inicializar Select2 en todos los selectores con la clase 'select2'
+    $(".select2").select2({ placeholder: "Selecciona una opción", allowClear: true });
+
+    // --- LÓGICA DE FILTROS DEL MODAL DE EXPORTACIÓN ---
+    const exportModal = document.getElementById('exportModal');
+    if (exportModal) {
+        const populateLabFilters = () => {
+            const claveSelect = document.getElementById('clave_export');
+            const laboratorioSelect = document.getElementById('nombre_laboratorio');
+            claveSelect.innerHTML = '<option value="">Todas las claves</option>';
+            laboratorioSelect.innerHTML = '<option value="">Todos los laboratorios</option>';
+
+            laboratoriosData.forEach(lab => {
+                const claveOption = document.createElement('option');
+                claveOption.value = lab.clave;
+                claveOption.textContent = lab.clave;
+                claveSelect.appendChild(claveOption);
+
+                const labOption = document.createElement('option');
+                labOption.value = lab.id_laboratorio;
+                labOption.textContent = lab.laboratorio;
+                laboratorioSelect.appendChild(labOption);
+            });
+        };
+
+        const toggleSelectState = (checkbox, selectId) => {
+            const selectElement = document.getElementById(selectId);
+            const labelElement = exportModal.querySelector(`label[for="${checkbox.id}"]`);
+            if (!selectElement) return;
+
+            const isDisabled = !checkbox.checked;
+            $(selectElement).prop('disabled', isDisabled).trigger('change.select2');
+            labelElement?.classList.toggle('text-muted', isDisabled);
+        };
+
+        $(exportModal).on('shown.bs.modal', () => {
+            populateLabFilters();
+            exportModal.querySelectorAll('select').forEach(select => {
+                $(select).select2({ dropdownParent: exportModal, placeholder: select.getAttribute('placeholder') || 'Selecciona una opción', allowClear: true });
+            });
+            exportModal.querySelectorAll('.form-check-input[type="checkbox"]').forEach(checkbox => {
+                toggleSelectState(checkbox, checkbox.id.replace('activar_', ''));
+            });
+        });
+
+        exportModal.querySelectorAll('.form-check-input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => toggleSelectState(e.target, e.target.id.replace('activar_', '')));
+        });
+
+        const exportarBtn = document.getElementById('exportarBtn');
+        if (exportarBtn) {
+            exportarBtn.addEventListener('click', () => {
+                const claveExport = document.getElementById('clave_export').value;
+                const laboratorioExport = document.getElementById('nombre_laboratorio').value;
+
+                let nombreFiltro = 'Todos_los_servicios';
+                let urlFiltros = '';
+
+                if (claveExport) {
+                    nombreFiltro = `Servicios_Clave_${claveExport}`;
+                    urlFiltros = `clave=${claveExport}`;
+                } else if (laboratorioExport) {
+                    const lab = laboratoriosData.find(l => l.id_laboratorio == laboratorioExport);
+                    const nombreLab = lab ? lab.laboratorio.replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'Laboratorio_desconocido';
+                    nombreFiltro = `Servicios_Lab_${nombreLab}`;
+                    urlFiltros = `laboratorio=${laboratorioExport}`;
+                }
+                const fecha = new Date().toISOString().slice(0, 10);
+                const nombreArchivo = `${nombreFiltro}_${fecha}.xlsx`;
+                const exportUrl = `/servicios/exportar?${urlFiltros}&nombre_archivo=${nombreArchivo}`;
+                window.location.href = exportUrl;
+                bootstrap.Modal.getInstance(exportModal)?.hide();
+            });
         }
     }
-
-    if (requiereMuestraSelect) {
-        $(requiereMuestraSelect).on('change', handleMuestraSelection);
-        handleMuestraSelection();
-    }
-    if (acreditacionSelect) {
-        $(acreditacionSelect).on('change', handleMuestraSelection);
-        handleMuestraSelection();
-    }
-
-    // Inicializa todos los selects con select2
-    $('.select2').select2();
 
     // --- CÓDIGO DE DATATABLES ---
-    const dt_servicios_table = $('#tablaServicios');
+    const initDataTables = () => {
+        const dt_servicios_table = $("#tablaServicios");
+        const dataTableAjaxUrl = window.dataTableAjaxUrl;
 
-    if (dt_servicios_table.length) {
-        try {
-            // Verifica si 'dataTableAjaxUrl' está definido antes de usarlo
-            if (typeof dataTableAjaxUrl === 'undefined') {
-                console.error("La variable 'dataTableAjaxUrl' no está definida. Asegúrate de que se pase desde tu plantilla Blade.");
-                showSweetAlertError('Error de Configuración', `La URL para cargar la tabla de servicios no está definida.`);
-                return;
-            }
-
-            dt_servicios = dt_servicios_table.DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: dataTableAjaxUrl,
-                    type: 'GET',
-                    // Manejo de errores en la petición AJAX
-                    error: function(xhr, error, thrown) {
-                        console.error("Error al cargar datos con DataTables:", thrown);
-                        console.log("Respuesta del servidor:", xhr.responseText);
-                        showSweetAlertError('Error de Carga', `Hubo un problema al cargar los datos de la tabla. Revisa la consola para más detalles. Error: ${thrown}`);
-                    }
-                },
-                columns: [{
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'clave',
-                        name: 'clave'
-                    },
-                    {
-                        data: 'nombre',
-                        name: 'nombre'
-                    },
-                    {
-                        data: 'precio',
-                        name: 'precio'
-                    },
-                    {
-                        data: 'laboratorio',
-                        name: 'laboratorio',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'duracion',
-                        name: 'duracion'
-                    },
-                    {
-                        data: 'id_habilitado',
-                        name: 'id_habilitado'
-                    },
-                    {
-                        // Modificación para el nuevo botón de acciones
-                        data: 'acciones',
-                        name: 'acciones',
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row) {
-                            return `
-                            <div class="d-flex justify-content-center">
-                                <div class="dropdown">
-                                    <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenuActions_${row.id_servicio}" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuActions_${row.id_servicio}">
-                                        <li>
-                                            <a href="{{ url('servicios') }}/${row.id_servicio}" class="dropdown-item btn-view-servicio">
-                                                <i class="ri-eye-line me-1"></i> Visualizar
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <a href="{{ url('servicios') }}/${row.id_servicio}/edit" class="dropdown-item btn-edit-servicio">
-                                                <i class="ri-pencil-line me-1"></i> Editar
-                                            </a>
-                                        </li>
-                                        <li>
-                                            <button class="dropdown-item btn-disable-servicio" data-id="${row.id_servicio}">
-                                                <i class="ri-delete-bin-line me-1"></i> Deshabilitar
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            `;
-                        }
-                    }
-                ],
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                },
-                // Configuración del DOM para la tabla
-                // 't': Tabla, 'i': Información, 'p': Paginación.
-                // Eliminamos 'l' (length) y 'f' (filter) para usar los controles manuales en el HTML
-                dom: 't<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                responsive: true
-            });
-
-            // Event listener para el campo de búsqueda manual
-            const searchInput = document.getElementById('buscar');
-            if (searchInput) {
-                searchInput.addEventListener('keyup', function() {
-                    dt_servicios.search(this.value).draw();
-                });
-            }
-
-            // Event listener para el select de "Mostrar x registros"
-            const lengthSelect = document.querySelector('select[name="tablaServicios_length"]');
-            if (lengthSelect) {
-                $(lengthSelect).on('change', function() {
-                    dt_servicios.page.len(this.value).draw();
-                });
-            }
-
-            // --- LÓGICA AGREGADA: MANEJO DEL BOTÓN DE DESHABILITAR ---
-            dt_servicios_table.on('click', '.btn-disable-servicio', function() {
-                const servicioId = $(this).data('id');
-
-                Swal.fire({
-                    title: '¿Estás seguro?',
-                    text: "¡No podrás revertir esto!",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, ¡deshabilitar!',
-                    cancelButtonText: 'Cancelar',
-                    customClass: {
-                        confirmButton: 'btn btn-danger me-3',
-                        cancelButton: 'btn btn-secondary'
-                    },
-                    buttonsStyling: false
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Enviamos la petición AJAX para deshabilitar el servicio
-                        const url = `/servicios/${servicioId}`; // Asegúrate de que esta URL exista
-                        fetch(url, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json'
-                            }
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                return response.json().then(errorData => {
-                                    throw new Error(errorData.message || 'Error al deshabilitar el servicio.');
-                                });
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Deshabilitado!',
-                                text: data.message,
-                                customClass: { confirmButton: 'btn btn-success' }
-                            });
-                            // Recargar la tabla para reflejar el cambio
-                            dt_servicios.ajax.reload();
-                        })
-                        .catch(error => {
-                            showSweetAlertError('Error de Deshabilitación', `Hubo un problema: ${error.message}`);
-                        });
-                    }
-                });
-            });
-
-            // Manejo de clic para el botón de editar
-            dt_servicios_table.on('click', '.btn-edit-servicio', function(e) {
-                e.preventDefault();
-                const url = $(this).attr('href');
-                window.location.href = url;
-            });
-
-        } catch (error) {
-            console.error('Error al inicializar la tabla de DataTables:', error);
-            showSweetAlertError('Error de Inicialización', `Hubo un problema al inicializar la tabla de servicios. Revisa la consola para más detalles.`);
+        if (!dt_servicios_table.length || typeof dataTableAjaxUrl === "undefined") {
+            console.error("La tabla o la URL de AJAX no están disponibles.");
+            return;
         }
-    }
+
+        dt_servicios = dt_servicios_table.DataTable({
+            processing: true,
+            serverSide: true,
+            ajax: {
+                url: dataTableAjaxUrl,
+                type: "GET",
+                error: (xhr, _, thrown) => {
+                    console.error("Error al cargar datos con DataTables:", thrown);
+                    showSweetAlertError("Error de Carga", `Problema al cargar los datos. Error: ${thrown}`);
+                },
+            },
+            columns: [
+                { data: "DT_RowIndex", name: "DT_RowIndex", orderable: false, searchable: false },
+                { data: "clave", name: "clave" },
+                { data: "nombre", name: "nombre" },
+                { data: "precio", name: "precio" },
+                { data: "laboratorio", name: "laboratorio", orderable: false, searchable: false },
+                { data: "duracion", name: "duracion" },
+                { data: "id_habilitado", name: "id_habilitado" },
+                {
+                    data: null,
+                    name: "acciones",
+                    orderable: false,
+                    searchable: false,
+                    render: (data, _, row) => {
+                        const isDisabled = row.id_habilitado == 0;
+                        const statusText = isDisabled ? "Habilitar" : "Deshabilitar";
+                        const statusIcon = isDisabled ? "ri-check-line" : "ri-close-line";
+                        return `
+                            <div class="dropdown">
+                                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Opciones
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="/servicios/${row.id_servicio}">
+                                        <i class="ri-eye-line me-2"></i>Visualizar
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="/servicios/${row.id_servicio}/edit">
+                                        <i class="ri-edit-line me-2"></i>Editar
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><button class="dropdown-item toggle-status-btn" data-id="${row.id_servicio}" data-status="${row.id_habilitado}">
+                                        <i class="${statusIcon} me-2"></i>${statusText}
+                                    </button></li>
+                                </ul>
+                            </div>
+                        `;
+                    },
+                },
+            ],
+            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            dom: 't<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            responsive: true,
+            // Solución del FOUC
+            initComplete: function() {
+                // Selecciona el contenedor principal de la tabla o la tabla misma
+                // En este caso, el contenedor principal de la tabla es #tablaServicios
+                $("#tablaServicios").css("visibility", "visible");
+            }
+        });
+
+        // Eventos para la tabla
+        $("#buscar").on("keyup", function () { dt_servicios.search(this.value).draw(); });
+        $('select[name="tablaServicios_length"]').on("change", function () { dt_servicios.page.len(this.value).draw(); });
+
+        $(document).on("click", ".toggle-status-btn", function (e) {
+            e.preventDefault();
+            const { id: servicioId, status: currentStatus } = $(this).data();
+            const newStatus = currentStatus === 1 ? 0 : 1;
+            const statusAction = newStatus === 1 ? "Habilitar" : "Deshabilitar";
+            Swal.fire({
+                title: "¿Estás seguro?",
+                text: `¿Estás seguro de que quieres ${statusAction.toLowerCase()} este servicio?`,
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: `Sí, ${statusAction.toLowerCase()}`,
+                cancelButtonText: "Cancelar",
+                customClass: { confirmButton: `btn btn-lg btn-${newStatus === 1 ? "success" : "warning"}`, cancelButton: "btn btn-lg btn-secondary" },
+                buttonsStyling: false,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/servicios/${servicioId}/toggle-status`, {
+                        method: "PUT",
+                        headers: { "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"), "Content-Type": "application/json", Accept: "application/json" },
+                        body: JSON.stringify({ status: newStatus }),
+                    })
+                        .then((response) => response.json())
+                        .then((data) => {
+                            if (data.success) {
+                                dt_servicios.ajax.reload(null, false);
+                                Swal.fire({ icon: "success", title: "¡Actualizado!", text: `El servicio ha sido ${statusAction.toLowerCase()} correctamente.`, customClass: { confirmButton: "btn btn-success" } });
+                            } else {
+                                showSweetAlertError("Error", data.message || "Problema al actualizar el estado.");
+                            }
+                        })
+                        .catch((error) => {
+                            console.error("Error:", error);
+                            showSweetAlertError("Error", "No se pudo completar la operación. Inténtalo de nuevo.");
+                        });
+                }
+            });
+        });
+    };
+    initDataTables();
+
+    // Lógica para los modales
+    const handleModal = (selector, urlFunction, callback) => {
+        $(document).on('click', selector, function (e) {
+            e.preventDefault();
+            const servicioId = $(this).data('id');
+            const modalContent = $(this).closest('.modal').find('.modal-content-container');
+            const modalTitle = $(this).closest('.modal').find('.modal-title');
+            modalContent.html(`
+                <div class="modal-body text-center py-5">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div>
+                    <p class="mt-2">Cargando detalles del servicio...</p>
+                </div>
+            `);
+            fetch(urlFunction(servicioId))
+                .then(response => { if (!response.ok) throw new Error('Error al cargar la vista parcial'); return response.text(); })
+                .then(html => { modalContent.html(html); callback && callback(modalContent); })
+                .catch(error => {
+                    console.error('Error:', error);
+                    modalContent.html(`<div class="modal-header"><h5 class="modal-title">Error</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div><div class="modal-body text-center"><p class="text-danger">Hubo un error al cargar los detalles del servicio.</p></div>`);
+                });
+        });
+    };
+    // Desactivado el manejo de modales con clases de botón por la nueva estructura del menú
+    // handleModal('.view-servicio-btn', id => `/servicios/${id}/show`);
+    // handleModal('.edit-servicio-btn', id => `/servicios/${id}/edit`, modalContent => {
+    //     initEditFormScripts(modalContent);
+    // });
+    
+    // Función para reinicializar scripts en el modal de edición
+    const initEditFormScripts = (modalContent) => {
+        const formEditServicio = modalContent.find("#editServicioForm")[0];
+        if (!formEditServicio) return;
+
+        $(formEditServicio).find('.select2').select2({ placeholder: "Selecciona una opción", allowClear: true, dropdownParent: $('#editServicioModal') });
+
+        $(formEditServicio).on('input', '.precio-lab', updatePrecioTotal);
+        
+        const laboratoriosContenedorEdit = formEditServicio.querySelector("#laboratorios-contenedor-edit");
+        const requisitosContenedorEdit = formEditServicio.querySelector("#requisitos-contenedor-edit");
+        
+        formEditServicio.querySelector("#agregar-laboratorio-btn-edit")?.addEventListener('click', addLaboratorio);
+        formEditServicio.querySelector("#agregar-requisito-btn-edit")?.addEventListener('click', addRequisito);
+        
+        laboratoriosContenedorEdit?.addEventListener("click", e => {
+            const btn = e.target.closest(".eliminar-laboratorio-btn");
+            if (btn) {
+                if (laboratoriosContenedorEdit.children.length > 1) {
+                    btn.closest(".laboratorio-item")?.remove();
+                    updatePrecioTotal();
+                } else {
+                    Swal.fire({ icon: "warning", title: "No se puede eliminar", text: "Debe haber al menos un laboratorio responsable.", customClass: { confirmButton: "btn btn-warning" } });
+                }
+            }
+        });
+        
+        requisitosContenedorEdit?.addEventListener("click", e => e.target.closest(".eliminar-requisito-btn")?.closest(".requisito-item")?.remove());
+
+        const requiereMuestraSelectEdit = formEditServicio.querySelector("#requiereMuestra-edit");
+        const acreditacionSelectEdit = formEditServicio.querySelector("#acreditacion-edit");
+        const metodoFieldEdit = formEditServicio.querySelector("#metodoField-edit");
+        const tipoMuestraFieldEdit = formEditServicio.querySelector("#tipoMuestraField-edit");
+        const tipoMuestraInputEdit = formEditServicio.querySelector("#tipoMuestra-edit");
+        
+        const handleEditMuestraSelection = () => {
+            const isSiSelected = requiereMuestraSelectEdit?.value === "si";
+            const isAcreditadoSelected = acreditacionSelectEdit?.value.includes("Acreditado");
+            tipoMuestraFieldEdit.style.display = isSiSelected ? "block" : "none";
+            tipoMuestraInputEdit.disabled = !isSiSelected;
+            if (!isSiSelected) tipoMuestraInputEdit.value = "";
+            metodoFieldEdit.style.display = isAcreditadoSelected ? "block" : "none";
+        };
+        
+        $(requiereMuestraSelectEdit).on("change", handleEditMuestraSelection);
+        $(acreditacionSelectEdit).on("change", handleEditMuestraSelection);
+        handleEditMuestraSelection();
+
+        formEditServicio.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const servicioId = this.querySelector('input[name="id_servicio"]').value;
+            await submitForm(this, this.action || `/servicios/${servicioId}`, "PUT");
+        });
+    };
 });
