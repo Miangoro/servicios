@@ -608,9 +608,14 @@ Route::get('/servicios/datatable', [serviciosEspecializadosController::class, 't
 Route::post('/servicios/exportar', [serviciosEspecializadosController::class, 'exportar'])->name('servicios.exportar');
 Route::get('/servicios-especializados/exportar', [ServiciosEspecializadosController::class, 'exportExcel'])->name('servicios.exportExcel');
 Route::get('/servicios/{servicio}', [serviciosEspecializadosController::class, 'show'])->name('servicios.show');
+
 Route::get('/servicios/{servicio}/edit', [serviciosEspecializadosController::class, 'edit'])->name('servicios.edit');
+Route::put('/servicios/{servicio}', [ServiciosEspecializadosController::class, 'update'])->name('servicios.update');
+Route::delete('/servicios/{servicio}', [ServiciosEspecializadosController::class, 'destroy'])->name('servicios.destroy');
 Route::put('servicios/{servicio}', [serviciosEspecializadosController::class, 'update'])->name('servicios.update');
 
+Route::get('/servicios/export-excel', [serviciosEspecializadosController::class, 'exportExcel'])->name('servicios.export-excel');
+Route::put('servicios/{id}/toggle-status', [serviciosEspecializadosController::class, 'toggleStatus']);
 });
 
 /*obtener el editar*/

@@ -23,7 +23,7 @@
                             </div>
                             <select class="form-select" id="clave" name="clave" disabled>
                                 <option value="todos" selected>Todas las claves</option>
-                                @foreach($claves_laboratorio as $clave)
+                                @foreach($claves as $clave)
                                     <option value="{{ $clave }}">{{ $clave }}</option>
                                 @endforeach
                             </select>
@@ -37,8 +37,8 @@
                             <select class="form-select" id="estatus" name="estatus" disabled>
                                 <option value="" selected>Todos los estatus</option>
                                 <option value="1">Habilitado</option>
-                                <option value="2">No Habilitado</option>
-                                <option value="3">Observado</option>
+                                <option value="0">Deshabilitado</option>
+                                {{-- <option value="2">Observado</option> --}}
                             </select>
                         </div>
 
@@ -48,9 +48,9 @@
                                 <label class="form-check-label" for="activar_acreditado">Acreditación</label>
                             </div>
                             <select class="form-select" id="acreditado" name="acreditado" disabled>
-                                <option value="0" selected>Todas</option>
-                                <option value="1">No Acreditado</option>
-                                <option value="2">Acreditado</option>
+                                <option value="todos" selected>Todas</option>
+                                <option value="0">No Acreditado</option>
+                                <option value="1">Acreditado</option>
                             </select>
                         </div>
 
@@ -62,7 +62,7 @@
                             <select class="form-select" id="laboratorio_nombre" name="laboratorio_nombre" disabled>
                                 <option value="todos" selected>Todos los laboratorios</option>
                                 @foreach($laboratorios as $lab)
-                                    <option value="{{ $lab->laboratorio }}">{{ $lab->laboratorio }}</option>
+                                    <option value="{{ $lab->id_laboratorio }}">{{ $lab->laboratorio }}</option>
                                 @endforeach
                             </select>
                         </div>

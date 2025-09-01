@@ -21,22 +21,22 @@
 @endsection
 
 @section('vendor-script')
-    @vite([
-        'resources/assets/vendor/libs/moment/moment.js',
-        'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js',
-        'resources/assets/vendor/libs/select2/select2.js',
-        'resources/assets/vendor/libs/@form-validation/popular.js',
-        'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
-        'resources/assets/vendor/libs/@form-validation/auto-focus.js',
-        'resources/assets/vendor/libs/cleavejs/cleave.js',
-        'resources/assets/vendor/libs/cleavejs/cleave-phone.js',
-        'resources/assets/vendor/libs/sweetalert2/sweetalert2.js',
-        'resources/assets/vendor/libs/select2/select2.js',
-        'resources/assets/vendor/libs/tagify/tagify.js',
-        'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.js',
-        'resources/assets/vendor/libs/typeahead-js/typeahead.js',
-        'resources/assets/vendor/libs/bloodhound/bloodhound.js'
-    ])
+@vite([
+    'resources/assets/vendor/libs/moment/moment.js',
+    'resources/assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js',
+    'resources/assets/vendor/libs/select2/select2.js',
+    'resources/assets/vendor/libs/@form-validation/popular.js',
+    'resources/assets/vendor/libs/@form-validation/bootstrap5.js',
+    'resources/assets/vendor/libs/@form-validation/auto-focus.js',
+    'resources/assets/vendor/libs/cleavejs/cleave.js',
+    'resources/assets/vendor/libs/cleavejs/cleave-phone.js',
+    'resources/assets/vendor/libs/sweetalert2/sweetalert2.js',
+    'resources/assets/vendor/libs/select2/select2.js',
+    'resources/assets/vendor/libs/tagify/tagify.js',
+    'resources/assets/vendor/libs/bootstrap-select/bootstrap-select.js',
+    'resources/assets/vendor/libs/typeahead-js/typeahead.js',
+    'resources/assets/vendor/libs/bloodhound/bloodhound.js'
+])
 @endsection
 
 @section('page-script')
@@ -62,14 +62,68 @@
             const data = {};
             formData.forEach((value, key) => (data[key] = value));
 
-            // Aquí puedes agregar la lógica para enviar los datos a una ruta de Laravel
-            // que se encargará de generar y descargar el archivo Excel
-            console.log('Datos a exportar:', data);
-    
+            // Envía la solicitud al controlador para generar y descargar el Excel
+            window.location.href = "{{ route('servicios.export-excel') }}?" + new URLSearchParams(data).toString();
+
             const exportModal = bootstrap.Modal.getInstance(document.getElementById('exportModal'));
             if (exportModal) {
                 exportModal.hide();
             }
+        });
+
+        // Manejo del click en el botón de toggle status
+        $(document).on('click', '.toggle-status-btn', function() {
+            const idServicio = $(this).data('id');
+            const newStatus = $(this).data('status');
+            const token = $('meta[name="csrf-token"]').attr('content');
+            const url = `/servicios/toggle-status/${idServicio}`;
+
+            Swal.fire({
+                title: "¿Estás seguro?",
+                text: "El estado del servicio será modificado.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Sí, modificar",
+                cancelButtonText: "Cancelar"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: url,
+                        type: 'PUT',
+                        data: {
+                            _token: token,
+                            status: newStatus
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire(
+                                    '¡Actualizado!',
+                                    response.message,
+                                    'success'
+                                );
+                                // Recarga la tabla para reflejar el cambio
+                                $('#tablaServicios').DataTable().ajax.reload();
+                            } else {
+                                Swal.fire(
+                                    'Error',
+                                    response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.fire(
+                                'Error',
+                                'No se pudo actualizar el estado del servicio.',
+                                'error'
+                            );
+                            console.error("Error en la solicitud AJAX:", error);
+                        }
+                    });
+                }
+            });
         });
     });
 </script>
@@ -78,8 +132,8 @@
 @section('content')
 <style>
 /* -------------------------------------------
-   Ajustes de la tabla para DataTables
-   ------------------------------------------- */
+    Ajustes de la tabla para DataTables
+    ------------------------------------------- */
 
 /* Estilos para el tamaño de letra del cuerpo de la tabla */
 .table.table-sm tbody tr td {
@@ -100,6 +154,28 @@
 
 #tablaServicios th:nth-child(8) {
     min-width: 120px; /* Ancho mínimo para la columna de Acciones */
+}
+
+/* Estilos para el estado del servicio */
+.estatus-label {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.75em;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border-radius: 0.25rem;
+    color: white;
+}
+
+.estatus-label.habilitado {
+    background-color: #28a745; /* Verde para habilitado */
+}
+
+.estatus-label.deshabilitado {
+    background-color: #dc3545; /* Rojo para deshabilitado */
 }
 </style>
     
@@ -150,216 +226,6 @@
                     </thead>
                     <tbody>
                         {{-- Los datos de la tabla se cargarán con DataTables --}}
-                        <tr>
-                            <td>1</td>
-                            <td>SAB</td>
-                            <td>juan mezcal</td>
-                            <td>100</td>
-                            <td>Sabritas (100) - Clave: SAB</td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>FITO</td>
-                            <td>adrian</td>
-                            <td>700</td>
-                            <td>Fitopatología (200) - Clave: FITO, Laboratorio (500) - Clave: LAB</td>
-                            <td>3 días</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>ABCD</td>
-                            <td>juan mezcal</td>
-                            <td>100</td>
-                            <td>School (100) - Clave: ABCD</td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>SAB</td>
-                            <td>lola mezcal</td>
-                            <td>100</td>
-                            <td>Sabritas (100) - Clave: SAB</td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>5</td>
-                            <td>LAB</td>
-                            <td>lola mezcal</td>
-                            <td>100</td>
-                            <td>Laboratorio (100) - Clave: LAB</td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>6</td>
-                            <td>ABCD</td>
-                            <td>Andres mezcal</td>
-                            <td>100</td>
-                            <td>School (100) - Clave: ABCD</td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>7</td>
-                            <td>LUP</td>
-                            <td>adrian</td>
-                            <td>100</td>
-                            <td>María Guadalupe (100) - Clave: LUP</td>
-                            <td>dgdgdgdg</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>8</td>
-                            <td>LAB</td>
-                            <td>adrian</td>
-                            <td>100</td>
-                            <td>Laboratorio (100) - Clave: LAB</td>
-                            <td>rdtfj</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>9</td>
-                            <td>LAB</td>
-                            <td>adrian</td>
-                            <td>100</td>
-                            <td>Laboratorio (100) - Clave: LAB</td>
-                            <td>rdtfj</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>10</td>
-                            <td>ABCD</td>
-                            <td>Trina mezcal</td>
-                            <td>50</td>
-                            <td>School (50) - Clave: ABCD</td>
-                            <td>2</td>
-                            <td>1</td>
-                            <td>
-                                <div class="dropdown">
-                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                        Opciones
-                                    </button>
-                                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                        <li><a class="dropdown-item" href="#">Visualizar</a></li>
-                                        <li><a class="dropdown-item" href="#">Editar</a></li>
-                                        <li><a class="dropdown-item" href="#">Deshabilitar</a></li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>
