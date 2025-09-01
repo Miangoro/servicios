@@ -502,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             ],
-            language: { url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+            language: { url: "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
             dom: 't<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
             responsive: true,
             initComplete: function() {
@@ -518,7 +518,7 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             const { id: servicioId, status: currentStatus } = $(this).data();
             const newStatus = currentStatus === 1 ? 0 : 1;
-            const statusAction = newStatus === 1 ? "Habilitar" : "Deshabilitar";
+            const statusAction = newStatus === 1 ? "Deshabilitar" : "Habilitar";
             Swal.fire({
                 title: "¿Estás seguro?",
                 text: `¿Estás seguro de que quieres ${statusAction.toLowerCase()} este servicio?`,

@@ -616,6 +616,8 @@ Route::put('servicios/{servicio}', [serviciosEspecializadosController::class, 'u
 
 Route::get('/servicios/export-excel', [serviciosEspecializadosController::class, 'exportExcel'])->name('servicios.export-excel');
 Route::put('servicios/{id}/toggle-status', [serviciosEspecializadosController::class, 'toggleStatus']);
+
+
 });
 
 /*obtener el editar*/

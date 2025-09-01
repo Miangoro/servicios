@@ -8,6 +8,31 @@
     @vite('resources/assets/vendor/libs/animate-css/animate.scss')
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.scss')
     @vite('resources/assets/vendor/libs/spinkit/spinkit.scss')
+    <style>
+        .file-preview {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .laboratorio-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+        }
+    </style>
 @endsection
 
 @section('vendor-script')
@@ -133,13 +158,42 @@
                                     <div class="col-12">
                                         <div class="form-floating form-floating-outline">
                                             <input type="text" id="unidades" name="unidades" class="form-control" placeholder="Ejemplo: NMP/100mL" value="{{ old('unidades', $servicio->unidades) }}" required />
-                                            <label for="unidades">Unidades</label>
+                                            <label for='unidades'>Unidades</label>
                                         </div>
                                     </div>
                                     <div class="col-12" id="descripcionMuestraField" style="display: {{ old('requiere_muestra', $servicio->id_requiere_muestra ? 'si' : 'no') == 'si' ? 'block' : 'none' }};">
                                         <div class="form-floating form-floating-outline">
-                                            <textarea id="descripcionMuestra" name="descripcion_muestra" class="form-control" placeholder="Descripción de Muestra" style="height: 100px;">{{ old('descripcion_muestra', $servicio->descripcion_muestra !== '0' ? $servicio->descripcion_muestra : '') }}</textarea>
+                                            <textarea id="descripcionMuestra" name="descripcion_muestra" class="form-control" placeholder="Descripción de Muestra" style="height: 100px;">{{ old('descripcion_muestra', $servicio->descripcion_Muestra !== '0' ? $servicio->descripcion_Muestra : '') }}</textarea>
                                             <label for="descripcionMuestra">Descripción de Muestra</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="col-12">
+                                <h5 class="mb-3">Archivo de requisitos (Opcional)</h5>
+                                <div class="row g-4">
+                                    <div class="col-12">
+                                        <div class="file-upload-container">
+                                            @if($servicio->url_requisitos)
+                                                <div class="file-preview mb-3">
+                                                    <p class="mb-1 fw-bold">Archivo actual:</p>
+                                                    <div class="file-info">
+                                                        <div>
+                                                            <i class="ri-file-text-line me-1"></i>
+                                                            <span>{{ basename($servicio->url_requisitos) }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                            
+                                            <div class="form-floating form-floating-outline">
+                                                <input type="file" id="url_requisitos" name="url_requisitos" class="form-control" accept=".doc,.docx,.pdf" />
+                                                <label for="url_requisitos">Subir nuevo archivo (WORD o PDF)</label>
+                                            </div>
+                                            <div class="form-text">Formatos permitidos: .doc, .docx, .pdf. Tamaño máximo: 5MB</div>
                                         </div>
                                     </div>
                                 </div>
@@ -161,13 +215,13 @@
                                     </div>
                                     <div class="col-12 col-md-6" id="campoNombreAcreditacion" style="display: {{ old('acreditacion', $servicio->id_acreditacion == 1 ? 'Acreditado' : 'No acreditado') == 'Acreditado' ? 'block' : 'none' }};">
                                         <div class="form-floating form-floating-outline">
-                                            <input type="text" id="nombreAcreditacion" name="nombre_acreditacion" class="form-control" placeholder="Nombre de la Acreditación" value="{{ old('nombre_acreditacion', $servicio->nombre_acreditacion !== '0' ? $servicio->nombre_acreditacion : '') }}" />
+                                            <input type="text" id="nombreAcreditacion" name="nombre_acreditacion" class="form-control" placeholder="Nombre de la Acreditación" value="{{ old('nombre_acreditacion', $servicio->nombre_Acreditacion !== '0' ? $servicio->nombre_Acreditacion : '') }}" />
                                             <label for="nombreAcreditacion">Nombre de la Acreditación</label>
                                         </div>
                                     </div>
                                     <div class="col-12" id="campoDescripcionAcreditacion" style="display: {{ old('acreditacion', $servicio->id_acreditacion == 1 ? 'Acreditado' : 'No acreditado') == 'Acreditado' ? 'block' : 'none' }};">
                                         <div class="form-floating form-floating-outline">
-                                            <textarea id="descripcionAcreditacion" name="descripcion_acreditacion" class="form-control" placeholder="Descripción de la Acreditación" style="height: 100px;">{{ old('descripcion_acreditacion', $servicio->descripcion_acreditacion !== '0' ? $servicio->descripcion_acreditacion : '') }}</textarea>
+                                            <textarea id="descripcionAcreditacion" name="descripcion_acreditacion" class="form-control" placeholder="Descripción de la Acreditación" style="height: 100px;">{{ old('descripcion_acreditacion', $servicio->descripcion_Acreditacion !== '0' ? $servicio->descripcion_Acreditacion : '') }}</textarea>
                                             <label for="descripcionAcreditacion">Descripción de la Acreditación</label>
                                         </div>
                                     </div>
@@ -194,11 +248,46 @@
                                         <h5 class="fw-bold text-dark mb-0">Precio por laboratorio</h5>
                                     </div>
                                     <div class="card-body bg-white py-3" id="laboratorios-contenedor">
-                                        @foreach ($servicio->laboratorios as $laboratorio)
+                                        @if(count($servicio->laboratorios) > 0)
+                                            @foreach ($servicio->laboratorios as $index => $laboratorio)
+                                                <div class="row g-3 mb-3 laboratorio-item align-items-center">
+                                                    <div class="col-12 col-md-5">
+                                                        <div class="form-floating form-floating-outline">
+                                                            <input type="number" step="0.01" min="0" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" value="{{ $laboratorio->pivot->precio }}" required />
+                                                            <label>Precio </label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-md-5">
+                                                        <div class="form-floating form-floating-outline">
+                                                            <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
+                                                                <option value="">Selecciona un laboratorio</option>
+                                                                @foreach ($laboratorios as $lab)
+                                                                    <option value="{{ $lab->id_laboratorio }}" {{ $laboratorio->id_laboratorio == $lab->id_laboratorio ? 'selected' : '' }}>
+                                                                        {{ $lab->laboratorio }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                            <label>Laboratorio responsable *</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12 col-md-2 d-flex justify-content-end">
+                                                        @if($index > 0)
+                                                            <button type="button" class="btn btn-danger eliminar-laboratorio-btn w-100">
+                                                                <i class="ri-subtract-line"></i> Eliminar
+                                                            </button>
+                                                        @else
+                                                            <button type="button" class="btn btn-secondary w-100" disabled>
+                                                                <i class="ri-lock-line"></i> Fijo
+                                                            </button>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        @else
                                             <div class="row g-3 mb-3 laboratorio-item align-items-center">
                                                 <div class="col-12 col-md-5">
                                                     <div class="form-floating form-floating-outline">
-                                                        <input type="number" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" value="{{ $laboratorio->pivot->precio }}" required />
+                                                        <input type="number" step="0.01" min="0" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required />
                                                         <label>Precio *</label>
                                                     </div>
                                                 </div>
@@ -207,26 +296,24 @@
                                                         <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
                                                             <option value="">Selecciona un laboratorio</option>
                                                             @foreach ($laboratorios as $lab)
-                                                                <option value="{{ $lab->id_laboratorio }}" {{ $laboratorio->id_laboratorio == $lab->id_laboratorio ? 'selected' : '' }}>
-                                                                    {{ $lab->laboratorio }}
-                                                                </option>
+                                                                <option value="{{ $lab->id_laboratorio }}">{{ $lab->laboratorio }}</option>
                                                             @endforeach
                                                         </select>
-                                                        <label for="select2-laboratorio">Laboratorio responsable *</label>
+                                                        <label>Laboratorio responsable *</label>
                                                     </div>
                                                 </div>
                                                 <div class="col-12 col-md-2 d-flex justify-content-end">
-                                                    <button type="button" class="btn btn-danger eliminar-laboratorio-btn w-100">
-                                                        <i class="ri-subtract-line"></i> Eliminar
+                                                    <button type="button" class="btn btn-secondary w-100" disabled>
+                                                        <i class="ri-lock-line"></i> Fijo
                                                     </button>
                                                 </div>
                                             </div>
-                                        @endforeach
+                                        @endif
                                     </div>
                                     <div class="card-footer bg-white rounded-bottom-4 py-3">
                                         <div class="d-flex align-items-center">
-                                            <button type="button" class="btn btn-success me-2" id="agregar-laboratorio-btn">
-                                                <i class="ri-add-line"></i>
+                                            <button type="button" class="btn btn-success me-2" id="agregar-laboratorio-btn-edit">
+                                                <i class="ri-add-line"></i> Agregar
                                             </button>
                                             <span class="fs-5 fw-bold text-dark">Agregar Laboratorio</span>
                                         </div>
@@ -254,15 +341,16 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const precioTotalInput = document.getElementById('precio');
-        const requiereMuestraSelect = $('#requiereMuestra');
+        const requiereMuestraSelect = document.getElementById('requiereMuestra');
         const descripcionMuestraField = document.getElementById('descripcionMuestraField');
-        const acreditacionSelect = $('#acreditacion');
+        const acreditacionSelect = document.getElementById('acreditacion');
         const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
         const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
-        const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
+        const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn-edit');
         const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
+        const archivoRequisitosInput = document.getElementById('url_requisitos');
 
-        // Function to calculate the total price
+        // Función para calcular el precio total
         function calcularTotal() {
             let total = 0;
             const preciosLabs = document.querySelectorAll('.precio-lab');
@@ -273,73 +361,48 @@
             precioTotalInput.value = total.toFixed(2);
         }
 
-        // Function to initialize Select2 elements
-        function initSelect2Elements(container = document) {
-            $('.select2', container).select2({
-                placeholder: 'Selecciona una opción',
-                allowClear: true,
-                dropdownParent: $(container).find('.select2').parent() // Ensure dropdown renders correctly
-            });
-            $('.select2-laboratorio', container).select2({
-                placeholder: 'Selecciona un laboratorio',
-                allowClear: true,
-                dropdownParent: $(container).find('.select2-laboratorio').parent() // Ensure dropdown renders correctly
-            });
-        }
+        // Función para inicializar Select2 y listeners para una fila
+        function setupLaboratorioListenersAndSelect2(item) {
+            // Inicializar Select2 para el select dentro de la fila
+            const selectElement = item.querySelector('.select2-laboratorio');
+            if (selectElement) {
+                $(selectElement).select2({
+                    placeholder: 'Selecciona un laboratorio',
+                    allowClear: true,
+                    dropdownParent: $(selectElement).parent()
+                });
+            }
 
-        // Initialize Select2 on existing elements on page load
-        initSelect2Elements();
+            // Configurar listener para el campo de precio
+            const precioInput = item.querySelector('.precio-lab');
+            if (precioInput) {
+                precioInput.addEventListener('input', calcularTotal);
+            }
 
-        // Toggle 'Descripción de Muestra' field based on selection
-        function toggleDescripcionMuestraField() {
-            const requiereMuestraValue = requiereMuestraSelect.val();
-            if (requiereMuestraValue === 'si') {
-                descripcionMuestraField.style.display = 'block';
-            } else {
-                descripcionMuestraField.style.display = 'none';
-                const textareaMuestra = document.getElementById('descripcionMuestra');
-                if (textareaMuestra) textareaMuestra.value = '';
+            // Configurar listener para el botón de eliminar
+            const eliminarBtn = item.querySelector('.eliminar-laboratorio-btn');
+            if (eliminarBtn) {
+                eliminarBtn.addEventListener('click', function() {
+                    item.remove();
+                    calcularTotal();
+                });
             }
         }
 
-        // Toggle 'Acreditación' fields based on selection
-        function toggleAcreditacionFields() {
-            const acreditacionValue = acreditacionSelect.val();
-            if (acreditacionValue === 'Acreditado') {
-                campoNombreAcreditacion.style.display = 'block';
-                campoDescripcionAcreditacion.style.display = 'block';
-            } else {
-                campoNombreAcreditacion.style.display = 'none';
-                campoDescripcionAcreditacion.style.display = 'none';
-                const inputNombreAcreditacion = document.getElementById('nombreAcreditacion');
-                const textareaDescripcionAcreditacion = document.getElementById('descripcionAcreditacion');
-                if (inputNombreAcreditacion) inputNombreAcreditacion.value = '';
-                if (textareaDescripcionAcreditacion) textareaDescripcionAcreditacion.value = '';
-            }
-        }
-        
-        // Initial state on page load
-        toggleDescripcionMuestraField();
-        toggleAcreditacionFields();
-        calcularTotal();
-
-        // Event listeners for changes
-        requiereMuestraSelect.on('change.select2', toggleDescripcionMuestraField);
-        acreditacionSelect.on('change.select2', toggleAcreditacionFields);
-        laboratoriosContenedor.addEventListener('input', function(e) {
-            if (e.target.classList.contains('precio-lab')) {
-                calcularTotal();
-            }
+        // Inicializar Select2 y listeners para los elementos existentes al cargar la página
+        document.querySelectorAll('.laboratorio-item').forEach(item => {
+            setupLaboratorioListenersAndSelect2(item);
         });
-
-        // Add a new laboratory field
+        calcularTotal();
+        
+        // Listener para el botón de "Agregar Laboratorio"
         agregarLaboratorioBtn.addEventListener('click', function() {
-            const nuevoLaboratorio = document.createElement('div');
-            nuevoLaboratorio.classList.add('row', 'g-3', 'mb-3', 'laboratorio-item', 'align-items-center');
-            nuevoLaboratorio.innerHTML = `
+            const nuevoLaboratorioDiv = document.createElement('div');
+            nuevoLaboratorioDiv.classList.add('row', 'g-3', 'mb-3', 'laboratorio-item', 'align-items-center');
+            nuevoLaboratorioDiv.innerHTML = `
                 <div class="col-12 col-md-5">
                     <div class="form-floating form-floating-outline">
-                        <input type="number" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required />
+                        <input type="number" step="0.01" min="0" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required />
                         <label>Precio *</label>
                     </div>
                 </div>
@@ -360,26 +423,73 @@
                     </button>
                 </div>
             `;
-            laboratoriosContenedor.appendChild(nuevoLaboratorio);
-
-            // Initialize Select2 for the newly added elements
-            initSelect2Elements(nuevoLaboratorio);
             
-            // Recalculate total after adding a field
+            laboratoriosContenedor.appendChild(nuevoLaboratorioDiv);
+
+            // Inicializar Select2 y listeners para la nueva fila
+            setupLaboratorioListenersAndSelect2(nuevoLaboratorioDiv);
+            
+            // Recalcular el total después de agregar un campo
             calcularTotal();
         });
 
-        // Remove a laboratory field
-        laboratoriosContenedor.addEventListener('click', function(e) {
-            if (e.target.closest('.eliminar-laboratorio-btn')) {
-                const item = e.target.closest('.laboratorio-item');
-                if (item) {
-                    item.remove();
-                    // Recalculate total after removing a field
-                    calcularTotal();
-                }
+        // Alternar la visibilidad de los campos de muestra
+        function toggleDescripcionMuestraField() {
+            if (requiereMuestraSelect.value === 'si') {
+                descripcionMuestraField.style.display = 'block';
+            } else {
+                descripcionMuestraField.style.display = 'none';
+                document.getElementById('descripcionMuestra').value = '';
             }
-        });
+        }
+
+        // Alternar la visibilidad de los campos de acreditación
+        function toggleAcreditacionFields() {
+            if (acreditacionSelect.value === 'Acreditado') {
+                campoNombreAcreditacion.style.display = 'block';
+                campoDescripcionAcreditacion.style.display = 'block';
+            } else {
+                campoNombreAcreditacion.style.display = 'none';
+                campoDescripcionAcreditacion.style.display = 'none';
+                document.getElementById('nombreAcreditacion').value = '';
+                document.getElementById('descripcionAcreditacion').value = '';
+            }
+        }
+
+        // Validar el tipo de archivo al seleccionar
+        if (archivoRequisitosInput) {
+            archivoRequisitosInput.addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+                    const maxSize = 5 * 1024 * 1024; // 5MB
+                    
+                    if (!allowedTypes.includes(file.type)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Tipo de archivo no válido',
+                            text: 'Solo se permiten archivos PDF y Word (.doc, .docx)'
+                        });
+                        this.value = '';
+                    } else if (file.size > maxSize) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Archivo demasiado grande',
+                            text: 'El tamaño máximo permitido es 5MB'
+                        });
+                        this.value = '';
+                    }
+                }
+            });
+        }
+        
+        // Asigna listeners a los selectores principales
+        requiereMuestraSelect.addEventListener('change', toggleDescripcionMuestraField);
+        acreditacionSelect.addEventListener('change', toggleAcreditacionFields);
+
+        // Inicializar estados iniciales de los campos
+        toggleDescripcionMuestraField();
+        toggleAcreditacionFields();
     });
 </script>
 @endpush

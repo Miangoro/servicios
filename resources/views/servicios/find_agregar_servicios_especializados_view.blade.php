@@ -35,8 +35,8 @@
                         {{-- Fila 1: Clave, Clave Adicional, Nombre del Servicio, Precio --}}
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="clave" name="clave" class="select2 form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
-                                    <option value="">Seleccione una clave</option>
+                                <select id="clave" name="clave" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
+                                    <option value="">Selecciona una clave</option>
                                     @foreach ($claves as $clave)
                                         <option value="{{ $clave->clave }}" data-nombre-lab="{{ $clave->laboratorio }}" data-id-lab="{{ $clave->id_laboratorio }}">
                                             {{ $clave->clave }}
@@ -80,7 +80,7 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="requiereMuestra" name="requiere_muestra" class="select2 form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
+                                <select id="requiereMuestra" name="requiere_muestra" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="">Selecciona una opción</option>
                                     <option value="si">Sí</option>
                                     <option value="no">No</option>
@@ -90,7 +90,8 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="acreditacion" name="acreditacion" class="select2 form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
+                                <select id="acreditacion" name="acreditacion" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
+                                    <option value="">Selecciona una opción</option>
                                     <option value="No acreditado">No acreditado</option>
                                     <option value="Acreditado">Acreditado</option>
                                 </select>
@@ -99,10 +100,10 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="estatus" name="id_habilitado" class="select2 form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
+                                <select id="estatus" name="id_habilitado" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="1">Habilitado</option>
                                     <option value="0">No habilitado</option>
-                                    <option value="2">Observado</option>
+                                   
                                 </select>
                                 <label for="estatus">Estatus</label>
                             </div>
@@ -153,6 +154,24 @@
                             <div class="form-floating form-floating-outline">
                                 <textarea id="descripcionMuestra" name="descripcion_muestra" class="form-control" placeholder="Descripción de Muestra"></textarea>
                                 <label for="descripcionMuestra">Descripción de Muestra</label>
+                            </div>
+                        </div>
+
+                        {{-- Fila 9: Archivo WORD-PDF de requisitos (Opcional) --}}
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-header bg-white rounded-top-4 py-3">
+                                    <h5 class="fw-bold text-dark mb-0">Archivo WORD-PDF de requisitos (Opcional)</h5>
+                                </div>
+                                <div class="card-body bg-white py-3">
+                                    <div class="input-group">
+                                        <label class="input-group-text" for="archivoRequisitos">
+                                            <i class="ri-file-text-line"></i>
+                                        </label>
+                                        <input type="file" class="form-control" id="archivoRequisitos" name="archivo_requisitos" accept=".doc,.docx,.pdf">
+                                    </div>
+                                    <div class="form-text mt-2" id="archivoInfo">No se ha seleccionado ningún archivo</div>
+                                </div>
                             </div>
                         </div>
 
@@ -217,6 +236,18 @@
 
             const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
             const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
+            
+            // Control para mostrar el nombre del archivo seleccionado
+            const archivoInput = document.getElementById('archivoRequisitos');
+            const archivoInfo = document.getElementById('archivoInfo');
+            
+            archivoInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    archivoInfo.textContent = this.files[0].name;
+                } else {
+                    archivoInfo.textContent = 'No se ha seleccionado ningún archivo';
+                }
+            });
 
             // Autocompletado del primer laboratorio
             claveSelect.on('change.select2', function() {

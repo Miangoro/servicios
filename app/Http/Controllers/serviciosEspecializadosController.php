@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use App\Exports\ServiciosExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ServiciosEspecializadosController extends Controller
 {
@@ -42,21 +44,21 @@ class ServiciosEspecializadosController extends Controller
                     return '<span class="estatus-label ' . $clase . '">' . $texto . '</span>';
                 })
                 ->addColumn('acciones', function($row){
-                    $btn = '<div class="dropdown">
-                                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Opciones
+                    $btn = '<div class="dropdown d-flex justify-content-center">
+                               <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
+                                
                                 </button>
                                 <ul class="dropdown-menu">
                                     <li><a class="dropdown-item" href="'.route('servicios.show', $row->id_servicio).'">
-                                        <i class="ri-eye-line me-2"></i>Visualizar
+                                        <i class="ri-search-fill ri-20px text-normal me-2"></i>Visualizar
                                     </a></li>
                                     <li><a class="dropdown-item" href="'.route('servicios.edit', $row->id_servicio).'">
-                                        <i class="ri-edit-line me-2"></i>Editar
+                                        <i class="ri-file-edit-fill ri-20px text-info"></i>Editar
                                     </a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li>
                                         <button class="dropdown-item toggle-status-btn" data-id="'.$row->id_servicio.'" data-status="'.($row->id_habilitado ? 0 : 1).'">
-                                            <i class="'.($row->id_habilitado ? 'ri-close-line' : 'ri-check-line').' me-2"></i>'.($row->id_habilitado ? 'Deshabilitar' : 'Habilitar').'
+                                            <i class="'.($row->id_habilitado ? 'ri-delete-bin-2-fill ri-20px text-danger' : 'ri-file-check-fill ri-20px text-primary').' me-2"></i>'.($row->id_habilitado ? 'Deshabilitar' : 'Habilitar').'
                                         </button>
                                     </li>
                                 </ul>
@@ -160,6 +162,7 @@ class ServiciosEspecializadosController extends Controller
             'precios_laboratorio.*' => 'required|numeric',
             'laboratorios_responsables' => 'required|array|min:1',
             'laboratorios_responsables.*' => 'required|exists:catalogo_laboratorios,id_laboratorio',
+            'archivo_requisitos' => 'nullable|file|mimes:doc,docx,pdf|max:2048',
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -222,7 +225,41 @@ class ServiciosEspecializadosController extends Controller
             $servicio->tipo_servicio = 2;
             $servicio->id_usuario = auth()->id() ?? 1;
 
+            // DEBUG: Verificar si el archivo está llegando
+            Log::info('Archivo recibido: ' . ($request->hasFile('archivo_requisitos') ? 'SÍ' : 'NO'));
+            
+            // Procesar el archivo si se subió
+            if ($request->hasFile('archivo_requisitos')) {
+                $archivo = $request->file('archivo_requisitos');
+                
+                // DEBUG: Información del archivo
+                Log::info('Nombre archivo: ' . $archivo->getClientOriginalName());
+                Log::info('Tamaño archivo: ' . $archivo->getSize());
+                
+                $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+                $ruta = $archivo->storeAs('requisitos', $nombreArchivo, 'public');
+                
+                // DEBUG: Ruta donde se guardó
+                Log::info('Ruta almacenamiento: ' . $ruta);
+                
+                // Guardar la URL en la base de datos
+                $servicio->url_requisitos = asset('storage/' . $ruta);
+                
+                // DEBUG: URL que se guardará
+                Log::info('URL a guardar: ' . $servicio->url_requisitos);
+            } else {
+                Log::info('No se subió ningún archivo');
+                $servicio->url_requisitos = null; // Explícitamente establecer como null
+            }
+
+            // DEBUG: Antes de guardar
+            Log::info('URL requisitos antes de save(): ' . $servicio->url_requisitos);
+            
             $servicio->save();
+
+            // DEBUG: Después de guardar
+            $servicioGuardado = Servicio::find($servicio->id_servicio);
+            Log::info('URL requisitos después de save(): ' . $servicioGuardado->url_requisitos);
 
             $precios_laboratorio = $request->input('precios_laboratorio');
             $laboratorios_responsables = $request->input('laboratorios_responsables');
@@ -238,31 +275,31 @@ class ServiciosEspecializadosController extends Controller
             
             DB::commit();
 
-            // Corrected: Redirect to the index view with a success message
             return redirect()->route('servicios.index')->with('success', 'Servicio agregado con éxito. La clave generada es: ' . $nuevaClave);
 
         } catch (\Exception $e) {
             DB::rollback();
-            // Redirect back with an error message in case of failure
+            Log::error('Error al guardar servicio: ' . $e->getMessage());
+            Log::error('Trace: ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Ocurrió un error al guardar el servicio: ' . $e->getMessage());
         }
     }
 
 
-   /**
- * Displays the form to edit an existing service. Modificado
- * @param Servicio $servicio
- * @return \Illuminate\View\View
- */
-public function edit(Servicio $servicio)
-{
-    $servicio->load('laboratorios');
-    $claves = CatalogoLaboratorio::all();
-    $laboratorios = CatalogoLaboratorio::all();
-    
-    // Asegúrate de que el campo se está pasando correctamente
-    return view('servicios.edit', compact('servicio', 'claves', 'laboratorios'));
-}
+    /**
+     * Displays the form to edit an existing service. Modificado
+     * @param Servicio $servicio
+     * @return \Illuminate\View\View
+     */
+    public function edit(Servicio $servicio)
+    {
+        $servicio->load('laboratorios');
+        $claves = CatalogoLaboratorio::all();
+        $laboratorios = CatalogoLaboratorio::all();
+        
+        // Asegúrate de que el campo se está pasando correctamente
+        return view('servicios.edit', compact('servicio', 'claves', 'laboratorios'));
+    }
 
     /**
      * Updates an existing service in the database.
@@ -299,6 +336,7 @@ public function edit(Servicio $servicio)
             'laboratorios_responsables' => 'required|array|min:1',
             'laboratorios_responsables.*' => 'required|exists:catalogo_laboratorios,id_laboratorio',
             'motivo_edicion' => 'required|string|min:10',
+            'url_requisitos' => 'nullable|file|mimes:doc,docx,pdf|max:5120', // Cambiado de archivo_requisitos a url_requisitos
         ];
 
         $validator = Validator::make($request->all(), $rules);
@@ -311,24 +349,45 @@ public function edit(Servicio $servicio)
         DB::beginTransaction();
 
         try {
-            $servicio->update([
-                'clave' => $request->input('clave'),
-                'clave_adicional' => $request->input('clave_adicional'),
-                'nombre' => $request->input('nombre'),
-                'precio' => $request->input('precio'),
-                'duracion' => $request->input('duracion'),
-                'id_requiere_muestra' => ($request->input('requiere_muestra') === 'si') ? 1 : 0,
-                'descripcion_muestra' => ($request->input('requiere_muestra') === 'si') ? $request->input('descripcion_muestra') : '0',
-                'especificaciones' => $request->input('especificaciones'),
-                'id_acreditacion' => ($request->input('acreditacion') === 'Acreditado') ? 1 : 0,
-                'nombre_acreditacion' => ($request->input('acreditacion') === 'Acreditado') ? $request->input('nombre_acreditacion') : '0',
-                'descripcion_acreditacion' => ($request->input('acreditacion') === 'Acreditado') ? $request->input('descripcion_acreditacion') : '0',
-                'id_habilitado' => $request->input('id_habilitado'),
-                'analisis' => $request->input('analisis'),
-                'unidades' => $request->input('unidades'),
-                'prueba' => $request->input('prueba'),
-                'metodo' => $request->input('metodo'),
-            ]);
+            // Procesar el archivo si se subió
+            if ($request->hasFile('url_requisitos')) {
+                // Eliminar archivo anterior si existe
+                if ($servicio->url_requisitos) {
+                    $rutaAnterior = str_replace(asset('storage/'), '', $servicio->url_requisitos);
+                    Storage::disk('public')->delete($rutaAnterior);
+                }
+                
+                $archivo = $request->file('url_requisitos');
+                $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
+                $ruta = $archivo->storeAs('requisitos', $nombreArchivo, 'public');
+                
+                // Guardar la nueva URL en la base de datos
+                $urlRequisitos = asset('storage/' . $ruta);
+            } else {
+                // Mantener la URL existente si no se subió un nuevo archivo
+                $urlRequisitos = $servicio->url_requisitos;
+            }
+
+            // Actualizar los campos del servicio
+            $servicio->clave = $request->input('clave');
+            $servicio->clave_adicional = $request->input('clave_adicional');
+            $servicio->nombre = $request->input('nombre');
+            $servicio->precio = $request->input('precio');
+            $servicio->duracion = $request->input('duracion');
+            $servicio->id_requiere_muestra = ($request->input('requiere_muestra') === 'si') ? 1 : 0;
+            $servicio->descripcion_muestra = ($request->input('requiere_muestra') === 'si') ? $request->input('descripcion_muestra') : '0';
+            $servicio->especificaciones = $request->input('especificaciones');
+            $servicio->id_acreditacion = ($request->input('acreditacion') === 'Acreditado') ? 1 : 0;
+            $servicio->nombre_acreditacion = ($request->input('acreditacion') === 'Acreditado') ? $request->input('nombre_acreditacion') : '0';
+            $servicio->descripcion_acreditacion = ($request->input('acreditacion') === 'Acreditado') ? $request->input('descripcion_acreditacion') : '0';
+            $servicio->id_habilitado = $request->input('id_habilitado');
+            $servicio->analisis = $request->input('analisis');
+            $servicio->unidades = $request->input('unidades');
+            $servicio->prueba = $request->input('prueba');
+            $servicio->metodo = $request->input('metodo');
+            $servicio->url_requisitos = $urlRequisitos;
+
+            $servicio->save();
 
             $precios_laboratorio = $request->input('precios_laboratorio');
             $laboratorios_responsables = $request->input('laboratorios_responsables');
@@ -372,6 +431,13 @@ public function edit(Servicio $servicio)
     {
         try {
             $servicio = Servicio::findOrFail($id);
+            
+            // Eliminar archivo asociado si existe
+            if ($servicio->url_requisitos) {
+                $rutaArchivo = str_replace(asset('storage/'), '', $servicio->url_requisitos);
+                Storage::disk('public')->delete($rutaArchivo);
+            }
+            
             $servicio->delete();
 
             return response()->json(['success' => true, 'message' => 'Servicio eliminado correctamente.']);
@@ -414,6 +480,6 @@ public function edit(Servicio $servicio)
         $servicios = $query->with('laboratorios')->get();
         $nombreArchivo = $request->input('nombre_archivo', 'servicios.xlsx');
 
-        return Excel::download(new ServiciosExport($servicios), $nombreArchivo);
+        return Excel::download(new ServiciosExport($servicios), $request->nombreArchivo . '.xlsx');
     }
 }
