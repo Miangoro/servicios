@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PersonalRegularModel;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use PhpParser\Node\Stmt\TryCatch;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Str;
 
 class PersonalRegularController extends Controller
 {
@@ -39,8 +42,14 @@ class PersonalRegularController extends Controller
                         '</ul>
                     </div>';
                     return $btn;
+                })->editColumn('descripcion', function($row) {
+                    if($row->descripcion === null){
+                      return 'Sin descripción';  
+                    }
+                    return Str::limit(($row->descripcion), 150);
+                    
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['action', 'descripcion'])
                 ->make(true);
         }
 
@@ -48,24 +57,52 @@ class PersonalRegularController extends Controller
     }
 
     public function create(){
-        $usuarios = User::where( 'tipo', 1);
+        $usuarios = User::where( 'tipo', 1)->get();
         return view('personal.agregar_personal_regular', compact('usuarios'));
     }
 
     public function store(Request $request)
     {
-        if ($request->hasFile('file')) {
-            // Guarda imagen en storage/app/public/uploads
-            $path = $request->file('file')->store('uploads', 'public');
+        try{
+            $descripcion = $request->descripcionEmpleado;
+            // quita etiquetas vacías y espacios
+            $descripcionLimpia = trim(strip_tags($descripcion));
 
-            $model = new PersonalRegularModel();
-            $model->foto = $path;
-            $model->save();
-        }
+            if ($descripcionLimpia === '') {
+                $descripcion = null;
+            }
 
-        return redirect()->back()->with('success', 'Imagen subida correctamente');
+            $foto = $request->input('fotoEmpleado');
+
+        PersonalRegularModel::create([
+            'nombre' => $request->nombreEmpleado,
+            'folio' => $request->folioEmpleado,
+            'foto' => $foto,
+            'correo' => $request->correoEmpleado,
+            'id_usuario' => $request->idUsuario,
+            'fecha_ingreso' => $request->fechaIngreso,
+            'descripcion' => $descripcion,
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        return response()->json(['success' => 'Empleado agregado correctamente.']);
+        
+
+    }catch (\Exception $e) {
+        Log::error('Error al agregar empleado: ' . $e->getMessage());
+        return response()->json(['error' => 'Error al agregar empleado.'], 500);
     }
 
+    }
 
+    public function uploadPhoto(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('uploads', 'public');
+            return response()->json(['path' => $path]);
+        }
+        return response()->json(['error' => 'No file uploaded'], 400);
+    }
 }
 
