@@ -60,10 +60,10 @@
                     <div class="row align-items-center">
                         <div class="col-6">
                             <h3 class="mb-0"><b>Personal regular</b></h3>
-                            <button id="addEmpleadoR" type="button" class="add-new btn btn-primary waves-effect waves-light">
+                            <a id="addEmpleadoR" type="button" href="{{ route('personalRegular.create') }}" class="add-new btn btn-primary waves-effect waves-light">
                                 <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
                                 <span class="d-none d-sm-inline-block">Agregar empleado</span>
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

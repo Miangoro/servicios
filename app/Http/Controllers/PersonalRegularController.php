@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PersonalRegularModel;
+use App\Models\User;
 use Yajra\DataTables\DataTables;
 
 class PersonalRegularController extends Controller
@@ -45,5 +46,26 @@ class PersonalRegularController extends Controller
 
         return view('personal.find_personal_regular');
     }
+
+    public function create(){
+        $usuarios = User::where( 'tipo', 1);
+        return view('personal.agregar_personal_regular', compact('usuarios'));
+    }
+
+    public function store(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            // Guarda imagen en storage/app/public/uploads
+            $path = $request->file('file')->store('uploads', 'public');
+
+            $model = new PersonalRegularModel();
+            $model->foto = $path;
+            $model->save();
+        }
+
+        return redirect()->back()->with('success', 'Imagen subida correctamente');
+    }
+
+
 }
 
