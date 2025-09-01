@@ -198,13 +198,13 @@
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
-                        <button type="button" class="btn btn-warning me-2" data-bs-toggle="modal" data-bs-target="#exportModal">
+                        <button type="button" class="btn btn-info waves-effect waves-light me-2" data-bs-toggle="modal" data-bs-target="#exportModal">
                             <i class="ri-file-excel-2-line align-middle"></i>
                             Exportar
                         </button>
-                        <a href="{{ route('servicios.create') }}" class="btn btn-success">
+                        <a href="{{ route('servicios.create') }}" class="btn btn-primary waves-effect waves-light">
                             <i class="ri-add-line align-middle"></i>
-                            Agregar Cliente
+                            Agregar Servicio
                         </a>
                     </div>
                 </div>

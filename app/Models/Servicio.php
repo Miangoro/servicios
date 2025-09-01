@@ -42,9 +42,9 @@ class Servicio extends Model
         'id_categoria',
         'cant_muestra',
         'id_requiere_muestra',
-        'nombre_acreditacion',
-        'descripcion_acreditacion',
-        'descripcion_muestra',
+        'nombre_Acreditacion',
+        'descripcion_Acreditacion',
+        'descripcion_Muestra',
     ];
 
     // Cast para manejar el campo id_requiere_muestra como booleano
