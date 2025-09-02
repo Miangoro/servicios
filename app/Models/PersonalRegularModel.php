@@ -12,8 +12,11 @@ class PersonalRegularModel extends Model
         'folio',
         'foto',
         'nombre',
+        'id_usuario',
         'fecha_ingreso',
         'descripcion',
         'correo',
+        'created_at',
+        'updated_at'
     ];
 }

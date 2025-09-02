@@ -52,10 +52,7 @@
 
 @section('page-script')
 @vite(['resources/js/agregarPersonalRegular.js',
-  'resources/assets/js/forms-selects.js',
-  'resources/assets/js/forms-tagify.js',
   'resources/assets/js/forms-pickers.js',
-  'resources/assets/js/forms-editors.js'
 ])
 
 @endsection
@@ -64,7 +61,8 @@
 
 <script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 <script>
-  var usuarios = @json($usuarios->pluck('name')); 
+  var usuarios = @json($usuarios); 
+   console.log('Datos de usuarios:', usuarios);
 </script>
 
 
@@ -126,7 +124,7 @@
                 <meta name="csrf-token" content="{{ csrf_token() }}">
 
                 <div>
-                    <form id="form-agregar-empleado" method="POST" action="{{ route('personalRegular.store') }}">
+                    <form id="form-agregar-empleado">
                         @csrf
                         <div class="col-md-12 d-flex flex-column align-items-center justify-content-center">
                             <h4>Foto</h4>
@@ -144,12 +142,12 @@
                                     <span class="needsclick btn btn-sm btn-outline-primary" id="btnBrowse">Buscar imagen</span>
                                 </div>
                                 <div class="fallback">
-                                    <input name="file" type="file" />
+                                    <input name="fotoEmpleado" type="file" id="fotoEmpleadoInput" />
                                 </div>
                             </div>
                         </div>
 
-                        <input hidden value="null" name="idUsuario">
+                        <input hidden value="" name="idUsuario" id="id_usuario_input">
 
                         <div class="d-flex flex-row align-items-center">
                                <span class="iconify" data-icon="fluent:info-24-filled" data-inline="false" style="font-size: 24px;"></span>
@@ -158,18 +156,18 @@
 
                         <div class="row col-md-12 my-4">
                             <div class="col-md-8">
-                                <input id="TypeaheadBasic" name="nombreEmpleado" class="form-control typeahead" type="text" autocomplete="off" placeholder="Escriba el nombre completo del empleado o selecciónelo" />
+                                <input id="nombreEmpleadoInput" name="nombreEmpleado" class="form-control typeahead" type="text" autocomplete="off" placeholder="Escriba el nombre completo del empleado o selecciónelo" />
                             </div>
                             <div class="form-floating form-floating-outline col-md-4">
-                                <input type="text" class="form-control" id="floatingInput" name="folioEmpleado" placeholder="Cree un folio para este empleado" aria-describedby="floatingInputHelp" />
-                                <label for="floatingInput">Folio</label>
+                                <input type="text" class="form-control" id="folioEmpleadoInput" name="folioEmpleado" placeholder="Cree un folio para este empleado" aria-describedby="floatingInputHelp" />
+                                <label for="folioEmpleadoInput">Folio</label>
                             </div>
                         </div>
 
                         <div class="row col-md-12 my-4">
                             <div class="form-floating form-floating-outline col-md-6">
-                                <input type="text" class="form-control" id="floatingInput" name="correoEmpleado" placeholder="Correo electrónico del empleado" aria-describedby="floatingInputHelp" />
-                                <label for="floatingInput">Correo</label>
+                                <input type="text" class="form-control" id="correoEmpleadoInput" name="correoEmpleado" placeholder="Correo electrónico del empleado" aria-describedby="floatingInputHelp" />
+                                <label for="correoEmpleadoInput">Correo</label>
                             </div>
                             <div class="col-md-6 form-floating form-floating-outline">
                                 <input type="text" class="form-control" placeholder="YYYY-MM-DD" id="flatpickr-date" name="fechaIngreso" />
@@ -179,7 +177,7 @@
 
                         <div class="col-12">
                         <span>Descripción</span>
-                        <input type="hidden" name="descripcionEmpleado" id="descripcion">
+                        <input type="hidden" name="descripcionEmpleado" id="descripcionEmp">
                         <div id="snow-toolbar">
                             <span class="ql-formats">
                                 <select class="ql-font"></select>

@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\PersonalRegularModel;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
+use PhpParser\Node\Stmt\TryCatch;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Str;
 
 class PersonalRegularController extends Controller
 {
@@ -13,7 +16,7 @@ class PersonalRegularController extends Controller
     {
         if ($request->ajax()) {
             $sql = PersonalRegularModel::orderBy('id_empleado', 'desc')->get();
-            
+
             return DataTables::of($sql)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
@@ -39,33 +42,71 @@ class PersonalRegularController extends Controller
                         '</ul>
                     </div>';
                     return $btn;
-                })
-                ->rawColumns(['action'])
+                })->editColumn('descripcion', function ($row) {
+                    if ($row->descripcion === null) {
+                        return 'Sin descripción';
+                    }
+                    return Str::limit(($row->descripcion), 500);
+                })->addColumn('foto_html', function($row) {
+                $url = asset($row->foto);
+                
+                    return '<img src="' .  $url . '" alt="Foto de empleado" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">';
+                
+            })
+                ->rawColumns(['action', 'descripcion', 'foto_html'])
                 ->make(true);
         }
 
         return view('personal.find_personal_regular');
     }
 
-    public function create(){
-        $usuarios = User::where( 'tipo', 1);
+    public function create()
+    {
+        $usuarios = User::where('tipo', 1)->get();
         return view('personal.agregar_personal_regular', compact('usuarios'));
     }
 
+    // En tu PersonalRegularController.php
+
     public function store(Request $request)
     {
-        if ($request->hasFile('file')) {
-            // Guarda imagen en storage/app/public/uploads
-            $path = $request->file('file')->store('uploads', 'public');
+        try {
+            $descripcion = $request->descripcionEmpleado;
+            $descripcionLimpia = trim(strip_tags($descripcion));
 
-            $model = new PersonalRegularModel();
-            $model->foto = $path;
-            $model->save();
+            if ($descripcionLimpia === '') {
+                $descripcion = null;
+            }
+
+            $fotoPath = null;
+
+            // En tu PersonalRegularController.php
+            if ($request->hasFile('fotoEmpleado')) {
+                $uploadedImage = $request->file('fotoEmpleado');
+
+                $folder = 'uploads';
+                $filename = time() . '.' . $uploadedImage->getClientOriginalExtension();
+
+                $uploadedImage->move(public_path($folder), $filename);
+
+                $fotoPath = $folder . '/' . $filename;
+            }
+            PersonalRegularModel::create([
+                'nombre' => $request->nombreEmpleado,
+                'folio' => $request->folioEmpleado,
+                'foto' => $fotoPath,
+                'correo' => $request->correoEmpleado,
+                'id_usuario' => $request->idUsuario,
+                'fecha_ingreso' => $request->fechaIngreso,
+                'descripcion' => $descripcion,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
+            return response()->json(['success' => 'Empleado agregado correctamente.']);
+        } catch (\Exception $e) {
+            Log::error('Error al agregar empleado: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al agregar empleado.'], 500);
         }
-
-        return redirect()->back()->with('success', 'Imagen subida correctamente');
     }
-
-
 }
-
