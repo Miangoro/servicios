@@ -14,7 +14,7 @@ $(function () {
     columns: [
       { data: 'DT_RowIndex', name: 'num', orderable: true, searchable: false },
       { data: 'folio', name: 'folio', searchable: true },
-      { data: 'foto', name: 'foto', searchable: true },
+      { data: 'foto_html', name: 'foto_html', searchable: false, orderable: false },
       { data: 'nombre', name: 'nombre', searchable: true },
       { data: 'fecha_ingreso', name: 'fecha_ingreso', searchable: true },
       { data: 'descripcion', name: 'descripcion', searchable: true },

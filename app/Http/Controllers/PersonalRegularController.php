@@ -16,7 +16,7 @@ class PersonalRegularController extends Controller
     {
         if ($request->ajax()) {
             $sql = PersonalRegularModel::orderBy('id_empleado', 'desc')->get();
-            
+
             return DataTables::of($sql)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
@@ -42,67 +42,71 @@ class PersonalRegularController extends Controller
                         '</ul>
                     </div>';
                     return $btn;
-                })->editColumn('descripcion', function($row) {
-                    if($row->descripcion === null){
-                      return 'Sin descripción';  
+                })->editColumn('descripcion', function ($row) {
+                    if ($row->descripcion === null) {
+                        return 'Sin descripción';
                     }
-                    return Str::limit(($row->descripcion), 150);
-                    
-                })
-                ->rawColumns(['action', 'descripcion'])
+                    return Str::limit(($row->descripcion), 500);
+                })->addColumn('foto_html', function($row) {
+                $url = asset($row->foto);
+                
+                    return '<img src="' .  $url . '" alt="Foto de empleado" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">';
+                
+            })
+                ->rawColumns(['action', 'descripcion', 'foto_html'])
                 ->make(true);
         }
 
         return view('personal.find_personal_regular');
     }
 
-    public function create(){
-        $usuarios = User::where( 'tipo', 1)->get();
+    public function create()
+    {
+        $usuarios = User::where('tipo', 1)->get();
         return view('personal.agregar_personal_regular', compact('usuarios'));
     }
 
+    // En tu PersonalRegularController.php
+
     public function store(Request $request)
     {
-        try{
+        try {
             $descripcion = $request->descripcionEmpleado;
-            // quita etiquetas vacías y espacios
             $descripcionLimpia = trim(strip_tags($descripcion));
 
             if ($descripcionLimpia === '') {
                 $descripcion = null;
             }
 
-            $foto = $request->input('fotoEmpleado');
+            $fotoPath = null;
 
-        PersonalRegularModel::create([
-            'nombre' => $request->nombreEmpleado,
-            'folio' => $request->folioEmpleado,
-            'foto' => $foto,
-            'correo' => $request->correoEmpleado,
-            'id_usuario' => $request->idUsuario,
-            'fecha_ingreso' => $request->fechaIngreso,
-            'descripcion' => $descripcion,
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+            // En tu PersonalRegularController.php
+            if ($request->hasFile('fotoEmpleado')) {
+                $uploadedImage = $request->file('fotoEmpleado');
 
-        return response()->json(['success' => 'Empleado agregado correctamente.']);
-        
+                $folder = 'uploads';
+                $filename = time() . '.' . $uploadedImage->getClientOriginalExtension();
 
-    }catch (\Exception $e) {
-        Log::error('Error al agregar empleado: ' . $e->getMessage());
-        return response()->json(['error' => 'Error al agregar empleado.'], 500);
-    }
+                $uploadedImage->move(public_path($folder), $filename);
 
-    }
+                $fotoPath = $folder . '/' . $filename;
+            }
+            PersonalRegularModel::create([
+                'nombre' => $request->nombreEmpleado,
+                'folio' => $request->folioEmpleado,
+                'foto' => $fotoPath,
+                'correo' => $request->correoEmpleado,
+                'id_usuario' => $request->idUsuario,
+                'fecha_ingreso' => $request->fechaIngreso,
+                'descripcion' => $descripcion,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
 
-    public function uploadPhoto(Request $request)
-    {
-        if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('uploads', 'public');
-            return response()->json(['path' => $path]);
+            return response()->json(['success' => 'Empleado agregado correctamente.']);
+        } catch (\Exception $e) {
+            Log::error('Error al agregar empleado: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al agregar empleado.'], 500);
         }
-        return response()->json(['error' => 'No file uploaded'], 400);
     }
 }
-

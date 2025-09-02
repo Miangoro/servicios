@@ -255,7 +255,6 @@ Route::middleware('auth')->controller(App\Http\Controllers\PersonalRegularContro
     Route::get('/personal/regular', 'index')->name('personalRegular.index');
     Route::get('/personal/regular/create', 'create')->name('personalRegular.create');
     Route::post('/personal/regular/post', 'store')->name('personalRegular.store');
-    Route::post('/personal/regular/uploadPhoto', 'uploadPhoto')->name('personalRegular.uploadPhoto');
     Route::get('/personal/regular/{id}', 'show')->name('personalRegular.show');
     Route::get('/personal/regular/{id}/edit',  'edit')->name('personalRegular.edit');
     Route::put('/personal/regular/{id}',  'update')->name('personalRegular.update');
