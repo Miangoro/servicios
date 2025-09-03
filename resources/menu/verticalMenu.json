@@ -69,10 +69,16 @@
 
     {
       "name": "Cotizaciones",
-      "url": "find_roles",
       "icon": "menu-icon ri-user-settings-fill",
-      "slug": "find_roles",
-      "can" : "Visualizar roles"
+      "slug": "Cotizacion",
+      "can" : "Visualizar roles",
+      "submenu":[
+        {
+          "url": "/cotizaciones/agregar",
+          "name": "Agregar Cotización",
+          "slug": "/cotizaciones/agregar"
+        }
+      ]
     },
 
     {
