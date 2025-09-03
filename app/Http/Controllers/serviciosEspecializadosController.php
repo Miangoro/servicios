@@ -151,8 +151,10 @@ class ServiciosEspecializadosController extends Controller
             'precio' => 'required|numeric',
             'duracion' => 'required|string|max:255',
             'requiere_muestra' => ['required', Rule::in(['si', 'no'])],
-            'especificaciones' => 'nullable|string',
+            'descripcion_muestra' => 'nullable|string',
             'acreditacion' => 'required|string|max:255',
+            'nombre_acreditacion' => 'nullable|string|max:255',
+            'descripcion_acreditacion' => 'nullable|string',
             'id_habilitado' => 'nullable|in:1,0',
             'analisis' => 'required|string|max:255',
             'unidades' => 'required|string|max:255',
@@ -193,14 +195,13 @@ class ServiciosEspecializadosController extends Controller
             
             $servicio = new Servicio();
             $servicio->clave = $nuevaClave;
-            $servicio->especificaciones = $request->input('especificaciones');
             $servicio->nombre = $request->input('nombre');
             $servicio->precio = $request->input('precio');
             $servicio->duracion = $request->input('duracion');
             $servicio->id_requiere_muestra = ($request->input('requiere_muestra') === 'si') ? 1 : 0;
             
             if ($request->input('requiere_muestra') === 'si') {
-                $servicio->descripcion_muestra = $request->input('descripcion_muestra');
+                $servicio->descripcion_muestra = $request->input('descripcion_muestra') ?? '';
             } else {
                 $servicio->descripcion_muestra = '0';
             }
@@ -209,15 +210,14 @@ class ServiciosEspecializadosController extends Controller
             
             if ($request->input('acreditacion') === 'Acreditado') {
                 $servicio->id_acreditacion = 1;
-                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion');
-                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion');
+                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
+                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
             } else {
                 $servicio->id_acreditacion = 0;
                 $servicio->nombre_acreditacion = '0';
                 $servicio->descripcion_acreditacion = '0';
             }
 
-            $servicio->id_categoria = $request->input('id_categoria', 0);
             $servicio->analisis = $request->input('analisis');
             $servicio->unidades = $request->input('unidades');
             $servicio->metodo = $request->input('metodo');
@@ -225,41 +225,19 @@ class ServiciosEspecializadosController extends Controller
             $servicio->tipo_servicio = 2;
             $servicio->id_usuario = auth()->id() ?? 1;
 
-            // DEBUG: Verificar si el archivo está llegando
-            Log::info('Archivo recibido: ' . ($request->hasFile('archivo_requisitos') ? 'SÍ' : 'NO'));
-            
             // Procesar el archivo si se subió
             if ($request->hasFile('archivo_requisitos')) {
                 $archivo = $request->file('archivo_requisitos');
-                
-                // DEBUG: Información del archivo
-                Log::info('Nombre archivo: ' . $archivo->getClientOriginalName());
-                Log::info('Tamaño archivo: ' . $archivo->getSize());
-                
                 $nombreArchivo = time() . '_' . $archivo->getClientOriginalName();
                 $ruta = $archivo->storeAs('requisitos', $nombreArchivo, 'public');
                 
-                // DEBUG: Ruta donde se guardó
-                Log::info('Ruta almacenamiento: ' . $ruta);
-                
                 // Guardar la URL en la base de datos
                 $servicio->url_requisitos = asset('storage/' . $ruta);
-                
-                // DEBUG: URL que se guardará
-                Log::info('URL a guardar: ' . $servicio->url_requisitos);
             } else {
-                Log::info('No se subió ningún archivo');
-                $servicio->url_requisitos = null; // Explícitamente establecer como null
+                $servicio->url_requisitos = null;
             }
 
-            // DEBUG: Antes de guardar
-            Log::info('URL requisitos antes de save(): ' . $servicio->url_requisitos);
-            
             $servicio->save();
-
-            // DEBUG: Después de guardar
-            $servicioGuardado = Servicio::find($servicio->id_servicio);
-            Log::info('URL requisitos después de save(): ' . $servicioGuardado->url_requisitos);
 
             $precios_laboratorio = $request->input('precios_laboratorio');
             $laboratorios_responsables = $request->input('laboratorios_responsables');
@@ -287,18 +265,29 @@ class ServiciosEspecializadosController extends Controller
 
 
     /**
-     * Displays the form to edit an existing service. Modificado
+     * Displays the form to edit an existing service.
      * @param Servicio $servicio
      * @return \Illuminate\View\View
      */
     public function edit(Servicio $servicio)
     {
+        // Cargar relaciones necesarias con los nombres de laboratorio
         $servicio->load('laboratorios');
+        
         $claves = CatalogoLaboratorio::all();
         $laboratorios = CatalogoLaboratorio::all();
         
-        // Asegúrate de que el campo se está pasando correctamente
-        return view('servicios.edit', compact('servicio', 'claves', 'laboratorios'));
+        // Obtener los precios de laboratorio desde la relación laboratorios (tabla pivote)
+        $preciosLaboratorio = [];
+        foreach ($servicio->laboratorios as $laboratorio) {
+            $preciosLaboratorio[] = [
+                'id_laboratorio' => $laboratorio->id_laboratorio,
+                'precio' => $laboratorio->pivot->precio,
+                'nombre_laboratorio' => $laboratorio->laboratorio // Agregar el nombre
+            ];
+        }
+        
+        return view('servicios.edit', compact('servicio', 'claves', 'laboratorios', 'preciosLaboratorio'));
     }
 
     /**
@@ -322,26 +311,23 @@ class ServiciosEspecializadosController extends Controller
             'duracion' => 'required|string|max:255',
             'requiere_muestra' => ['required', Rule::in(['si', 'no'])],
             'descripcion_muestra' => 'nullable|string',
-            'especificaciones' => 'nullable|string',
             'acreditacion' => 'required|string|max:255',
             'nombre_acreditacion' => 'nullable|string|max:255',
             'descripcion_acreditacion' => 'nullable|string',
-            'id_habilitado' => 'required|in:1,0,2',
+            'id_habilitado' => 'required|in:1,0',
             'analisis' => 'required|string|max:255',
             'unidades' => 'required|string|max:255',
-            'prueba' => 'nullable|string',
-            'metodo' => 'nullable|string|max:255',
+            'prueba' => 'required|string',
             'precios_laboratorio' => 'required|array|min:1',
             'precios_laboratorio.*' => 'required|numeric',
             'laboratorios_responsables' => 'required|array|min:1',
             'laboratorios_responsables.*' => 'required|exists:catalogo_laboratorios,id_laboratorio',
             'motivo_edicion' => 'required|string|min:10',
-            'url_requisitos' => 'nullable|file|mimes:doc,docx,pdf|max:5120', // Cambiado de archivo_requisitos a url_requisitos
+            'url_requisitos' => 'nullable|file|mimes:doc,docx,pdf|max:5120',
         ];
 
         $validator = Validator::make($request->all(), $rules);
 
-        // Si la validación falla, regresa con los errores para mostrar un mensaje
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
@@ -352,7 +338,7 @@ class ServiciosEspecializadosController extends Controller
             // Procesar el archivo si se subió
             if ($request->hasFile('url_requisitos')) {
                 // Eliminar archivo anterior si existe
-                if ($servicio->url_requisitos) {
+                if ($servicio->url_requisitos && $servicio->url_requisitos != '0') {
                     $rutaAnterior = str_replace(asset('storage/'), '', $servicio->url_requisitos);
                     Storage::disk('public')->delete($rutaAnterior);
                 }
@@ -375,16 +361,29 @@ class ServiciosEspecializadosController extends Controller
             $servicio->precio = $request->input('precio');
             $servicio->duracion = $request->input('duracion');
             $servicio->id_requiere_muestra = ($request->input('requiere_muestra') === 'si') ? 1 : 0;
-            $servicio->descripcion_muestra = ($request->input('requiere_muestra') === 'si') ? $request->input('descripcion_muestra') : '0';
-            $servicio->especificaciones = $request->input('especificaciones');
-            $servicio->id_acreditacion = ($request->input('acreditacion') === 'Acreditado') ? 1 : 0;
-            $servicio->nombre_acreditacion = ($request->input('acreditacion') === 'Acreditado') ? $request->input('nombre_acreditacion') : '0';
-            $servicio->descripcion_acreditacion = ($request->input('acreditacion') === 'Acreditado') ? $request->input('descripcion_acreditacion') : '0';
+            
+            // Actualizar descripción de muestra
+            if ($request->input('requiere_muestra') === 'si') {
+                $servicio->descripcion_muestra = $request->input('descripcion_muestra') ?? '';
+            } else {
+                $servicio->descripcion_muestra = '0';
+            }
+            
+            // Actualizar campos de acreditación
+            if ($request->input('acreditacion') === 'Acreditado') {
+                $servicio->id_acreditacion = 1;
+                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
+                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
+            } else {
+                $servicio->id_acreditacion = 0;
+                $servicio->nombre_acreditacion = '0';
+                $servicio->descripcion_acreditacion = '0';
+            }
+            
             $servicio->id_habilitado = $request->input('id_habilitado');
             $servicio->analisis = $request->input('analisis');
             $servicio->unidades = $request->input('unidades');
             $servicio->prueba = $request->input('prueba');
-            $servicio->metodo = $request->input('metodo');
             $servicio->url_requisitos = $urlRequisitos;
 
             $servicio->save();
@@ -412,12 +411,11 @@ class ServiciosEspecializadosController extends Controller
 
             DB::commit();
 
-            // Redirección en caso de éxito
             return redirect()->route('servicios.index')->with('success', 'El servicio se actualizó correctamente.');
 
         } catch (\Exception $e) {
             DB::rollback();
-            // Redirección en caso de error
+            Log::error('Error al actualizar servicio: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Ocurrió un error al actualizar el servicio: ' . $e->getMessage());
         }
     }
@@ -433,7 +431,7 @@ class ServiciosEspecializadosController extends Controller
             $servicio = Servicio::findOrFail($id);
             
             // Eliminar archivo asociado si existe
-            if ($servicio->url_requisitos) {
+            if ($servicio->url_requisitos && $servicio->url_requisitos != '0') {
                 $rutaArchivo = str_replace(asset('storage/'), '', $servicio->url_requisitos);
                 Storage::disk('public')->delete($rutaArchivo);
             }

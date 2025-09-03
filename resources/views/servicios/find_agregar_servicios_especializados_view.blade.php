@@ -103,7 +103,6 @@
                                 <select id="estatus" name="id_habilitado" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="1">Habilitado</option>
                                     <option value="0">No habilitado</option>
-                                   
                                 </select>
                                 <label for="estatus">Estatus</label>
                             </div>
@@ -140,7 +139,7 @@
                                 <label for="descripcionAcreditacion">Descripción de la Acreditación</label>
                             </div>
                         </div>
-                        
+                       
                         {{-- Fila 7: Prueba --}}
                         <div class="col-12">
                             <div class="form-floating form-floating-outline">
@@ -188,8 +187,12 @@
                                             <label>Precio *</label>
                                         </div>
                                         <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                                            <input type="text" class="form-control" name="laboratorio_responsable_nombre[]" placeholder="Laboratorio responsable" />
-                                            <input type="hidden" name="laboratorios_responsables[]" />
+                                            <select class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true">
+                                                <option value="">Selecciona un laboratorio</option>
+                                                @foreach ($laboratorios as $laboratorio)
+                                                    <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
+                                                @endforeach
+                                            </select>
                                             <label>Laboratorio responsable *</label>
                                         </div>
                                         <button type="button" class="btn btn-danger eliminar-laboratorio-btn ms-2">
@@ -228,19 +231,31 @@
             const claveSelect = $('#clave');
             const precioTotalInput = document.getElementById('precio');
             const requiereMuestraSelect = $('#requiereMuestra');
-            const descripcionMuestraField = document.getElementById('descripcionMuestraField'); // Renamed ID
-            
+            const descripcionMuestraField = document.getElementById('descripcionMuestraField');
+           
             const acreditacionSelect = $('#acreditacion');
             const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
             const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
 
             const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
             const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
+           
+            // Inicializar select2 para TODOS los campos de laboratorio (incluyendo el primero)
+            function inicializarSelect2Laboratorios() {
+                $('.select2-laboratorio').select2({
+                    placeholder: 'Selecciona un laboratorio',
+                    allowClear: true,
+                    width: '100%'
+                });
+            }
             
+            // Inicializar todos los selects de laboratorio al cargar la página
+            inicializarSelect2Laboratorios();
+
             // Control para mostrar el nombre del archivo seleccionado
             const archivoInput = document.getElementById('archivoRequisitos');
             const archivoInfo = document.getElementById('archivoInfo');
-            
+           
             archivoInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     archivoInfo.textContent = this.files[0].name;
@@ -249,31 +264,12 @@
                 }
             });
 
-            // Autocompletado del primer laboratorio
-            claveSelect.on('change.select2', function() {
-                const selectedOption = $(this).find('option:selected');
-                const firstLaboratorioItem = document.querySelector('.laboratorio-item');
-                if (selectedOption.val() && firstLaboratorioItem) {
-                    const nombreLab = selectedOption.data('nombre-lab');
-                    const idLab = selectedOption.data('id-lab');
-                    const nombreInput = firstLaboratorioItem.querySelector('[name="laboratorio_responsable_nombre[]"]');
-                    const idInput = firstLaboratorioItem.querySelector('[name="laboratorios_responsables[]"]');
-                    if (nombreInput) nombreInput.value = nombreLab || '';
-                    if (idInput) idInput.value = idLab || '';
-                } else if (firstLaboratorioItem) {
-                    const nombreInput = firstLaboratorioItem.querySelector('[name="laboratorio_responsable_nombre[]"]');
-                    const idInput = firstLaboratorioItem.querySelector('[name="laboratorios_responsables[]"]');
-                    if (nombreInput) nombreInput.value = '';
-                    if (idInput) idInput.value = '';
-                }
-            });
-
             // Lógica para mostrar/ocultar el campo "Descripción de Muestra"
             function toggleDescripcionMuestraField() {
                 if (requiereMuestraSelect.val() === 'si') {
-                    descripcionMuestraField.style.display = 'block'; // Renamed variable
+                    descripcionMuestraField.style.display = 'block';
                 } else {
-                    descripcionMuestraField.style.display = 'none'; // Renamed variable
+                    descripcionMuestraField.style.display = 'none';
                 }
             }
             toggleDescripcionMuestraField();
@@ -329,7 +325,7 @@
                                 <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
                             @endforeach
                         </select>
-                        <label for="select2-laboratorio">Laboratorio responsable *</label>
+                        <label>Laboratorio responsable *</label>
                     </div>
                     <button type="button" class="btn btn-danger eliminar-laboratorio-btn ms-2">
                         <i class="ri-subtract-line"></i>
@@ -337,10 +333,11 @@
                 `;
                 laboratoriosContenedor.appendChild(nuevoLaboratorio);
 
-                const newSelect = nuevoLaboratorio.querySelector('.select2-laboratorio');
-                $(newSelect).select2({
+                // Inicializar el nuevo select2
+                $(nuevoLaboratorio).find('.select2-laboratorio').select2({
                     placeholder: 'Selecciona un laboratorio',
-                    allowClear: true
+                    allowClear: true,
+                    width: '100%'
                 });
 
                 calcularTotal();
@@ -350,6 +347,8 @@
                 if (e.target.closest('.eliminar-laboratorio-btn')) {
                     const item = e.target.closest('.laboratorio-item');
                     if (item) {
+                        // Destruir el select2 antes de eliminar el elemento
+                        $(item).find('.select2-laboratorio').select2('destroy');
                         item.remove();
                         calcularTotal();
                     }
@@ -363,15 +362,15 @@
                 e.preventDefault();
                 let camposVacios = false;
                 const camposRequeridos = [
-                    'clave', 
-                    'nombre', 
-                    'duracion', 
-                    'requiere_muestra', 
-                    'analisis', 
+                    'clave',
+                    'nombre',
+                    'duracion',
+                    'requiere_muestra',
+                    'analisis',
                     'unidades',
                     'prueba'
                 ];
-                
+               
                 // Validar campos principales
                 camposRequeridos.forEach(campo => {
                     const input = document.querySelector(`[name="${campo}"]`);
