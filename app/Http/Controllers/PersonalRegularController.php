@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\expedientePersonalModel;
 use Illuminate\Http\Request;
 use App\Models\PersonalRegularModel;
 use App\Models\User;
@@ -9,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use PhpParser\Node\Stmt\TryCatch;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class PersonalRegularController extends Controller
 {
@@ -25,18 +27,28 @@ class PersonalRegularController extends Controller
                         <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_empleado . '">' .
                         '<li>
+                            <a class="dropdown-item" href="'  . route('personalRegular.expediente', $row->id_empleado) .'">' .
+                        ' <span class="iconify text-primary" data-icon="fluent:document-add-20-filled" data-inline="false" style="font-size: 24px;"></span> Agregar expediente' .
+                        '</a>
+                        </li>' .
+                        '<li>
                             <a class="dropdown-item" href="javascript:void(0);" onclick="visualizar(' . $row->id_empleado . ')">' .
-                        '<i class="ri-search-fill ri-20px text-normal"></i> Visualizar' .
+                        '<span class="iconify text-primary" data-icon="streamline-ultimate:job-responsibility-bag-hand-bold" data-inline="false" style="font-size: 24px;"></span> Agregar nombramiento' .
+                        '</a>
+                        </li>' .
+                        '<li>
+                            <a class="dropdown-item" href="javascript:void(0);" onclick="visualizar(' . $row->id_empleado . ')">' .
+                        '<span class="iconify text-primary" data-icon="fluent:document-search-20-filled" data-inline="false" style="font-size: 24px;"></span> Agregar conflicto de interés' .
                         '</a>
                         </li>' .
                         '<li>
                             <a class="dropdown-item" href="javascript:void(0);" onclick="editProveedor(' . $row->id_empleado . ')">' .
-                        '<i class="ri-file-edit-fill ri-20px text-info"></i> Editar' .
+                        '<span class="iconify text-info" data-icon="fa7-solid:file-signature" data-inline="false" style="font-size: 24px;"></span> Resgistrar acuerdo de confidencialidad' .
                         '</a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="javascript:void(0);" onclick="deleteProv(' . $row->id_empleado . ')">' .
-                        '<i class="ri-delete-bin-2-fill ri-20px text-danger"></i> Eliminar' .
+                        ' <span class="iconify" data-icon="heroicons:document-arrow-up-solid" data-inline="false" style="font-size: 24px;"></span> Subir documentación' .
                         '</a>
                         </li>' .
                         '</ul>
@@ -103,10 +115,53 @@ class PersonalRegularController extends Controller
                 'updated_at' => now()
             ]);
 
+            expedientePersonalModel::create([
+                'id_empleado' => PersonalRegularModel::latest('id_empleado')->first()->id_empleado,
+                'd_personales' => "",
+                'profesion' => "",
+                'experiencia' => "",
+                'cursos' => "",
+                'actividades' => "",
+                'habilidades' => "",
+                'habilitado' => "",
+                'fecha_registro' => now(),
+                'id_usuario' => Auth::id(),
+            ]);
+
             return response()->json(['success' => 'Empleado agregado correctamente.']);
         } catch (\Exception $e) {
             Log::error('Error al agregar empleado: ' . $e->getMessage());
             return response()->json(['error' => 'Error al agregar empleado.'], 500);
         }
     }
+
+    public function expediente($id)
+    {
+        $empleado = expedientePersonalModel::where('id_empleado', $id)->first();
+
+        return view('personal.agregar_expediente', compact('empleado'));
+    }
+
+    public function expedientePost(Request $request)
+    {
+        $data = $request->only([
+            'd_personales',
+            'profesion',
+            'experiencia',
+            'cursos',
+            'actividades',
+            'habilidades'
+        ]);
+
+        $expediente = expedientePersonalModel::where('id_empleado', $request->idEmpleado)->first();
+
+        if (!$expediente) {
+            return response()->json(['error' => 'Expediente no encontrado.'], 404);
+        }
+
+        $expediente->update($data);
+
+        return response()->json(['success' => 'Expediente actualizado correctamente.']);
+    }
+
 }

@@ -62,7 +62,6 @@
 <script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 <script>
   var usuarios = @json($usuarios); 
-   console.log('Datos de usuarios:', usuarios);
 </script>
 
 
