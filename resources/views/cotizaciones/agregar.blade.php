@@ -172,14 +172,14 @@
             minimumResultsForSearch: 3,
             width: '100%',
             templateResult: function(data) {
-                // To truncate long text in options
+                // Para truncar el texto largo en las opciones
                 if (!data.id) return data.text;
                 var $result = $('<span class="truncate-text">' + data.text + '</span>');
                 return $result;
             }
         });
 
-        // Add tooltips for long options
+        // Agrega tooltips para opciones largas
         $(document).on('mouseenter', '.select2-selection__rendered', function(e) {
             if (this.offsetWidth < this.scrollWidth) {
                 $(this).attr('title', $(this).text());
@@ -188,7 +188,7 @@
             }
         });
 
-        // Add styles to selects
+        // Agrega estilos a los selects
         const selects = document.querySelectorAll('select');
         selects.forEach(select => {
             select.addEventListener('focus', function() {
@@ -206,7 +206,7 @@
             const container = document.getElementById('contact-rows-container-agregar');
             const index = container.children.length;
 
-            // Update field names with the correct index
+            // Actualiza los nombres de los campos con el índice correcto
             const inputs = newRow.querySelectorAll('input, select, textarea');
             inputs.forEach(input => {
                 if (input.name) {
@@ -223,44 +223,61 @@
             }
         });
 
-        // *** CÓDIGO MODIFICADO PARA CARGAR LOS CONTACTOS ***
+        // CÓDIGO MODIFICADO PARA CARGAR Y SELECCIONAR EL PRIMER CONTACTO
         $('#empresa').on('select2:select', function (e) {
             const empresaId = e.params.data.id;
             const contactoSelect = $('#contacto');
 
-            // Limpia el select de contacto
+            // Limpia el select de contacto y muestra un mensaje de carga
             contactoSelect.empty().append($('<option></option>').val('').text('Cargando...'));
+            contactoSelect.prop('disabled', true); // Deshabilita el select durante la carga
 
-            if (empresaId && empresaId !== 'publico_general') {
-                // Realiza la petición AJAX al servidor para obtener los contactos
-                fetch(`/cotizaciones/get-contactos/${empresaId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Limpia el select de contacto de nuevo
-                        contactoSelect.empty();
-
-                        if (data.length > 0) {
-                            // Agrega una opción por cada contacto recibido
-                            data.forEach(contacto => {
-                                const optionText = `${contacto.nombre_contacto} - ${contacto.telefono} (${contacto.correo})`;
-                                const newOption = new Option(optionText, contacto.id, false, false);
-                                contactoSelect.append(newOption);
-                            });
-                        } else {
-                            contactoSelect.append($('<option></option>').val('').text('No se encontraron contactos para esta empresa'));
-                        }
-                        contactoSelect.trigger('change'); // Notifica a Select2 que el contenido ha cambiado
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        contactoSelect.empty().append($('<option></option>').val('').text('Error al cargar contactos'));
-                        contactoSelect.trigger('change');
-                    });
-            } else {
-                // Si se selecciona "PUBLICO EN GENERAL", limpia el select de contacto
-                contactoSelect.empty().append($('<option></option>').val('').text('Seleccione una empresa primero'));
+            // Si se selecciona "PÚBLICO EN GENERAL", no se buscarán contactos
+            if (empresaId === 'publico_general') {
+                contactoSelect.empty().append($('<option></option>').val('').text('Seleccione una empresa o complete los datos manualmente.'));
+                contactoSelect.prop('disabled', false); // Habilita el select
                 contactoSelect.trigger('change');
+                return;
             }
+
+            // Realiza la petición AJAX al servidor para obtener los contactos
+            fetch(`/cotizaciones/get-contactos/${empresaId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar contactos');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Limpia el select de contacto de nuevo
+                    contactoSelect.empty();
+
+                    if (data.length > 0) {
+                        // Agrega una opción por cada contacto recibido
+                        data.forEach((contacto, index) => {
+                            const optionText = `${contacto.nombre_contacto} - ${contacto.correo_contacto}`;
+                            // Establece el primer contacto como seleccionado
+                            const isFirst = index === 0;
+                            const newOption = new Option(optionText, contacto.id, isFirst, isFirst);
+                            contactoSelect.append(newOption);
+                        });
+                        
+                        // Si hay datos, Select2 debería seleccionar el primero automáticamente.
+                        // Forzamos el cambio para asegurarnos de que se muestre en la interfaz.
+                        contactoSelect.trigger('change');
+
+                    } else {
+                        contactoSelect.append($('<option></option>').val('').text('No se encontraron contactos para esta empresa'));
+                        contactoSelect.trigger('change');
+                    }
+                    contactoSelect.prop('disabled', false); // Habilita el select al terminar la carga
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    contactoSelect.empty().append($('<option></option>').val('').text('Error al cargar contactos'));
+                    contactoSelect.prop('disabled', false); // Habilita el select
+                    contactoSelect.trigger('change');
+                });
         });
     });
 </script>
@@ -356,7 +373,7 @@
                             <div class="col-md-3 mb-4">
                                 <label for="pago_efectivo" class="form-label">¿Pago en efectivo?</label>
                                 <select class="form-select" id="pago_efectivo" name="pago_efectivo">
-                                    <option value="no" selected>No</option>
+                                    <option value="no" selected>No</o>
                                     <option value="si">Sí</option>
                                 </select>
                             </div>

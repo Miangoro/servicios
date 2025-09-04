@@ -175,10 +175,14 @@ use App\Http\Controllers\permisos\rolesController;
 use App\Http\Controllers\CatalogoLaboratorios;
 use App\Http\Controllers\CatalogoUnidades;
 use App\Http\Controllers\CatalogoProveedores;
+use App\Http\Controllers\ConvenioController;
 use App\Http\Controllers\historialClienteController;
 use App\Http\Controllers\serviciosEspecializadosController;
 use Barryvdh\DomPDF\Facade\pdf as PDF;
 use App\Http\Controllers\CotizacionAgregarController;
+
+
+
 // Main Page Route
 //Route::get('/', [Analytics::class, 'index'])->name('dashboard-analytics');
 Route::get('/', function () {
@@ -622,15 +626,16 @@ Route::put('servicios/{id}/toggle-status', [serviciosEspecializadosController::c
 
 //Cotizaciones (Agregar Cotizacion)
 Route::get('/cotizaciones/agregar', [CotizacionAgregarController::class, 'index']);
-// Ruta para la vista de agregar cotización
 Route::get('/cotizaciones/agregar', [CotizacionAgregarController::class, 'create'])->name('cotizaciones.create');
-
-// Ruta para guardar la cotización
 Route::post('/cotizaciones/store', [CotizacionAgregarController::class, 'store'])->name('cotizaciones.store');
+Route::get('/cotizaciones/get-contactos/{empresa}', [CotizacionAgregarController::class, 'getContactos']);
 
-// *** NUEVA RUTA PARA CARGAR DINÁMICAMENTE LOS CONTACTOS ***
-Route::get('/cotizaciones/get-contactos/{id}', [CotizacionAgregarController::class, 'getContactos'])->name('cotizaciones.getContactos');
 
+//Convenio (Agregar Cotizacion)
+// Ruta para mostrar el formulario de agregar convenio
+
+Route::get('/convenio/agregar', [ConvenioController::class, 'create'])->name('convenios.create');
+Route::post('/convenios', [ConvenioController::class, 'store'])->name('convenios.store');
 
 
 /*obtener el editar*/

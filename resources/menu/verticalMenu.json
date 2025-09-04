@@ -82,6 +82,20 @@
     },
 
     {
+      "name": "Convenio",
+      "icon": "menu-icon ri-user-star-fill",
+      "slug": "Convenio",
+      "can" : "Visualizar roles",
+      "submenu":[
+        {
+          "url": "/convenio/agregar",
+          "name": "Agregar Convenio",
+          "slug": "/convenio/agregar"
+        }
+      ]
+    },
+
+    {
       "name": "Ventas",
       "url": "find_roles",
       "icon": "menu-icon ri-user-settings-fill",

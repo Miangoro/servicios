@@ -57,10 +57,11 @@ class CotizacionAgregarController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getContactos($id)
+    public function getContactos(int $id)
     {
         // Busca todos los contactos que pertenezcan a la empresa con el ID proporcionado
-        $contactos = clientes_contacto::where('id_empresa_cliente', $id)->get(['id', 'nombre_contacto', 'telefono', 'correo']);
+        // Importante: Se modificaron los campos seleccionados para que coincidan con la vista
+        $contactos = clientes_contacto::where('cliente_id', $id)->get(['id', 'nombre_contacto', 'correo_contacto']);
 
         return response()->json($contactos);
     }
