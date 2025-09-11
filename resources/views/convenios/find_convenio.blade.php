@@ -11,7 +11,6 @@
         'resources/assets/vendor/libs/@form-validation/form-validation.scss',
         'resources/assets/vendor/libs/animate-css/animate.scss',
         'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
-        //Animacion "loading"
         'resources/assets/vendor/libs/spinkit/spinkit.scss',
     ])
 @endsection
@@ -36,6 +35,7 @@
 @endsection
 
 @section('content')
+<script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 <style>
     .columna-descripcion {
     width: auto;
@@ -77,9 +77,9 @@
                                         </select>
                                     </label>
                                 </div>
-                                <button id="agregarConvenioBtn" type="button" class="btn btn-success waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#agregarConvenios">
+                                <button type="button" class="btn btn-success waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#addConvenioModal">
                                     <i class="ri-add-line ri-16px me-0 me-sm-2 align-baseline"></i>
-                                    <span class="d-none d-sm-inline-block">+ Agregar Convenio</span>
+                                    <span class="d-none d-sm-inline-block">Agregar Convenio</span>
                                 </button>
                             </div>
                         </div>
@@ -87,7 +87,11 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th scope="col" class="text-white">No.</th>
-                                    <th scope="col" class="text-white">Nombre</th>
+                                    <th scope="col" class="text-white">Clave</th>
+                                    <th scope="col" class="text-white">Nombre del Proyecto</th>
+                                    <th scope="col" class="text-white">Investigador Responsable</th>
+                                    <th scope="col" class="text-white">duración</th>
+                                    <th scope="col" class="text-white">Tipo duración</th>
                                     <th scope="col" class="text-white" style="width: 120px;">Acciones</th>
                                 </tr>
                             </thead>
@@ -104,5 +108,5 @@
     </div>
 </div>
 
-
+@include('_partials/_modals/modal-add-convenio')
 @endsection

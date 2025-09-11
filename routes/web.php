@@ -633,12 +633,19 @@ Route::post('/cotizaciones/store', [CotizacionAgregarController::class, 'store']
 Route::get('/cotizaciones/get-contactos/{empresa}', [CotizacionAgregarController::class, 'getContactos']);
 
 
-//Convenio (Agregar Cotizacion)
+//Convenio (Agregar Convenio)
 // Ruta para mostrar el formulario de agregar convenio
 
 Route::get('/convenio/agregar', [ConvenioController::class, 'create'])->name('convenios.create');
 Route::post('/convenios', [ConvenioController::class, 'store'])->name('convenios.store');
+Route::get('/convenios/crear', [ConvenioController::class, 'create'])->name('convenios.crear');
 
+
+// Rutas para proyectos (si las necesitas, si no, puedes eliminarlas)
+Route::get('/proyectos', [ConvenioController::class, 'index'])->name('proyectos.index');
+Route::get('/proyectos/crear', [ConvenioController::class, 'create'])->name('proyectos.crear');
+Route::post('/proyectos', [ConvenioController::class, 'store'])->name('proyectos.store');
+Route::get('/convenios/datatable', [ConvenioController::class, 'getConvenios'])->name('convenios.datatable');
 
 /*obtener el editar*/
 Route::get('/cliente_confirmado/{id}/edit', [clientesConfirmadosController::class, 'editarCliente'])->name('editarCliente')->middleware(['auth']);
