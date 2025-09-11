@@ -6,6 +6,8 @@ use App\Models\expedientePersonalModel;
 use Illuminate\Http\Request;
 use App\Models\PersonalRegularModel;
 use App\Models\User;
+use App\Models\puestosModel;
+use App\Models\personalNombramientoModel;
 use Illuminate\Support\Facades\Log;
 use PhpParser\Node\Stmt\TryCatch;
 use Yajra\DataTables\DataTables;
@@ -32,12 +34,12 @@ class PersonalRegularController extends Controller
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="javascript:void(0);" onclick="visualizar(' . $row->id_empleado . ')">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.nombramiento', $row->id_empleado) .'">' .
                         '<span class="iconify text-primary" data-icon="streamline-ultimate:job-responsibility-bag-hand-bold" data-inline="false" style="font-size: 24px;"></span> Agregar nombramiento' .
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="javascript:void(0);" onclick="visualizar(' . $row->id_empleado . ')">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.conflictoInteres', $row->id_empleado) .'">' .
                         '<span class="iconify text-primary" data-icon="fluent:document-search-20-filled" data-inline="false" style="font-size: 24px;"></span> Agregar conflicto de interés' .
                         '</a>
                         </li>' .
@@ -162,6 +164,45 @@ class PersonalRegularController extends Controller
         $expediente->update($data);
 
         return response()->json(['success' => 'Expediente actualizado correctamente.']);
+    }
+
+    public function nombramiento($id)
+    {
+        $puestos = puestosModel::get('nombre');
+        $empleado = PersonalRegularModel::where('id_empleado', $id)->first();
+        $responsable = User::where('tipo', 1)->get();
+
+        return view('personal.agregar_nombramiento', compact('empleado', 'puestos', 'responsable'));
+    }
+
+    public function nombramientoPost(Request $request)
+    {
+
+        personalNombramientoModel::create([
+            'id_usuario' => $request->empleado_id,
+            'puesto' => $request->puesto,
+            'area' => $request->area,
+            'responsable' => $request->responsable,
+            'signatario' => $request->responsable,
+            'suplente' => $request->suplente,
+            'fecha_llenado' => $request->fechaNombramiento,
+            'fecha_efectivo' => $request->fechaEfectivo,
+            'id_registra' => Auth::id(),
+            'id_v_nombramiento' => 1,
+            'id_v_actividad' => 2,
+            'estatus' => 'Vigente',
+            'id_habilitado' => 1
+        ]);
+
+        return response()->json(['success' => 'Nombramiento agregado correctamente.']);
+    }
+
+    public function conflictoInteres($id)
+    {
+        $empleado = PersonalRegularModel::where('id_empleado', $id)->first();
+        $area = personalNombramientoModel::where('id_usuario', $id)->latest('id_nombramiento')->first();
+
+        return view('personal.agregar_conflicto_interes', compact('empleado', 'area'));
     }
 
 }
