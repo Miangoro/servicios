@@ -81,6 +81,7 @@ $(document).ready(function() {
                     $('#viewInvestigador').val(response.data.investigador_responsable || 'N/A');
                     $('#viewDuracion').val(response.data.duracion || 'N/A');
                     $('#viewTipoDuracion').val(response.data.tipo_duracion || 'N/A');
+                    $('#viewObservaciones').val(response.data.observaciones || 'N/A'); // Línea agregada
                     
                     viewModal.show();
                 } else {
@@ -108,6 +109,7 @@ $(document).ready(function() {
         const convenioInvestigador = $(this).data('investigador');
         const convenioDuracion = $(this).data('duracion');
         const convenioTipoDuracion = $(this).data('tipo-duracion');
+        const convenioObservaciones = $(this).data('observaciones'); // <-- AGREGADO
 
         $('#convenioId').val(convenioId);
         $('#clave').val(convenioClave);
@@ -115,6 +117,7 @@ $(document).ready(function() {
         $('#investigadorResponsable').val(convenioInvestigador);
         $('#duracion').val(convenioDuracion);
         $('#tipoDuracion').val(convenioTipoDuracion);
+        $('#observaciones').val(convenioObservaciones); // <-- AGREGADO
 
         $('#clave').attr('placeholder', 'Dejar vacío para mantener la clave actual');
         $('#clave').removeAttr('required');
@@ -202,6 +205,7 @@ $(document).ready(function() {
                 investigador_responsable: $('#investigadorResponsable').val().trim(),
                 duracion: $('#duracion').val().trim(),
                 tipo_duracion: $('#tipoDuracion').val().trim(),
+                observaciones: $('#observaciones').val().trim(), // <-- AGREGADO
                 _method: method === 'PUT' ? 'PUT' : 'POST'
             };
             
@@ -251,9 +255,9 @@ $(document).ready(function() {
                     let errorMessages = '';
                     for (const field in error.errors) {
                         const fieldId = field === 'investigador_responsable' ? 'investigadorResponsable' : 
-                                       field === 'nombre_proyecto' ? 'nombreProyecto' : 
-                                       field === 'tipo_duracion' ? 'tipoDuracion' : field;
-                                       
+                                         field === 'nombre_proyecto' ? 'nombreProyecto' : 
+                                         field === 'tipo_duracion' ? 'tipoDuracion' : field;
+                                         
                         const fieldElement = document.getElementById(fieldId);
                         if (fieldElement) {
                             fieldElement.classList.add('is-invalid');
