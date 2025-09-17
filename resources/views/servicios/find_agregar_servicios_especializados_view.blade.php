@@ -18,7 +18,7 @@
 @endsection
 
 @section('page-script')
-   
+    @vite('resources/js/servicios/create.js')
     @vite('resources/assets/js/forms-selects.js')
 @endsection
 
