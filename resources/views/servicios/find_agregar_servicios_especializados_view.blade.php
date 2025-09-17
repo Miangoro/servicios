@@ -18,7 +18,6 @@
 @endsection
 
 @section('page-script')
- 
     @vite('resources/assets/js/forms-selects.js')
 @endsection
 
@@ -139,7 +138,7 @@
                                 <label for="descripcionAcreditacion">Descripción de la Acreditación</label>
                             </div>
                         </div>
-                       
+                        
                         {{-- Fila 7: Prueba --}}
                         <div class="col-12">
                             <div class="form-floating form-floating-outline">
@@ -232,14 +231,14 @@
             const precioTotalInput = document.getElementById('precio');
             const requiereMuestraSelect = $('#requiereMuestra');
             const descripcionMuestraField = document.getElementById('descripcionMuestraField');
-           
+            
             const acreditacionSelect = $('#acreditacion');
             const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
             const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
 
             const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
             const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
-           
+            
             // Inicializar select2 para TODOS los campos de laboratorio (incluyendo el primero)
             function inicializarSelect2Laboratorios() {
                 $('.select2-laboratorio').select2({
@@ -255,7 +254,7 @@
             // Control para mostrar el nombre del archivo seleccionado
             const archivoInput = document.getElementById('archivoRequisitos');
             const archivoInfo = document.getElementById('archivoInfo');
-           
+            
             archivoInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     archivoInfo.textContent = this.files[0].name;
@@ -370,7 +369,7 @@
                     'unidades',
                     'prueba'
                 ];
-               
+                
                 // Validar campos principales
                 camposRequeridos.forEach(campo => {
                     const input = document.querySelector(`[name="${campo}"]`);
