@@ -6,7 +6,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="formAddConvenio" class="row g-3" action="{{ route('convenios.store') }}" method="POST">
+                <form id="formAddConvenio" class="row g-3" action="{{ route('convenios.store') }}" method="POST" novalidate>
                     @csrf
                     <div class="col-12 mb-3">
                         <div class="row g-3">
@@ -14,8 +14,8 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ri-key-2-line"></i></span>
                                     <div class="form-floating form-floating-outline">
-                                        <input type="text" id="clave" name="clave" class="form-control" placeholder="01-PROY" />
-                                        <label for="clave">Clave </label>
+                                        <input type="text" id="clave" name="clave" class="form-control" placeholder="01-PROY" required />
+                                        <label for="clave">Clave</label>
                                     </div>
                                 </div>
                             </div>
@@ -23,8 +23,8 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ri-flask-line"></i></span>
                                     <div class="form-floating form-floating-outline">
-                                        <input type="text" id="nombreProyecto" name="nombre_proyecto" class="form-control" placeholder="Análisis de Bacillus Subtilis" />
-                                        <label for="nombreProyecto">Nombre del Proyecto </label>
+                                        <input type="text" id="nombreProyecto" name="nombre_proyecto" class="form-control" placeholder="Análisis de Bacillus Subtilis" required />
+                                        <label for="nombreProyecto">Nombre del Proyecto</label>
                                     </div>
                                 </div>
                             </div>
@@ -37,29 +37,27 @@
                                 <div class="input-group input-group-merge">
                                     <span class="input-group-text"><i class="ri-user-line"></i></span>
                                     <div class="form-floating form-floating-outline">
-                                        <input type="text" id="investigadorResponsable" name="investigador_responsable" class="form-control" placeholder="Dra. Citlali Colín" />
-                                        <label for="investigadorResponsable">Investigador responsable </label>
+                                        <input type="text" id="investigadorResponsable" name="investigador_responsable" class="form-control" placeholder="Dra. Citlali Colín" required />
+                                        <label for="investigadorResponsable">Investigador responsable</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating form-floating-outline">
-                                    <input type="number" id="duracion" name="duracion" class="form-control" placeholder="Ej. 12" />
-                                    <label for="duracion">Duración </label>
-                                    <div class="fv-plugins-message-container invalid-feedback"></div>
+                                    <input type="number" id="duracion" name="duracion" class="form-control" placeholder="Ej. 12" required />
+                                    <label for="duracion">Duración</label>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="form-floating form-floating-outline">
-                                    <select id="tipoDuracion" name="tipo_duracion" class="form-select">
+                                    <select id="tipoDuracion" name="tipo_duracion" class="form-select" required>
                                         <option value="" selected disabled>Selecciona una opción</option>
                                         <option value="mes">Mes</option>
                                         <option value="año">Año</option>
                                         <option value="semanas">Semanas</option>
                                         <option value="dias">Días</option>
                                     </select>
-                                    <label for="tipoDuracion">Tipo Duración </label>
-                                    <div class="fv-plugins-message-container invalid-feedback"></div>
+                                    <label for="tipoDuracion">Tipo Duración</label>
                                 </div>
                             </div>
                         </div>

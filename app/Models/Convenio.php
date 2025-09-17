@@ -21,6 +21,12 @@ class Convenio extends Model
      * @var string
      */
     protected $table = 'catalogo_convenio';
+    
+    /**
+     * La llave primaria de la tabla.
+     * @var string
+     */
+    protected $primaryKey = 'id_convenio';
 
     /**
      * Los atributos que son asignables masivamente.
@@ -41,7 +47,6 @@ class Convenio extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        // Aquí puedes agregar casts si es necesario, por ejemplo:
-        // 'duracion' => 'integer',
+        'duracion' => 'integer',
     ];
 }
