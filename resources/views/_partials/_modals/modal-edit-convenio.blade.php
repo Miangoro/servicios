@@ -6,8 +6,10 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="formAddConvenio" class="row g-3" action="{{ route('convenios.store') }}" method="POST" novalidate>
+                <form id="formAddConvenio" class="row g-3" method="POST" novalidate>
                     @csrf
+                    <input type="hidden" id="convenioId" name="convenio_id">
+
                     <div class="col-12 mb-3">
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -18,6 +20,7 @@
                                         <label for="clave">Clave</label>
                                     </div>
                                 </div>
+                                <div class="form-text text-muted ms-1">Campo obligatorio para nuevos convenios.</div>
                             </div>
                             <div class="col-md-6">
                                 <div class="input-group input-group-merge">
@@ -62,9 +65,19 @@
                             </div>
                         </div>
                     </div>
-
+                    
+                    <div class="col-12 mb-3">
+                        <div class="input-group input-group-merge">
+                            <span class="input-group-text"><i class="ri-sticky-note-line"></i></span>
+                            <div class="form-floating form-floating-outline">
+                                <textarea id="observaciones" name="observaciones" class="form-control" placeholder="Escribe aquí las observaciones..." style="height: 100px;"></textarea>
+                                <label for="observaciones">Observaciones</label>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="col-12 text-end mt-4">
-                        <button type="submit" class="btn btn-primary me-2">
+                        <button type="submit" id="submitButton" class="btn btn-primary me-2">
                             <i class="ri-add-line"></i> Registrar
                         </button>
                         <button type="button" class="btn btn-danger" data-bs-dismiss="modal">

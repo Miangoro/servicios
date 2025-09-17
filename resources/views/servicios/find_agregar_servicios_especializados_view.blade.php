@@ -4,7 +4,7 @@
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/select2/select2.scss')
-    @vite('resources/assets/vendor/libs/form-validation/form-validation.scss')
+    {{-- @vite('resources/assets/vendor/libs/form-validation/form-validation.scss') --}}
     @vite('resources/assets/vendor/libs/animate-css/animate.scss')
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.scss')
     @vite('resources/assets/vendor/libs/spinkit/spinkit.scss')
@@ -12,13 +12,13 @@
 
 @section('vendor-script')
     @vite('resources/assets/vendor/libs/select2/select2.js')
-    @vite('resources/assets/vendor/libs/form-validation/form-validation.js')
-    @vite('resources/assets/vendor/libs/form-validation/auto-focus.js')
+    {{--@vite('resources/assets/vendor/libs/form-validation/form-validation.js') 
+    @vite('resources/assets/vendor/libs/form-validation/auto-focus.js')--}}
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.js')
 @endsection
 
 @section('page-script')
-    @vite('resources/js/servicios_create.js')
+   
     @vite('resources/assets/js/forms-selects.js')
 @endsection
 
