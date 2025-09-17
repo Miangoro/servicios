@@ -51,7 +51,7 @@
 
 @section('page-script')
     @vite([
-        'resources/js/agregarNombramiento.js',
+        'resources/js/agregarConflictoInteres.js',
         'resources/assets/js/forms-pickers.js',
         'resources/assets/js/forms-selects.js',
         'resources/assets/js/forms-tagify.js',
@@ -84,10 +84,8 @@
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
                     <div>
-                        <form id="form-agregar-nombramiento">
+                        <form id="form-agregar-conflicto-interes">
                             @csrf
-
-                            <input type="hidden" name="empleado_id" value="{{ $empleado->id_empleado }}">
 
                             <div class="row col-md-12 my-6">
                                 
@@ -119,7 +117,10 @@
                                 </p>
 
                                 <div class="form-floating form-floating-outline col-md-4">
-                                    <input type="text" class="form-control" id="areaInput" name="area" aria-describedby="floatingInputHelp" value="{{ $area->area }}" />
+                                    @if ($area)
+                                        <input type="text" class="form-control" id="areaInput" name="area" aria-describedby="floatingInputHelp" value="{{ $area->area }}" />
+                                    @endif
+                                    
                                 </div>
 
                                 <p>
@@ -127,60 +128,126 @@
                                 </p>
                                 
                                 <div class="my-4">
+
+                                    <input type="hidden" name="id_empleado" value="{{ $empleado->id_empleado }}">
+
+                                    
+                                    <input type="hidden" name="area" value="">
+                                   
+                                    
+
                                     <h4>Negocios</h4>
-                                    <p>1. ¿Tiene algún tipo de negocios vinculado con el giro de negocio de CIDAM?</p>
+                                    <p>1. ¿Tiene algún tipo de negocios vinculado con el giro de negocio de CIDAM? <strong class="text-danger">*</strong></p>
                                     <div class="form-floating form-floating-outline">
-                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
-                                            <option>Sí</option>
-                                            <option>No</option>
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="negocio">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
                                         </select>
                                     </div>
 
-                                    <p>2. ¿Tiene algún tipo de negocio en conjunto, con alguno de los clientes de CIDAM?</p>
+                                    <p>2. ¿Tiene algún tipo de negocio en conjunto, con alguno de los clientes de CIDAM? <strong class="text-danger">*</strong></p>
                                     <div class="form-floating form-floating-outline">
-                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
-                                            <option>Sí</option>
-                                            <option>No</option>
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="negocio_cliente">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="my-4">
                                     <h4>Personal</h4>
-                                    <p>3. ¿Mantiene usted alguna relación sentimental con, algún miembro del CIDAM?</p>
+                                    <p>3. ¿Mantiene usted alguna relación sentimental con, algún miembro del CIDAM? <strong class="text-danger">*</strong></p>
                                     <div class="form-floating form-floating-outline">
-                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
-                                            <option>Sí</option>
-                                            <option>No</option>
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="relacion">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div class="my-4">
                                     <h4>Familiar</h4>
-                                    <p>4.¿Algún familiar suyo (por afinidad o consanguinidad hasta el cuarto grado en línea recta o colateral) mantiene algún tipo de negocios vinculados con el giro de negocio de CIDAM?</p>
+                                    <p>4.¿Algún familiar suyo (por afinidad o consanguinidad hasta el cuarto grado en línea recta o colateral) mantiene algún tipo de negocios vinculados con el giro de negocio de CIDAM? <strong class="text-danger">*</strong></p>
                                     <div class="form-floating form-floating-outline">
-                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
-                                            <option>Sí</option>
-                                            <option>No</option>
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="familiar_negocio">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
                                         </select>
                                     </div>
 
-                                    <p>5. ¿Algún familiar suyo (por afinidad o consanguinidad hasta el cuarto grado en línea recta o colateral) mantiene alguna actividad económica en conjunto, con alguno de los clientes de CIDAM?</p>
+                                    <p>5. ¿Algún familiar suyo (por afinidad o consanguinidad hasta el cuarto grado en línea recta o colateral) mantiene alguna actividad económica en conjunto, con alguno de los clientes de CIDAM? <strong class="text-danger">*</strong></p>
                                     <div class="form-floating form-floating-outline">
-                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default">
-                                            <option>Sí</option>
-                                            <option>No</option>
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="familiar_cliente">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
                                         </select>
                                     </div>
                                 </div>
-                                
+
+                                 <div class="my-4">
+                                    <h4>Laboral</h4>
+                                    <p>6. ¿has laborado o brindado consultoría en alguna empresa o Centro que sea del mismo giro de CIDAM? <strong class="text-danger">*</strong></p>
+                                    <div class="form-floating form-floating-outline">
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="laborado">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+
+                                    <p>7. ¿Qué puesto desempeñabas?</p>
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="puestoInput" name="puesto" aria-describedby="floatingInputHelp" />
+                                    </div>
+
+                                    <p>8. ¿Cuál es la fecha en la que dejaste de laborar en la empresa antes mencionada?</p>
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="fechaDLInput" name="fechaDL" aria-describedby="floatingInputHelp" />
+                                    </div>
+
+                                    <p>9. Motivo de separación</p>
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="motivoSeparacionInput" name="motivoSeparacion" aria-describedby="floatingInputHelp" />
+                                    </div>
+
+                                    <p>10. ¿En CIDAM desempeñas más de un puesto? <strong class="text-danger">*</strong></p>
+                                    <div class="form-floating form-floating-outline">
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="masPuesto">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+
+                                    <p>11. ¿Cuál?</p>
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="otroPuestoInput" name="otroPuesto" aria-describedby="floatingInputHelp" />
+                                    </div>
+
+                                </div>
+
+                                 <div class="my-4">
+                                    <h4>Acreditación</h4>
+                                    <p>12. ¿Tiene usted parentesco familiar (por afinidad o consanguinidad hasta el cuarto grado en línea recta o colateral) con empleados o directivos de la Secretaría General que Participen en el proceso para obtener el título de Entidad de Acreditación? <strong class="text-danger">*</strong></p>
+                                    <div class="form-floating form-floating-outline">
+                                        <select id="selectpickerBasic" class="selectpicker w-100" data-style="btn-default" name="parentesco">
+                                            <option value="">Seleccione una opción</option>
+                                            <option value="Si">Sí</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                    </div>
+                                </div>
 
                             </div>
 
 
                             <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-                                <button id="AddNombramientoBtn" type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
+                                <button id="AddConflictoInteresBtn" type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
                                     <i class="ri-add-line"></i> Guardar
                                 </button>
                                 <a href="{{ route('personalRegular.index') }}" class="btn btn-danger">

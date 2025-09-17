@@ -8,6 +8,7 @@ use App\Models\PersonalRegularModel;
 use App\Models\User;
 use App\Models\puestosModel;
 use App\Models\personalNombramientoModel;
+use App\Models\personalConflictoInteresModel;
 use Illuminate\Support\Facades\Log;
 use PhpParser\Node\Stmt\TryCatch;
 use Yajra\DataTables\DataTables;
@@ -29,6 +30,11 @@ class PersonalRegularController extends Controller
                         <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_empleado . '">' .
                         '<li>
+                            <a class="dropdown-item" href="">' .
+                        '<span class="iconify text-info" data-icon="ri-file-edit-fill" data-inline="false" style="font-size: 24px;"></span> Editar' .
+                        '</a>
+                        </li>' .
+                        '<li>
                             <a class="dropdown-item" href="'  . route('personalRegular.expediente', $row->id_empleado) .'">' .
                         ' <span class="iconify text-primary" data-icon="fluent:document-add-20-filled" data-inline="false" style="font-size: 24px;"></span> Agregar expediente' .
                         '</a>
@@ -44,7 +50,7 @@ class PersonalRegularController extends Controller
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="javascript:void(0);" onclick="editProveedor(' . $row->id_empleado . ')">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.confidencialidad', $row->id_empleado) .'">' .
                         '<span class="iconify text-info" data-icon="fa7-solid:file-signature" data-inline="false" style="font-size: 24px;"></span> Resgistrar acuerdo de confidencialidad' .
                         '</a>
                         </li>
@@ -56,7 +62,11 @@ class PersonalRegularController extends Controller
                         '</ul>
                     </div>';
                     return $btn;
-                })->editColumn('descripcion', function ($row) {
+                })/*->addColumn('verExp', function ($row) {
+                    $btnexp = '<button class="btn btn-sm btn-warning dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Ver expediente <i class="ri-arrow-down-s-fill ri-20px"></i></button>';
+                    return $btnexp;
+                })*/
+                ->editColumn('descripcion', function ($row) {
                     if ($row->descripcion === null) {
                         return 'Sin descripción';
                     }
@@ -67,7 +77,7 @@ class PersonalRegularController extends Controller
                     return '<img src="' .  $url . '" alt="Foto de empleado" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">';
                 
             })
-                ->rawColumns(['action', 'descripcion', 'foto_html'])
+                ->rawColumns(['action', /*'verExp',*/ 'descripcion', 'foto_html'])
                 ->make(true);
         }
 
@@ -203,6 +213,43 @@ class PersonalRegularController extends Controller
         $area = personalNombramientoModel::where('id_usuario', $id)->latest('id_nombramiento')->first();
 
         return view('personal.agregar_conflicto_interes', compact('empleado', 'area'));
+    }
+
+     public function conflictoInteresPost(Request $request)
+    {
+
+        personalConflictoInteresModel::create([
+            'fecha' => $request->fecha,
+            'fecha_registro' => now(),
+            'p_uno' => $request->negocio,
+            'p_dos' => $request->negocio_cliente,
+            'p_tres' => $request->relacion,
+            'p_cuatro' => $request->familiar_negocio,
+            'p_cinco' => $request->familiar_cliente,
+            'p_seis' => $request->laborado,
+            'p_siete' => $request->puesto,
+            'p_ocho' => $request->fechaDL,
+            'p_nueve' => $request->motivoSeparacion,
+            'p_diez' => $request->masPuesto,
+            'p_once' => $request->otroPuesto,
+            'p_doce' => $request->parentesco,
+            'version' => $request->version,
+            'url_documento' => null,
+            'comentarios' => null,
+            'estatus' => 'Vigente',
+            'habilitado' => 1,
+            'id_usuario' => $request->id_empleado,
+            'area' => $request->area
+            
+        ]);
+
+        return response()->json(['success' => 'Conflicto de interés agregado correctamente.']);
+    }
+
+    public function confidencialidad($id)
+    {
+        $empleado = PersonalRegularModel::where('id_empleado', $id)->first();
+        return view('personal.registrar_acuerdo_confidencialidad', compact('empleado'));
     }
 
 }
