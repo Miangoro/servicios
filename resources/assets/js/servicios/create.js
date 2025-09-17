@@ -1,0 +1,1 @@
+console.log('Script de servicios/create.js cargado correctamente.');
