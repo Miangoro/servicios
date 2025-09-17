@@ -203,7 +203,7 @@ Route::get('/add_firmar_docusign', [DocuSignController::class, 'add_firmar_docus
 //catalogos
 // Agrupar rutas con el middleware 'auth' y el mismo controlador Nacional
 Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(function () {
-    Route::get('/catalogos/laboratorios', 'index')->name('laboratorios.index');
+    Route::get('/catalogos/laboratorios', 'index')->name('catalogos-laboratorios');
     Route::post('/catalogos/laboratorios', [CatalogoLaboratorios::class, 'store']);
     Route::get('/laboratorios/{id}/edit', [CatalogoLaboratorios::class, 'getLaboratorio'])->name('laboratorios.edit');
         Route::get('/laboratorios/unidades', [CatalogoLaboratorios::class, 'getUnidades'])->name('unidades.get');
@@ -213,7 +213,7 @@ Route::middleware('auth')->controller(CatalogoLaboratorios::class)->group(functi
 });
 
 Route::middleware('auth')->controller(CatalogoUnidades::class)->group(function () {
-    Route::get('/catalogos/unidades', 'index')->name('unidades.index');
+    Route::get('/catalogos/unidades', 'index')->name('catalogos-unidades');
     Route::post('/catalogos/unidades', [CatalogoUnidades::class, 'store']);
     Route::get('/getUnidad/{id}', [CatalogoUnidades::class, 'getUnidad'])->name('unidades.get');
     Route::put('/unidades/{id}', [CatalogoUnidades::class, 'update'])->name('unidades.update');
