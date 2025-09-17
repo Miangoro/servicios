@@ -137,18 +137,18 @@
     {
       "name": "Catálogos",
       "icon": "menu-icon ri-book-open-fill",
-      "slug": "catalogo",
+      "slug": "catalogos",
       "submenu": [
     
         {
           "url": "catalogos/laboratorios",
           "name": "Laboratorios de cidam",
-          "slug": "laboratorios"
+          "slug": "catalogos-laboratorios"
         },
         {
           "url": "/catalogos/unidades",
           "name": "Unidades",
-          "slug": "Unidades.index",
+          "slug": "catalogos-unidades",
           "can" : "Visualizar clases de mezcal" 
         },
         {
