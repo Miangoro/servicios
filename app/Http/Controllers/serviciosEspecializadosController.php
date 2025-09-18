@@ -47,22 +47,22 @@ class ServiciosEspecializadosController extends Controller
                     $btn = '<div class="dropdown d-flex justify-content-center">
                                <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                                 
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="'.route('servicios.show', $row->id_servicio).'">
-                                        <i class="ri-search-fill ri-20px text-normal me-2"></i>Visualizar
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="'.route('servicios.edit', $row->id_servicio).'">
-                                        <i class="ri-file-edit-fill ri-20px text-info"></i>Editar
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <button class="dropdown-item toggle-status-btn" data-id="'.$row->id_servicio.'" data-status="'.($row->id_habilitado ? 0 : 1).'">
-                                            <i class="'.($row->id_habilitado ? 'ri-delete-bin-2-fill ri-20px text-danger' : 'ri-file-check-fill ri-20px text-primary').' me-2"></i>'.($row->id_habilitado ? 'Deshabilitar' : 'Habilitar').'
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>';
+                               </button>
+                               <ul class="dropdown-menu">
+                                   <li><a class="dropdown-item" href="'.route('servicios.show', $row->id_servicio).'">
+                                       <i class="ri-search-fill ri-20px text-normal me-2"></i>Visualizar
+                                   </a></li>
+                                   <li><a class="dropdown-item" href="'.route('servicios.edit', $row->id_servicio).'">
+                                       <i class="ri-file-edit-fill ri-20px text-info"></i>Editar
+                                   </a></li>
+                                   <li><hr class="dropdown-divider"></li>
+                                   <li>
+                                       <button class="dropdown-item toggle-status-btn" data-id="'.$row->id_servicio.'" data-status="'.($row->id_habilitado ? 0 : 1).'">
+                                           <i class="'.($row->id_habilitado ? 'ri-delete-bin-2-fill ri-20px text-danger' : 'ri-file-check-fill ri-20px text-primary').' me-2"></i>'.($row->id_habilitado ? 'Deshabilitar' : 'Habilitar').'
+                                       </button>
+                                   </li>
+                               </ul>
+                           </div>';
                     return $btn;
                 })
                 ->rawColumns(['acciones', 'laboratorio', 'estatus'])
@@ -141,11 +141,12 @@ class ServiciosEspecializadosController extends Controller
     /**
      * Stores a new service in the database.
      * @param Request $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
         $rules = [
+            'clave' => 'required|string|max:255',
             'clave_adicional' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
             'precio' => 'required|numeric',
@@ -155,11 +156,11 @@ class ServiciosEspecializadosController extends Controller
             'acreditacion' => 'required|string|max:255',
             'nombre_acreditacion' => 'nullable|string|max:255',
             'descripcion_acreditacion' => 'nullable|string',
-            'id_habilitado' => 'nullable|in:1,0',
+            'id_habilitado' => 'required|in:1,0',
             'analisis' => 'required|string|max:255',
             'unidades' => 'required|string|max:255',
             'metodo' => 'nullable|string|max:255',
-            'prueba' => 'nullable|string',
+            'prueba' => 'required|string',
             'precios_laboratorio' => 'required|array|min:1',
             'precios_laboratorio.*' => 'required|numeric',
             'laboratorios_responsables' => 'required|array|min:1',
@@ -170,31 +171,19 @@ class ServiciosEspecializadosController extends Controller
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
         
         DB::beginTransaction();
 
         try {
-            $idPrimerLaboratorio = $request->laboratorios_responsables[0];
-            $laboratorioPrincipal = CatalogoLaboratorio::findOrFail($idPrimerLaboratorio);
-            $claveBase = $laboratorioPrincipal->clave;
-
-            $ultimoServicio = Servicio::where('clave', 'like', "{$claveBase}-%")->latest('id_servicio')->first();
-            $contador = 1;
-
-            if ($ultimoServicio) {
-                $ultimaClave = $ultimoServicio->clave;
-                $partes = explode('-', $ultimaClave);
-                if (count($partes) > 1 && is_numeric(end($partes))) {
-                    $contador = (int)end($partes) + 1;
-                }
-            }
-
-            $nuevaClave = "{$claveBase}-{$contador}";
-            
             $servicio = new Servicio();
-            $servicio->clave = $nuevaClave;
+            $servicio->clave = $request->input('clave');
+            $servicio->clave_adicional = $request->input('clave_adicional');
             $servicio->nombre = $request->input('nombre');
             $servicio->precio = $request->input('precio');
             $servicio->duracion = $request->input('duracion');
@@ -212,15 +201,16 @@ class ServiciosEspecializadosController extends Controller
                 $servicio->id_acreditacion = 1;
                 $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
                 $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
+                $servicio->metodo = $request->input('metodo') ?? '';
             } else {
                 $servicio->id_acreditacion = 0;
                 $servicio->nombre_acreditacion = '0';
                 $servicio->descripcion_acreditacion = '0';
+                $servicio->metodo = '0';
             }
 
             $servicio->analisis = $request->input('analisis');
             $servicio->unidades = $request->input('unidades');
-            $servicio->metodo = $request->input('metodo');
             $servicio->prueba = $request->input('prueba');
             $servicio->tipo_servicio = 2;
             $servicio->id_usuario = auth()->id() ?? 1;
@@ -253,13 +243,20 @@ class ServiciosEspecializadosController extends Controller
             
             DB::commit();
 
-            return redirect()->route('servicios.index')->with('success', 'Servicio agregado con éxito. La clave generada es: ' . $nuevaClave);
+            return response()->json([
+                'success' => true,
+                'message' => 'Servicio agregado con éxito. La clave generada es: ' . $servicio->clave
+            ]);
 
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error al guardar servicio: ' . $e->getMessage());
             Log::error('Trace: ' . $e->getTraceAsString());
-            return redirect()->back()->with('error', 'Ocurrió un error al guardar el servicio: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocurrió un error al guardar el servicio: ' . $e->getMessage()
+            ], 500);
         }
     }
 
