@@ -4,7 +4,6 @@
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/select2/select2.scss')
-    {{-- @vite('resources/assets/vendor/libs/form-validation/form-validation.scss') --}}
     @vite('resources/assets/vendor/libs/animate-css/animate.scss')
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.scss')
     @vite('resources/assets/vendor/libs/spinkit/spinkit.scss')
@@ -12,8 +11,6 @@
 
 @section('vendor-script')
     @vite('resources/assets/vendor/libs/select2/select2.js')
-    {{--@vite('resources/assets/vendor/libs/form-validation/form-validation.js') 
-    @vite('resources/assets/vendor/libs/form-validation/auto-focus.js')--}}
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.js')
 @endsection
 
@@ -182,11 +179,11 @@
                                 <div class="card-body bg-white py-3" id="laboratorios-contenedor">
                                     <div class="input-group mb-3 laboratorio-item">
                                         <div class="form-floating form-floating-outline flex-grow-1">
-                                            <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" />
+                                            <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required/>
                                             <label>Precio *</label>
                                         </div>
                                         <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                                            <select class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true">
+                                            <select id="primer-select-laboratorio" class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
                                                 <option value="">Selecciona un laboratorio</option>
                                                 @foreach ($laboratorios as $laboratorio)
                                                     <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
@@ -239,17 +236,12 @@
             const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
             const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
             
-            // Inicializar select2 para TODOS los campos de laboratorio (incluyendo el primero)
-            function inicializarSelect2Laboratorios() {
-                $('.select2-laboratorio').select2({
-                    placeholder: 'Selecciona un laboratorio',
-                    allowClear: true,
-                    width: '100%'
-                });
-            }
-            
-            // Inicializar todos los selects de laboratorio al cargar la página
-            inicializarSelect2Laboratorios();
+            // Inicializar Select2 en todos los selectores con la clase 'select2-laboratorio'
+            $('.select2-laboratorio').select2({
+                placeholder: 'Selecciona un laboratorio',
+                allowClear: true,
+                width: '100%'
+            });
 
             // Control para mostrar el nombre del archivo seleccionado
             const archivoInput = document.getElementById('archivoRequisitos');
@@ -267,12 +259,14 @@
             function toggleDescripcionMuestraField() {
                 if (requiereMuestraSelect.val() === 'si') {
                     descripcionMuestraField.style.display = 'block';
+                    document.getElementById('descripcionMuestra').setAttribute('required', 'required');
                 } else {
                     descripcionMuestraField.style.display = 'none';
+                    document.getElementById('descripcionMuestra').removeAttribute('required');
                 }
             }
             toggleDescripcionMuestraField();
-            requiereMuestraSelect.on('change.select2', function() {
+            requiereMuestraSelect.on('change', function() {
                 toggleDescripcionMuestraField();
             });
 
@@ -281,13 +275,17 @@
                 if (acreditacionSelect.val() === 'Acreditado') {
                     campoNombreAcreditacion.style.display = 'block';
                     campoDescripcionAcreditacion.style.display = 'block';
+                    document.getElementById('nombreAcreditacion').setAttribute('required', 'required');
+                    document.getElementById('descripcionAcreditacion').setAttribute('required', 'required');
                 } else {
                     campoNombreAcreditacion.style.display = 'none';
                     campoDescripcionAcreditacion.style.display = 'none';
+                    document.getElementById('nombreAcreditacion').removeAttribute('required');
+                    document.getElementById('descripcionAcreditacion').removeAttribute('required');
                 }
             }
             toggleAcreditacionFields();
-            acreditacionSelect.on('change.select2', function() {
+            acreditacionSelect.on('change', function() {
                 toggleAcreditacionFields();
             });
 
@@ -314,11 +312,11 @@
                 nuevoLaboratorio.classList.add('input-group', 'mb-3', 'laboratorio-item');
                 nuevoLaboratorio.innerHTML = `
                     <div class="form-floating form-floating-outline flex-grow-1">
-                        <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" />
+                        <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required/>
                         <label>Precio *</label>
                     </div>
                     <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                        <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true">
+                        <select class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
                             <option value="">Selecciona un laboratorio</option>
                             @foreach ($laboratorios as $laboratorio)
                                 <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
@@ -331,14 +329,11 @@
                     </button>
                 `;
                 laboratoriosContenedor.appendChild(nuevoLaboratorio);
-
-                // Inicializar el nuevo select2
-                $(nuevoLaboratorio).find('.select2-laboratorio').select2({
+                $(nuevoLaboratorio).find('.select-laboratorio').select({
                     placeholder: 'Selecciona un laboratorio',
                     allowClear: true,
                     width: '100%'
                 });
-
                 calcularTotal();
             });
 
@@ -346,95 +341,13 @@
                 if (e.target.closest('.eliminar-laboratorio-btn')) {
                     const item = e.target.closest('.laboratorio-item');
                     if (item) {
-                        // Destruir el select2 antes de eliminar el elemento
-                        $(item).find('.select2-laboratorio').select2('destroy');
+                        $(item).find('.select-laboratorio').select('destroy');
                         item.remove();
                         calcularTotal();
                     }
                 }
             });
-
             calcularTotal();
-
-            // Lógica de validación y mensajes del formulario
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                let camposVacios = false;
-                const camposRequeridos = [
-                    'clave',
-                    'nombre',
-                    'duracion',
-                    'requiere_muestra',
-                    'analisis',
-                    'unidades',
-                    'prueba'
-                ];
-                
-                // Validar campos principales
-                camposRequeridos.forEach(campo => {
-                    const input = document.querySelector(`[name="${campo}"]`);
-                    if (input && !input.value.trim()) {
-                        camposVacios = true;
-                    }
-                });
-
-                // Validar el campo de "Descripción de Muestra" si es visible
-                if (requiereMuestraSelect.val() === 'si') {
-                    const descripcionMuestra = document.getElementById('descripcionMuestra');
-                    if (!descripcionMuestra.value.trim()) {
-                        camposVacios = true;
-                    }
-                }
-
-                // Validar campos de acreditación si están visibles
-                if (acreditacionSelect.val() === 'Acreditado') {
-                    const nombreAcreditacion = document.getElementById('nombreAcreditacion');
-                    const descripcionAcreditacion = document.getElementById('descripcionAcreditacion');
-                    if (!nombreAcreditacion.value || !descripcionAcreditacion.value) {
-                        camposVacios = true;
-                    }
-                }
-
-                // Validar campos de laboratorios
-                const preciosLab = document.querySelectorAll('.precio-lab');
-                const laboratoriosResp = document.querySelectorAll('[name="laboratorios_responsables[]"]');
-                if (preciosLab.length === 0) {
-                    camposVacios = true;
-                } else {
-                    for (let i = 0; i < preciosLab.length; i++) {
-                        if (!preciosLab[i].value.trim() || !laboratoriosResp[i].value.trim()) {
-                            camposVacios = true;
-                            break;
-                        }
-                    }
-                }
-
-                // Mostrar mensajes de alerta
-                if (camposVacios) {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Faltan campos por llenar.',
-                        icon: 'error',
-                        customClass: {
-                            confirmButton: 'btn btn-primary'
-                        },
-                        buttonsStyling: false
-                    });
-                } else {
-                    // Si todo está lleno, enviar el formulario
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Servicio agregado correctamente.',
-                        icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-success'
-                        },
-                        buttonsStyling: false
-                    }).then(() => {
-                        form.submit();
-                    });
-                }
-            });
         });
     </script>
 @endsection
