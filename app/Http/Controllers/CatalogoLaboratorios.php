@@ -44,7 +44,7 @@ class CatalogoLaboratorios extends Controller
                     if($row->descripcion === null){
                       return 'Sin descripción';  
                     }
-                    return Str::limit(($row->descripcion), 50);
+                    return Str::limit(($row->descripcion), 5000);
                     
                 })
                 ->rawColumns(['action', 'descripcion'])

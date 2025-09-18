@@ -262,137 +262,137 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-
-    if (agregarLaboratorioForm) {
-
-        document.getElementById('agregarLaboratorioForm').addEventListener('submit', function(e) {
-            document.getElementById('descripcion').value = quill.root.innerHTML; // Cambiado a innerHTML para guardar el formato
+  fetch('/laboratorios/unidades')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al cargar las unidades');
+            }
+            return response.json();
+        })
+        .then(unidadesData => {
+            const select = document.getElementById('selectUnidades');
+            select.innerHTML = '<option value="">Seleccione una unidad</option>';
+            for (const key in unidadesData) {
+                if (unidadesData.hasOwnProperty(key)) {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.text = unidadesData[key];
+                    select.appendChild(option);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error al obtener las unidades:', error);
         });
 
-        fvAdd = FormValidation.formValidation(agregarLaboratorioForm, {
-            fields: {
-                nombre: {
-                    validators: {
-                        notEmpty: {
-                            message: 'Por favor, introduce el nombre del laboratorio.'
-                        }
-                    }
-                },
-                clave: {
-                    validators: {
-                        notEmpty: {
-                            message: 'Por favor, introduce la clave.'
-                        }
+
+    fvAdd = FormValidation.formValidation(agregarLaboratorioForm, {
+        fields: {
+            nombre: {
+                validators: {
+                    notEmpty: {
+                        message: 'Por favor, introduce el nombre del laboratorio.'
                     }
                 }
             },
-            plugins: {
-                trigger: new FormValidation.plugins.Trigger(),
-                bootstrap5: new FormValidation.plugins.Bootstrap5({
-                    eleValidClass: '',
-                    rowSelector: '.form-floating'
-                }),
-                submitButton: new FormValidation.plugins.SubmitButton(),
-                autoFocus: new FormValidation.plugins.AutoFocus()
-            }
-        });
-
-        fetch('/laboratorios/unidades')
-            .then(response => response.json())
-            .then(data => {
-                const select = document.getElementById('selectUnidades');
-                for (const key in data) {
-                    if (data.hasOwnProperty(key)) {
-                        const option = document.createElement('option');
-                        option.value = key;
-                        option.text = data[key];
-                        select.appendChild(option);
+            clave: {
+                validators: {
+                    notEmpty: {
+                        message: 'Por favor, introduce la clave.'
                     }
                 }
-
-                fvAdd.addField('selectUnidades', {
-                    validators: {
-                        notEmpty: {
-                            message: 'Por favor, seleccione una unidad.'
-                        }
+            },
+            selectUnidades: {
+                validators: {
+                    notEmpty: {
+                        message: 'Selecciona una unidad.'
                     }
-                });
-            })
-            .catch(error => console.error('Error al obtener datos:', error));
-
-        fvAdd.on('core.form.valid', function() {
-            document.getElementById('descripcion').value = quill.root.innerHTML;
-            // El formulario de agregar es válido, procede con el envío AJAX
-            const formData = new FormData(agregarLaboratorioForm);
-
-            addBtn.appendChild(Span);
-            addBtn.disabled = true;
-
-            fetch('/catalogos/laboratorios', { // Ruta para guardar nuevos laboratorios
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                    body: formData,
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(errorData => {
-                            throw new Error(JSON.stringify(errorData));
-                        });
+                }
+            },
+        },
+        plugins: {
+            trigger: new FormValidation.plugins.Trigger(),
+            bootstrap5: new FormValidation.plugins.Bootstrap5({
+                eleValidClass: '',
+                rowSelector: function(field, ele) {
+                    if (field === 'selectUnidades') {
+                        return '.mb-4';
                     }
-                    return response.json();
-                })
-                .then(data => {
-                    addBtn.disabled = false;
-                    addBtn.removeChild(Span);
-
-                    showAlert("Laboratorio agregado correctamente.", 'success');
-                    var addModal = bootstrap.Modal.getInstance(document.getElementById('agregarLab'));
-                    if (addModal) {
-                        addModal.hide();
-                    }
-                    agregarLaboratorioForm.reset();
-                    fvAdd.resetForm(true);
-                    reloadTableOrPage();
-                })
-                .catch(error => {
-                    addBtn.disabled = false;
-                    addBtn.removeChild(Span);
-
-                    console.error('Error al guardar el laboratorio:', error);
-                    let errorMessage = 'Ocurrió un error inesperado al guardar. Por favor, intente de nuevo.';
-                    try {
-                        const parsedError = JSON.parse(error.message);
-                        if (parsedError.error) {
-                            errorMessage = 'Error del servidor: ' + parsedError.error;
-                        } else if (parsedError.errors) {
-                            let validationErrors = 'Errores de validación:\n';
-                            for (const field in parsedError.errors) {
-                                validationErrors += ` - ${field}: ${parsedError.errors[field].join(', ')}\n`;
-                            }
-                            errorMessage = validationErrors;
-                        }
-                    } catch (e) { /* ignore */ }
-                    showAlert(errorMessage, 'error');
-                });
-        });
-
-        // Limpiar la validación cuando el modal se oculta
-        const addModalElement = document.getElementById('agregarLab');
-        if (addModalElement) {
-            addModalElement.addEventListener('hidden.bs.modal', function() {
-                fvAdd.resetForm(true);
-                agregarLaboratorioForm.reset();
-            });
+                    return '.form-floating';
+                }
+            }),
+            submitButton: new FormValidation.plugins.SubmitButton(),
+            autoFocus: new FormValidation.plugins.AutoFocus()
         }
-    }
+    });
 
+    addBtn.addEventListener('click', function() {
+        fvAdd.validate().then(function(status) {
+            if (status === 'Valid') {
+            } else {
+                console.log('El formulario contiene errores.');
+            }
+        });
+    });
+
+    fvAdd.on('core.form.valid', function() {
+        document.getElementById('descripcion').value = quill.root.innerHTML;
+        
+        const formData = new FormData(agregarLaboratorioForm);
+        const Span = document.createElement('span');
+        Span.className = 'spinner-border me-1 m-1';
+        Span.role = 'status';
+        Span.ariaHidden = 'true';
+
+        addBtn.appendChild(Span);
+        addBtn.disabled = true;
+
+        fetch('/catalogos/laboratorios', {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(errorData => {
+                        throw new Error(JSON.stringify(errorData));
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                showAlert("Laboratorio agregado correctamente.", 'success');
+                var addModal = bootstrap.Modal.getInstance(document.getElementById('agregarLab'));
+                if (addModal) {
+                    addModal.hide();
+                }
+                reloadTableOrPage();
+            })
+            .catch(error => {
+
+            })
+            .finally(() => {
+                addBtn.disabled = false;
+                if (addBtn.contains(Span)) {
+                    addBtn.removeChild(Span);
+                }
+            });
+    });
+
+    const addModalElement = document.getElementById('agregarLab');
+    if (addModalElement) {
+        addModalElement.addEventListener('hidden.bs.modal', function() {
+            fvAdd.resetForm(true);
+            agregarLaboratorioForm.reset();
+            quill.setText('');
+        });
+    }
 
     if (editLaboratorioForm) {
 
         document.getElementById('editLaboratorio').addEventListener('submit', function(e) {
-            // CORRECCIÓN: Usa el objeto quillEdit para obtener el HTML
             document.getElementById('descripcion_laboratorio_modal').value = quillEdit.root.innerHTML;
         });
 
@@ -453,7 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error al obtener datos:', error));
 
         fvEdit.on('core.form.valid', function() {
-            // CORRECCIÓN: Usa el objeto quillEdit para obtener el HTML y asignarlo al campo oculto
             document.getElementById('descripcion_laboratorio_modal').value = quillEdit.root.innerHTML;
 
             const laboratorioId = document.getElementById('id_laboratorio_modal').value;
@@ -462,8 +461,8 @@ document.addEventListener('DOMContentLoaded', function() {
             modalEditLabBtn.appendChild(Span);
             modalEditLabBtn.disabled = true;
 
-            fetch(`/laboratorios/${laboratorioId}`, { // Ruta para actualizar laboratorio
-                    method: 'POST', // Laravel usa POST con @method('PUT')
+            fetch(`/laboratorios/${laboratorioId}`, {
+                    method: 'POST',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                     },
