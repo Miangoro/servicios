@@ -183,7 +183,7 @@
                                             <label>Precio *</label>
                                         </div>
                                         <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                                            <select id="primer-select-laboratorio" class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
+                                            <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
                                                 <option value="">Selecciona un laboratorio</option>
                                                 @foreach ($laboratorios as $laboratorio)
                                                     <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
@@ -316,7 +316,7 @@
                         <label>Precio *</label>
                     </div>
                     <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                        <select class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
+                        <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
                             <option value="">Selecciona un laboratorio</option>
                             @foreach ($laboratorios as $laboratorio)
                                 <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
@@ -329,7 +329,7 @@
                     </button>
                 `;
                 laboratoriosContenedor.appendChild(nuevoLaboratorio);
-                $(nuevoLaboratorio).find('.select-laboratorio').select({
+                $(nuevoLaboratorio).find('.select2-laboratorio').select2({
                     placeholder: 'Selecciona un laboratorio',
                     allowClear: true,
                     width: '100%'
@@ -341,7 +341,7 @@
                 if (e.target.closest('.eliminar-laboratorio-btn')) {
                     const item = e.target.closest('.laboratorio-item');
                     if (item) {
-                        $(item).find('.select-laboratorio').select('destroy');
+                        $(item).find('.select2-laboratorio').select2('destroy');
                         item.remove();
                         calcularTotal();
                     }
