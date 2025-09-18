@@ -8,7 +8,6 @@
     'resources/assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.scss',
     'resources/assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.scss',
     'resources/assets/vendor/libs/select2/select2.scss',
-    //'resources/assets/vendor/libs/form-validation/form-validation.scss',
     'resources/assets/vendor/libs/animate-css/animate.scss',
     'resources/assets/vendor/libs/sweetalert2/sweetalert2.scss',
     'resources/assets/vendor/libs/spinkit/spinkit.scss',
@@ -240,7 +239,12 @@
             dom: '<"row"<"col-sm-12 col-md-6 d-flex justify-content-start"f><"col-sm-12 col-md-6 d-flex justify-content-end align-items-center"l<"botones_datatable_clientes d-flex align-items-center">>>t<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
             processing: true,
             serverSide: true,
-            responsive: true,
+            responsive: {
+                details: {
+                    type: 'column',
+                    target: 'tr'
+                }
+            },
             ajax: dataTableAjaxUrl,
             columns: [
                 { data: 'id', name: 'id' },
@@ -248,22 +252,39 @@
                 { data: 'rfc', name: 'rfc' },
                 { data: 'calle', name: 'calle' },
                 { data: 'colonia', name: 'colonia' },
-                { data: 'localidad', name: 'localidad' },
-                { data: 'municipio', name: 'municipio' },
+                { data: 'localidad', name: 'localidad', visible: false },
+                { data: 'municipio', name: 'municipio', visible: false },
                 { data: 'estado', name: 'estado' },
                 { data: 'regimen_fiscal', name: 'regimen_fiscal' },
                 { data: 'credito', name: 'credito' },
-                { data: 'constancia_fiscal', name: 'constancia_fiscal' },
-                { data: 'acciones', name: 'acciones', orderable: false, searchable: false }
+                { data: 'constancia_fiscal', name: 'constancia_fiscal', visible: false },
+                { 
+                    data: 'acciones', 
+                    name: 'acciones', 
+                    orderable: false, 
+                    searchable: false,
+                    className: 'text-center'
+                }
             ],
             autoWidth: false,
-            scrollX: false,
-            // Eliminamos la configuración de anchos fijos de DataTables
-            // columnDefs: [
-            //     { width: '5%', targets: 0 },
-            //     { width: '10%', targets: 1 },
-            //     ...
-            // ],
+            scrollX: true,
+            columnDefs: [
+                {
+                    // Hacer la columna de acciones siempre visible
+                    targets: -1,
+                    responsivePriority: 1
+                },
+                {
+                    // Prioridad para columnas importantes
+                    targets: [1, 2],
+                    responsivePriority: 2
+                },
+                {
+                    // Ocultar estas columnas en pantallas pequeñas
+                    targets: [3, 4, 7, 8, 9],
+                    responsivePriority: 3
+                }
+            ],
             initComplete: function () {
                 // Clona los botones originales
                 var addButton = $('#agregarClienteBtn').clone();
@@ -280,20 +301,33 @@
                 $('#agregarClienteBtn').remove();
                 $('#exportarClientesBtn').remove();
                 
-                // Oculta el texto "Mostrar" y los "registros"
-                $('.dataTables_length label').contents().filter(function() {
-                    return this.nodeType === 3;
-                }).remove();
+                // Ajustes responsivos para los controles de la tabla
+                adjustTableControls();
                 
-                // Mueve el filtro de búsqueda para alinear el botón y el mostrar
-                var searchDiv = $('.dataTables_filter');
-                searchDiv.css({
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px'
+                // Escuchar cambios de tamaño de ventana
+                $(window).resize(function() {
+                    adjustTableControls();
                 });
             }
         });
+        
+        // Función para ajustar controles de tabla en dispositivos móviles
+        function adjustTableControls() {
+            if ($(window).width() < 768) {
+                // En móviles, ajustar el campo de búsqueda
+                $('.dataTables_filter input').attr('placeholder', 'Buscar...').css('width', '120px');
+                
+                // Ocultar texto en botones y mostrar solo iconos
+                $('.botones_datatable_clientes .btn span').addClass('d-none');
+                $('.botones_datatable_clientes .btn').prepend('<i class="ri-add-line me-0"></i>');
+                $('.botones_datatable_clientes .btn').css('padding', '0.5rem');
+            } else {
+                // En pantallas más grandes, restaurar
+                $('.botones_datatable_clientes .btn span').removeClass('d-none');
+                $('.botones_datatable_clientes .btn i').remove();
+                $('.botones_datatable_clientes .btn').css('padding', '');
+            }
+        }
     });
 </script>
 
@@ -308,7 +342,7 @@
 
 /* Estilos para el tamaño de letra del cuerpo de la tabla */
 .table.table-sm tbody tr td {
-    font-size: 0.85rem; /* Ajusta el tamaño de la letra para que no sea tan pequeña */
+    font-size: 0.85rem;
 }
 
 /* Estilos para las celdas de la tabla */
@@ -317,6 +351,35 @@
     overflow-wrap: break-word;
     word-break: break-word;
     font-size: 0.85rem;
+}
+
+/* Mejoras responsivas para la tabla */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Ajustes para dispositivos móviles */
+@media screen and (max-width: 767px) {
+    .table-responsive {
+        border: 0;
+    }
+    
+    .dataTables_wrapper .dataTables_filter {
+        float: none;
+        text-align: left;
+        margin-bottom: 10px;
+    }
+    
+    .dataTables_wrapper .dataTables_length {
+        float: none;
+        margin-bottom: 10px;
+    }
+    
+    .botones_datatable_clientes {
+        margin-top: 10px;
+        justify-content: flex-start !important;
+    }
 }
 
 /* -------------------------------------------
@@ -451,7 +514,7 @@
 }
 
 .stats-card-percentage {
-    display: none; /* Oculta los porcentajes */
+    display: none;
 }
 
 .stats-card-loading {
@@ -481,7 +544,7 @@
     100% { transform: rotate(360deg); }
 }
 
-/* Responsive */
+/* Responsive para estadísticas */
 @media (max-width: 1200px) {
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -505,6 +568,93 @@
         width: 32px;
         height: 32px;
         font-size: 1.125rem;
+    }
+    
+    .total-clientes-count {
+        font-size: 1.2rem;
+        text-align: center;
+    }
+}
+
+/* Mejoras para dispositivos muy pequeños */
+@media (max-width: 576px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .card-header .col-sm-6 {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .table-responsive {
+        padding: 0;
+    }
+    
+    /* Ajustar botones de acción en la tabla */
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Ocultar texto en botones y mostrar solo iconos */
+    .btn-sm i {
+        margin-right: 0 !important;
+    }
+    
+    .btn-sm .d-none.d-sm-inline-block {
+        display: none !important;
+    }
+}
+
+/* Mejoras para la tabla en modo responsivo de DataTables */
+table.dataTable.dtr-column > tbody > tr > td.control:before,
+table.dataTable.dtr-column > tbody > tr > th.control:before {
+    background-color: #3b82f6;
+}
+
+/* Estilos para las filas expandidas en modo móvil */
+.dtr-details {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.5rem;
+}
+
+.dtr-details li {
+    border-bottom: 1px solid #eee;
+    padding: 0.5rem 0;
+}
+
+.dtr-title {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+/* Ajustes para los modales en dispositivos móviles */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-content {
+        border-radius: 0.5rem;
+    }
+    
+    .modal-header, .modal-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .modal-header .btn-close {
+        align-self: flex-end;
+        margin-top: -0.5rem;
+        margin-right: -0.5rem;
+    }
+    
+    .modal-footer .btn {
+        margin: 0.25rem 0;
+        width: 100%;
     }
 }
 </style>
@@ -601,7 +751,6 @@
                                 Clientes total registrados: <span id="totalEmpresasCount">{{ ($clientesActivos ?? 0) + ($clientesInactivos ?? 0) }}</span>
                             </div>
                         </div>
-                        
                     </div>
                 </div>
                 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -623,12 +772,12 @@
                                 <th>RFC</th>
                                 <th>Calle</th>
                                 <th>Colonia</th>
-                                <th>Localidad</th>
-                                <th>Municipio</th>
+                                <th data-priority="999" class="d-none d-md-table-cell">Localidad</th>
+                                <th data-priority="999" class="d-none d-md-table-cell">Municipio</th>
                                 <th>Estado</th>
                                 <th>Régimen Fiscal</th>
                                 <th>Crédito</th>
-                                <th>Constancia</th>
+                                <th data-priority="999" class="d-none d-md-table-cell">Constancia</th>
                                 <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
