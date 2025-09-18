@@ -47,22 +47,22 @@ class ServiciosEspecializadosController extends Controller
                     $btn = '<div class="dropdown d-flex justify-content-center">
                                <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                                 
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="'.route('servicios.show', $row->id_servicio).'">
-                                        <i class="ri-search-fill ri-20px text-normal me-2"></i>Visualizar
-                                    </a></li>
-                                    <li><a class="dropdown-item" href="'.route('servicios.edit', $row->id_servicio).'">
-                                        <i class="ri-file-edit-fill ri-20px text-info"></i>Editar
-                                    </a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <button class="dropdown-item toggle-status-btn" data-id="'.$row->id_servicio.'" data-status="'.($row->id_habilitado ? 0 : 1).'">
-                                            <i class="'.($row->id_habilitado ? 'ri-delete-bin-2-fill ri-20px text-danger' : 'ri-file-check-fill ri-20px text-primary').' me-2"></i>'.($row->id_habilitado ? 'Deshabilitar' : 'Habilitar').'
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>';
+                               </button>
+                               <ul class="dropdown-menu">
+                                   <li><a class="dropdown-item" href="'.route('servicios.show', $row->id_servicio).'">
+                                       <i class="ri-search-fill ri-20px text-normal me-2"></i>Visualizar
+                                   </a></li>
+                                   <li><a class="dropdown-item" href="'.route('servicios.edit', $row->id_servicio).'">
+                                       <i class="ri-file-edit-fill ri-20px text-info"></i>Editar
+                                   </a></li>
+                                   <li><hr class="dropdown-divider"></li>
+                                   <li>
+                                       <button class="dropdown-item toggle-status-btn" data-id="'.$row->id_servicio.'" data-status="'.($row->id_habilitado ? 0 : 1).'">
+                                           <i class="'.($row->id_habilitado ? 'ri-delete-bin-2-fill ri-20px text-danger' : 'ri-file-check-fill ri-20px text-primary').' me-2"></i>'.($row->id_habilitado ? 'Deshabilitar' : 'Habilitar').'
+                                       </button>
+                                   </li>
+                               </ul>
+                           </div>';
                     return $btn;
                 })
                 ->rawColumns(['acciones', 'laboratorio', 'estatus'])

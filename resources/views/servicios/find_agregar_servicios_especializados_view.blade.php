@@ -26,6 +26,18 @@
                     <h3 class="card-title">Agregar Nuevo Servicio</h3>
                 </div>
                 <div class="card-body">
+                    {{-- Bloque para mostrar errores de validación --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <h4><i class="icon ri-alert-fill"></i> ¡Atención!</h4>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <form id="formAgregarServicio" class="row g-5" action="{{ route('servicios.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         {{-- Fila 1: Clave, Clave Adicional, Nombre del Servicio, Precio --}}
@@ -223,27 +235,63 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('formAgregarServicio');
-            const claveSelect = $('#clave');
-            const precioTotalInput = document.getElementById('precio');
-            const requiereMuestraSelect = $('#requiereMuestra');
-            const descripcionMuestraField = document.getElementById('descripcionMuestraField');
-            
-            const acreditacionSelect = $('#acreditacion');
-            const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
-            const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
-
-            const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
-            const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
-            
-            // Inicializar Select2 en todos los selectores con la clase 'select2-laboratorio'
-            $('.select2-laboratorio').select2({
+            // Inicializar Select en todos los selectores con la clase 'select-laboratorio'
+            $('.select-laboratorio').select({
                 placeholder: 'Selecciona un laboratorio',
                 allowClear: true,
                 width: '100%'
             });
 
-            // Control para mostrar el nombre del archivo seleccionado
+            // Lógica para agregar y eliminar campos de "Precio por laboratorio"
+            document.getElementById('agregar-laboratorio-btn').addEventListener('click', function() {
+                const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
+                const nuevoLaboratorio = document.createElement('div');
+                nuevoLaboratorio.classList.add('input-group', 'mb-3', 'laboratorio-item');
+                nuevoLaboratorio.innerHTML = `
+                    <div class="form-floating form-floating-outline flex-grow-1">
+                        <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required/>
+                        <label>Precio *</label>
+                    </div>
+                    <div class="form-floating form-floating-outline flex-grow-1 ms-2">
+                        <select class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
+                            <option value="">Selecciona un laboratorio</option>
+                            @foreach ($laboratorios as $laboratorio)
+                                <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
+                            @endforeach
+                        </select>
+                        <label>Laboratorio responsable *</label>
+                    </div>
+                    <button type="button" class="btn btn-danger eliminar-laboratorio-btn ms-2">
+                        <i class="ri-subtract-line"></i>
+                    </button>
+                `;
+                laboratoriosContenedor.appendChild(nuevoLaboratorio);
+                $(nuevoLaboratorio).find('.select-laboratorio').select({
+                    placeholder: 'Selecciona un laboratorio',
+                    allowClear: true,
+                    width: '100%'
+                });
+                calcularTotal();
+            });
+
+            document.getElementById('laboratorios-contenedor').addEventListener('click', function(e) {
+                if (e.target.closest('.eliminar-laboratorio-btn')) {
+                    const item = e.target.closest('.laboratorio-item');
+                    if (item) {
+                        $(item).find('.select-laboratorio').select('destroy');
+                        item.remove();
+                        calcularTotal();
+                    }
+                }
+            });
+
+            // Resto de tu lógica
+            const precioTotalInput = document.getElementById('precio');
+            const requiereMuestraSelect = $('#requiereMuestra');
+            const descripcionMuestraField = document.getElementById('descripcionMuestraField');
+            const acreditacionSelect = $('#acreditacion');
+            const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
+            const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
             const archivoInput = document.getElementById('archivoRequisitos');
             const archivoInfo = document.getElementById('archivoInfo');
             
@@ -255,7 +303,6 @@
                 }
             });
 
-            // Lógica para mostrar/ocultar el campo "Descripción de Muestra"
             function toggleDescripcionMuestraField() {
                 if (requiereMuestraSelect.val() === 'si') {
                     descripcionMuestraField.style.display = 'block';
@@ -270,7 +317,6 @@
                 toggleDescripcionMuestraField();
             });
 
-            // Lógica para mostrar/ocultar los campos de acreditación
             function toggleAcreditacionFields() {
                 if (acreditacionSelect.val() === 'Acreditado') {
                     campoNombreAcreditacion.style.display = 'block';
@@ -289,7 +335,6 @@
                 toggleAcreditacionFields();
             });
 
-            // Lógica de suma para los precios
             function calcularTotal() {
                 let total = 0;
                 const preciosLabs = document.querySelectorAll('.precio-lab');
@@ -300,53 +345,12 @@
                 precioTotalInput.value = total.toFixed(2);
             }
 
-            laboratoriosContenedor.addEventListener('input', function(e) {
+            document.getElementById('laboratorios-contenedor').addEventListener('input', function(e) {
                 if (e.target.classList.contains('precio-lab')) {
                     calcularTotal();
                 }
             });
 
-            // Lógica para agregar y eliminar campos de "Precio por laboratorio"
-            agregarLaboratorioBtn.addEventListener('click', function() {
-                const nuevoLaboratorio = document.createElement('div');
-                nuevoLaboratorio.classList.add('input-group', 'mb-3', 'laboratorio-item');
-                nuevoLaboratorio.innerHTML = `
-                    <div class="form-floating form-floating-outline flex-grow-1">
-                        <input type="text" class="form-control precio-lab" name="precios_laboratorio[]" placeholder="Precio" required/>
-                        <label>Precio *</label>
-                    </div>
-                    <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                        <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
-                            <option value="">Selecciona un laboratorio</option>
-                            @foreach ($laboratorios as $laboratorio)
-                                <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
-                            @endforeach
-                        </select>
-                        <label>Laboratorio responsable *</label>
-                    </div>
-                    <button type="button" class="btn btn-danger eliminar-laboratorio-btn ms-2">
-                        <i class="ri-subtract-line"></i>
-                    </button>
-                `;
-                laboratoriosContenedor.appendChild(nuevoLaboratorio);
-                $(nuevoLaboratorio).find('.select2-laboratorio').select2({
-                    placeholder: 'Selecciona un laboratorio',
-                    allowClear: true,
-                    width: '100%'
-                });
-                calcularTotal();
-            });
-
-            laboratoriosContenedor.addEventListener('click', function(e) {
-                if (e.target.closest('.eliminar-laboratorio-btn')) {
-                    const item = e.target.closest('.laboratorio-item');
-                    if (item) {
-                        $(item).find('.select2-laboratorio').select2('destroy');
-                        item.remove();
-                        calcularTotal();
-                    }
-                }
-            });
             calcularTotal();
         });
     </script>
