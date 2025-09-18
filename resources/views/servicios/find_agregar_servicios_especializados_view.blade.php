@@ -4,7 +4,6 @@
 
 @section('vendor-style')
     @vite('resources/assets/vendor/libs/select2/select2.scss')
-    {{-- @vite('resources/assets/vendor/libs/form-validation/form-validation.scss') --}}
     @vite('resources/assets/vendor/libs/animate-css/animate.scss')
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.scss')
     @vite('resources/assets/vendor/libs/spinkit/spinkit.scss')
@@ -12,8 +11,6 @@
 
 @section('vendor-script')
     @vite('resources/assets/vendor/libs/select2/select2.js')
-    {{--@vite('resources/assets/vendor/libs/form-validation/form-validation.js') 
-    @vite('resources/assets/vendor/libs/form-validation/auto-focus.js')--}}
     @vite('resources/assets/vendor/libs/sweetalert2/sweetalert2.js')
 @endsection
 
@@ -29,6 +26,17 @@
                     <h3 class="card-title">Agregar Nuevo Servicio</h3>
                 </div>
                 <div class="card-body">
+                    <!-- Mostrar errores de validación -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    
                     <form id="formAgregarServicio" class="row g-5" action="{{ route('servicios.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         {{-- Fila 1: Clave, Clave Adicional, Nombre del Servicio, Precio --}}
@@ -123,7 +131,15 @@
                             </div>
                         </div>
 
-                        {{-- Fila 5: Nombre de la Acreditación (oculto por defecto) --}}
+                        {{-- Fila 5: Método (campo adicional necesario) --}}
+                        <div class="col-12">
+                            <div class="form-floating form-floating-outline">
+                                <input type="text" id="metodo" name="metodo" class="form-control" placeholder="Ejemplo: Método estándar" />
+                                <label for="metodo">Método</label>
+                            </div>
+                        </div>
+
+                        {{-- Fila 6: Nombre de la Acreditación (oculto por defecto) --}}
                         <div class="col-12" id="campoNombreAcreditacion" style="display: none;">
                             <div class="form-floating form-floating-outline">
                                 <input type="text" id="nombreAcreditacion" name="nombre_acreditacion" class="form-control" placeholder="Nombre de la Acreditación" />
@@ -131,7 +147,7 @@
                             </div>
                         </div>
 
-                        {{-- Fila 6: Descripción de la Acreditación (oculto por defecto) --}}
+                        {{-- Fila 7: Descripción de la Acreditación (oculto por defecto) --}}
                         <div class="col-12" id="campoDescripcionAcreditacion" style="display: none;">
                             <div class="form-floating form-floating-outline">
                                 <input type="text" id="descripcionAcreditacion" name="descripcion_acreditacion" class="form-control" placeholder="Descripción de la Acreditación" />
@@ -139,7 +155,7 @@
                             </div>
                         </div>
                         
-                        {{-- Fila 7: Prueba --}}
+                        {{-- Fila 8: Prueba --}}
                         <div class="col-12">
                             <div class="form-floating form-floating-outline">
                                 <textarea id="prueba" name="prueba" class="form-control" placeholder="Prueba" required></textarea>
@@ -147,7 +163,7 @@
                             </div>
                         </div>
 
-                        {{-- Fila 8: Descripción de Muestra --}}
+                        {{-- Fila 9: Descripción de Muestra --}}
                         <div class="col-12" id="descripcionMuestraField" style="display: none;">
                             <div class="form-floating form-floating-outline">
                                 <textarea id="descripcionMuestra" name="descripcion_muestra" class="form-control" placeholder="Descripción de Muestra"></textarea>
@@ -155,7 +171,7 @@
                             </div>
                         </div>
 
-                        {{-- Fila 9: Archivo WORD-PDF de requisitos (Opcional) --}}
+                        {{-- Fila 10: Archivo WORD-PDF de requisitos (Opcional) --}}
                         <div class="col-12">
                             <div class="card border-0 shadow-sm rounded-4">
                                 <div class="card-header bg-white rounded-top-4 py-3">
@@ -367,6 +383,7 @@
                     'requiere_muestra',
                     'analisis',
                     'unidades',
+                    'metodo',
                     'prueba'
                 ];
                 
@@ -375,6 +392,9 @@
                     const input = document.querySelector(`[name="${campo}"]`);
                     if (input && !input.value.trim()) {
                         camposVacios = true;
+                        input.classList.add('is-invalid');
+                    } else if (input) {
+                        input.classList.remove('is-invalid');
                     }
                 });
 
@@ -383,6 +403,9 @@
                     const descripcionMuestra = document.getElementById('descripcionMuestra');
                     if (!descripcionMuestra.value.trim()) {
                         camposVacios = true;
+                        descripcionMuestra.classList.add('is-invalid');
+                    } else {
+                        descripcionMuestra.classList.remove('is-invalid');
                     }
                 }
 
@@ -390,21 +413,46 @@
                 if (acreditacionSelect.val() === 'Acreditado') {
                     const nombreAcreditacion = document.getElementById('nombreAcreditacion');
                     const descripcionAcreditacion = document.getElementById('descripcionAcreditacion');
-                    if (!nombreAcreditacion.value || !descripcionAcreditacion.value) {
+                    
+                    if (!nombreAcreditacion.value.trim()) {
                         camposVacios = true;
+                        nombreAcreditacion.classList.add('is-invalid');
+                    } else {
+                        nombreAcreditacion.classList.remove('is-invalid');
+                    }
+                    
+                    if (!descripcionAcreditacion.value.trim()) {
+                        camposVacios = true;
+                        descripcionAcreditacion.classList.add('is-invalid');
+                    } else {
+                        descripcionAcreditacion.classList.remove('is-invalid');
                     }
                 }
 
                 // Validar campos de laboratorios
                 const preciosLab = document.querySelectorAll('.precio-lab');
                 const laboratoriosResp = document.querySelectorAll('[name="laboratorios_responsables[]"]');
+                
                 if (preciosLab.length === 0) {
                     camposVacios = true;
+                    // Mostrar error en el contenedor de laboratorios
+                    laboratoriosContenedor.classList.add('border', 'border-danger', 'rounded', 'p-2');
                 } else {
+                    laboratoriosContenedor.classList.remove('border', 'border-danger', 'rounded', 'p-2');
+                    
                     for (let i = 0; i < preciosLab.length; i++) {
-                        if (!preciosLab[i].value.trim() || !laboratoriosResp[i].value.trim()) {
+                        if (!preciosLab[i].value.trim()) {
                             camposVacios = true;
-                            break;
+                            preciosLab[i].classList.add('is-invalid');
+                        } else {
+                            preciosLab[i].classList.remove('is-invalid');
+                        }
+                        
+                        if (!laboratoriosResp[i].value.trim()) {
+                            camposVacios = true;
+                            laboratoriosResp[i].classList.add('is-invalid');
+                        } else {
+                            laboratoriosResp[i].classList.remove('is-invalid');
                         }
                     }
                 }
@@ -413,7 +461,7 @@
                 if (camposVacios) {
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Faltan campos por llenar.',
+                        text: 'Faltan campos por llenar. Por favor, complete todos los campos requeridos.',
                         icon: 'error',
                         customClass: {
                             confirmButton: 'btn btn-primary'
@@ -421,20 +469,21 @@
                         buttonsStyling: false
                     });
                 } else {
-                    // Si todo está lleno, enviar el formulario
-                    Swal.fire({
-                        title: '¡Éxito!',
-                        text: 'Servicio agregado correctamente.',
-                        icon: 'success',
-                        customClass: {
-                            confirmButton: 'btn btn-success'
-                        },
-                        buttonsStyling: false
-                    }).then(() => {
-                        form.submit();
-                    });
+                    // Si todo está lleno, enviar el formulario directamente
+                    // En lugar de mostrar un SweetAlert y luego hacer submit
+                    form.submit();
                 }
             });
         });
     </script>
+
+    <style>
+        .is-invalid {
+            border-color: #ff3e1d !important;
+        }
+        .is-invalid ~ .form-floating-outline,
+        .is-invalid ~ .form-notched-outline {
+            color: #ff3e1d !important;
+        }
+    </style>
 @endsection
