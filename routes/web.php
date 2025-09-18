@@ -180,7 +180,7 @@ use App\Http\Controllers\historialClienteController;
 use App\Http\Controllers\serviciosEspecializadosController;
 use Barryvdh\DomPDF\Facade\pdf as PDF;
 use App\Http\Controllers\CotizacionAgregarController;
-
+use App\Http\Controllers\ServiciosCatalogoController;
 
 
 // Main Page Route
@@ -246,12 +246,10 @@ Route::middleware('auth')->controller(App\Http\Controllers\EncuestasController::
 
 //Rutas para Servicios de Catálogo
 Route::middleware('auth')->controller(App\Http\Controllers\ServiciosCatalogoController::class)->group(function () {
-    Route::get('/serviciosCatalogo', 'index')->name('serviciosCatalogo.index');
-    Route::get('/serviciosCatalogo/create', 'create')->name('serviciosCatalogo.create');
-    Route::post('/serviciosCatalogo', 'store')->name('serviciosCatalogo.store');
-    Route::get('/serviciosCatalogo/{id}', 'show')->name('serviciosCatalogo.show');
-    Route::get('/serviciosCatalogo/{id}/edit',  'edit')->name('serviciosCatalogo.edit');
-    Route::put('/serviciosCatalogo/{id}',  'update')->name('serviciosCatalogo.update');
+Route::get('/serviciosCatalogo', 'index')->name('serviciosCatalogo.index');
+Route::get('/servicios/encontrar-catalogo', [ServiciosCatalogoController::class, 'findCatalogo'])->name('servicios.agregar.catalogo');
+Route::get('/servicios-catalogo/create', [ServiciosCatalogoController::class, 'create'])->name('serviciosCatalogo.create');
+
 });
 
 //Rutas para personal regular

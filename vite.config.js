@@ -58,31 +58,33 @@ export default defineConfig({
       input: [
         'resources/css/app.css',
         'resources/assets/css/demo.css',
-        'resources/css/hologramas.css', // ← asegúrate de incluirlo
+        'resources/css/hologramas.css',
         'resources/assets/vendor/fonts/personalizados/style.css',
         'resources/js/app.js',
         ...pageJsFiles,
         ...vendorJsFiles,
         ...LibsJsFiles,
-        'resources/js/laravel-user-management.js', // Processing Laravel User Management CRUD JS File
+        'resources/js/laravel-user-management.js',
         ...CoreScssFiles,
         ...LibsScssFiles,
         ...LibsCssFiles,
         ...FontsScssFiles,
         ...personalizados,
+        // Agregando la ruta específica para asegurar que se incluya
+        'resources/assets/vendor/libs/form-validation/form-validation.js',
       ],
       refresh: true
     }),
     html(),
     libsWindowAssignment()
   ],
-/*        server: {
+  /* server: {
     host: '0.0.0.0', // Esto hace que Vite escuche en todas las interfaces de red
-    port: 5173,       // Asegúrate de que este puerto esté disponible
+    port: 5173, 	 // Asegúrate de que este puerto esté disponible
     strictPort: true, // Utiliza estrictamente este puerto
     hmr: {
       host: '10.1.30.224', // IP de la máquina del servidor
       port: 5173,
     },
-  },  */
+  }, 	*/
 });
