@@ -1,5 +1,4 @@
-<!-- resources/views/_partials/_modals/modal-add-edit-Historial.blade.php -->
-@php use Illuminate\Support\Facades\Storage; @endphp {{-- ¡IMPORTANTE: Añadido para resolver "Class Storage not found"! --}}
+@php use Illuminate\Support\Facades\Storage; @endphp
 
 <!-- El contenido de esta vista será cargado dinámicamente dentro de la modal principal -->
 
@@ -36,9 +35,9 @@
         <div class="col-12 col-md-6">
             <div class="form-floating form-floating-outline">
                 <select id="modalAddressCredito" name="credito" class="select2 form-select" data-allow-clear="true">
-                    <option value="">Selecciona una Opción</option>
-                    <option value="Con Crédito" {{ old('credito', $empresa->credito) == 'Con Crédito' ? 'selected' : '' }}>Con Crédito</option>
-                    <option value="Sin Crédito" {{ old('credito', $empresa->credito) == 'Sin Crédito' ? 'selected' : '' }}>Sin Crédito</option>
+                    <option value="" {{ empty($empresa->credito) ? 'selected' : '' }}>Selecciona una Opción</option>
+                    <option value="Con Crédito" {{ strtolower($empresa->credito) == 'con crédito' ? 'selected' : '' }}>Con Crédito</option>
+                    <option value="Sin Crédito" {{ strtolower($empresa->credito) == 'sin crédito' || $empresa->credito == '0' ? 'selected' : '' }}>Sin Crédito</option>
                 </select>
                 <label for="modalAddressCredito">Crédito </label>
             </div>
@@ -189,8 +188,8 @@
                             <td> {{-- Columna para Estatus --}}
                                 <div class="form-floating form-floating-outline mb-0">
                                     <select class="form-select form-select-sm contact-status-select" name="contactos[{{ $loop->index }}][status]">
-                                        <option value="0" {{ old('status', $contact->status) == '0' ? 'selected' : '' }}>Sin contactar</option>
-                                        <option value="1" {{ old('status', $contact->status) == '1' ? 'selected' : '' }}>Contactado</option>
+                                        <option value="0" {{ $contact->status == '0' ? 'selected' : '' }}>Sin contactar</option>
+                                        <option value="1" {{ $contact->status == '1' ? 'selected' : '' }}>Contactado</option>
                                     </select>
                                     <label>Estatus</label>
                                 </div>
@@ -198,7 +197,7 @@
                             </td>
                             <td> {{-- Columna para Observaciones --}}
                                 <div class="form-floating form-floating-outline mb-0">
-                                    <textarea class="form-control form-control-sm h-px-40" name="contactos[{{ $loop->index }}][observaciones]" placeholder="Observaciones">{{ old('observaciones', $contact->observaciones) }}</textarea>
+                                    <textarea class="form-control form-control-sm h-px-40" name="contactos[{{ $loop->index }}][observaciones]" placeholder="Observaciones">{{ $contact->observaciones }}</textarea>
                                     <label>Observaciones</label>
                                 </div>
                                 <div class="invalid-feedback"></div>
