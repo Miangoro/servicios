@@ -11,6 +11,8 @@ class PersonalRegularModel extends Model
     protected $fillable = [
         'folio',
         'foto',
+        'firma',
+        'firma_correo',
         'nombre',
         'id_usuario',
         'fecha_ingreso',

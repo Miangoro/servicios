@@ -1,6 +1,6 @@
 @extends('layouts/layoutMaster')
 
-@section('title', 'Personal regular')
+@section('title', 'Editar Empleado')
 
 <!-- Vendor Styles -->
 @section('vendor-style')
@@ -51,7 +51,7 @@
 @endsection
 
 @section('page-script')
-@vite(['resources/js/agregarPersonalRegular.js',
+@vite(['resources/js/editarPersonalRegular.js',
   'resources/assets/js/forms-pickers.js',
 ])
 
@@ -61,12 +61,12 @@
 
 <script src="https://code.iconify.design/1/1.0.7/iconify.min.js"></script>
 <script>
-  var usuarios = @json($usuarios); 
+  var empleado = @json($empleado); 
 </script>
 
 
 <style>
-#dropzone-basic {
+#dropzone-basic-edit {
   position: relative;
   min-height: 250px;
   max-height: 400px;
@@ -78,26 +78,26 @@
   justify-content: center;
 }
 
-#dropzone-basic .dz-message {
+#dropzone-basic-edit .dz-message {
   text-align: center;
   color: #888;
   font-size: 1rem;
   z-index: 10;
 }
 
-#dropzone-basic.dz-started .dz-message {
+#dropzone-basic-edit.dz-started .dz-message {
   display: none;
 }
 
-#dropzone-basic .dz-preview {
+#dropzone-basic-edit .dz-preview {
   margin: 0 !important;
   width: 100%;
   height: 100%;
   pointer-events: none;
 }
 
-#dropzone-basic .dz-preview .dz-image,
-#dropzone-basic .dz-preview .dz-image img {
+#dropzone-basic-edit .dz-preview .dz-image,
+#dropzone-basic-edit .dz-preview .dz-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -115,7 +115,7 @@
                     <div class="d-flex flex-row">
                         <span class="iconify" data-icon="mdi:user-badge" data-inline="false" style="font-size: 48px;"></span>
                         <div class="">
-                            <h3 class="mb-0"><b>Agregar empleado</b></h3>
+                            <h3 class="mb-0"><b>Editar empleado</b></h3>
                         </div>
                     </div>
                 </div>
@@ -123,11 +123,12 @@
                 <meta name="csrf-token" content="{{ csrf_token() }}">
 
                 <div>
-                    <form id="form-agregar-empleado">
+                    <form id="form-editar-empleado">
                         @csrf
+                        @method('PUT')
                         <div class="col-md-12 d-flex flex-column align-items-center justify-content-center">
                             <h4>Foto</h4>
-                            <div class="dropzone needsclick col-md-4" id="dropzone-basic">
+                            <div class="dropzone needsclick col-md-4" id="dropzone-basic-edit">
                                 <div class="dz-message needsclick">
                                     <div class="d-flex justify-content-center">
                                         <div class="avatar">
@@ -141,12 +142,12 @@
                                     <span class="needsclick btn btn-sm btn-outline-primary" id="btnBrowse">Buscar imagen</span>
                                 </div>
                                 <div class="fallback">
-                                    <input name="fotoEmpleado" type="file" id="fotoEmpleadoInput" />
+                                    <input name="fotoEmpleadoEdit" type="file" id="fotoEmpleadoInputEdit" />
                                 </div>
                             </div>
                         </div>
 
-                        <input hidden value="" name="idUsuario" id="id_usuario_input">
+                        <input hidden value="" name="idUsuarioEdit" id="id_usuario_inputEdit">
 
                         <div class="d-flex flex-row align-items-center">
                                <span class="iconify" data-icon="fluent:info-24-filled" data-inline="false" style="font-size: 24px;"></span>
@@ -155,28 +156,42 @@
 
                         <div class="row col-md-12 my-4">
                             <div class="col-md-8">
-                                <input id="nombreEmpleadoInput" name="nombreEmpleado" class="form-control typeahead" type="text" autocomplete="off" placeholder="Escriba el nombre completo del empleado o selecciónelo" />
+                                <input id="nombreEmpleadoInputEdit" name="nombreEmpleadoEdit" class="form-control typeahead" type="text" autocomplete="off" placeholder="Escriba el nombre completo del empleado o selecciónelo" />
                             </div>
                             <div class="form-floating form-floating-outline col-md-4">
-                                <input type="text" class="form-control" id="folioEmpleadoInput" name="folioEmpleado" placeholder="Cree un folio para este empleado" aria-describedby="floatingInputHelp" />
+                                <input type="text" class="form-control" id="folioEmpleadoInputEdit" name="folioEmpleadoEdit" placeholder="Cree un folio para este empleado" aria-describedby="floatingInputHelp" />
                                 <label for="folioEmpleadoInput">Folio</label>
                             </div>
                         </div>
 
                         <div class="row col-md-12 my-4">
                             <div class="form-floating form-floating-outline col-md-6">
-                                <input type="text" class="form-control" id="correoEmpleadoInput" name="correoEmpleado" placeholder="Correo electrónico del empleado" aria-describedby="floatingInputHelp" />
+                                <input type="text" class="form-control" id="correoEmpleadoInputEdit" name="correoEmpleadoEdit" placeholder="Correo electrónico del empleado" aria-describedby="floatingInputHelp" />
                                 <label for="correoEmpleadoInput">Correo</label>
                             </div>
                             <div class="col-md-6 form-floating form-floating-outline">
-                                <input type="text" class="form-control" placeholder="YYYY-MM-DD" id="flatpickr-date" name="fechaIngreso" />
+                                <input type="text" class="form-control" placeholder="YYYY-MM-DD" id="flatpickr-date" name="fechaIngresoEdit" />
                                 <label for="flatpickr-date">Fecha de ingreso</label>
                             </div>
                         </div>
 
-                        <div class="col-12">
+                    <div class="row col-md-12">
+
+                        <div class="col-md-6">
+                            <span>Firma</span>
+                            <input class="form-control" type="file" id="firma" name="firmaEdit" accept="image/*">
+                        </div>
+
+                        <div class="col-md-6">
+                            <span>Firma del correo</span>
+                            <input class="form-control" type="file" id="firmaCorreo" name="firmaCorreoEdit" accept="image/*">
+                        </div>
+
+                    </div>
+
+                    <div class="col-12 my-6">
                         <span>Descripción</span>
-                        <input type="hidden" name="descripcionEmpleado" id="descripcionEmp">
+                        <input type="hidden" name="descripcionEmpleadoEdit" id="descripcionEmpEdit">
                         <div id="snow-toolbar">
                             <span class="ql-formats">
                                 <select class="ql-font"></select>
@@ -203,11 +218,11 @@
                                 <button class="ql-code-block"></button>
                             </span>
                         </div>
-                        <div id="snow-editor"></div>
+                        <div id="snow-editor-edit"></div>
                     </div>
 
                     <div class="col-12 mt-6 d-flex flex-wrap justify-content-center gap-4 row-gap-4">
-                        <button id="AddEmpleadoBtn" type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
+                        <button id="EditEmpleadoBtn" type="submit" class="btn btn-primary me-sm-3 me-1 data-submit">
                             <i class="ri-add-line"></i> Agregar
                         </button>
                         <a href="{{ route('personalRegular.index') }}" class="btn btn-danger">

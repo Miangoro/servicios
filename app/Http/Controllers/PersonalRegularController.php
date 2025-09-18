@@ -12,6 +12,7 @@ use App\Models\personalConflictoInteresModel;
 use Illuminate\Support\Facades\Log;
 use PhpParser\Node\Stmt\TryCatch;
 use Yajra\DataTables\DataTables;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,27 +31,27 @@ class PersonalRegularController extends Controller
                         <button class="btn btn-sm btn-info dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Opciones <i class="ri-arrow-down-s-fill ri-20px"></i></button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton_' . $row->id_empleado . '">' .
                         '<li>
-                            <a class="dropdown-item" href="">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.edit', $row->id_empleado) . '">' .
                         '<span class="iconify text-info" data-icon="ri-file-edit-fill" data-inline="false" style="font-size: 24px;"></span> Editar' .
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="'  . route('personalRegular.expediente', $row->id_empleado) .'">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.expediente', $row->id_empleado) . '">' .
                         ' <span class="iconify text-primary" data-icon="fluent:document-add-20-filled" data-inline="false" style="font-size: 24px;"></span> Agregar expediente' .
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="'  . route('personalRegular.nombramiento', $row->id_empleado) .'">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.nombramiento', $row->id_empleado) . '">' .
                         '<span class="iconify text-primary" data-icon="streamline-ultimate:job-responsibility-bag-hand-bold" data-inline="false" style="font-size: 24px;"></span> Agregar nombramiento' .
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="'  . route('personalRegular.conflictoInteres', $row->id_empleado) .'">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.conflictoInteres', $row->id_empleado) . '">' .
                         '<span class="iconify text-primary" data-icon="fluent:document-search-20-filled" data-inline="false" style="font-size: 24px;"></span> Agregar conflicto de interés' .
                         '</a>
                         </li>' .
                         '<li>
-                            <a class="dropdown-item" href="'  . route('personalRegular.confidencialidad', $row->id_empleado) .'">' .
+                            <a class="dropdown-item" href="'  . route('personalRegular.confidencialidad', $row->id_empleado) . '">' .
                         '<span class="iconify text-info" data-icon="fa7-solid:file-signature" data-inline="false" style="font-size: 24px;"></span> Resgistrar acuerdo de confidencialidad' .
                         '</a>
                         </li>
@@ -62,22 +63,21 @@ class PersonalRegularController extends Controller
                         '</ul>
                     </div>';
                     return $btn;
-                })/*->addColumn('verExp', function ($row) {
-                    $btnexp = '<button class="btn btn-sm btn-warning dropdown-toggle hide-arrow" data-bs-toggle="dropdown"><i class="ri-settings-5-fill"></i>&nbsp;Ver expediente <i class="ri-arrow-down-s-fill ri-20px"></i></button>';
+                })->addColumn('verExp', function ($row) {
+                    $btnexp = '<button class="btn btn-sm btn-warning"><span class="iconify text-normal" data-icon="material-symbols:folder-eye-rounded" data-inline="false" style="font-size: 20px;" ></span> Ver expediente</button>';
                     return $btnexp;
-                })*/
+                })
                 ->editColumn('descripcion', function ($row) {
                     if ($row->descripcion === null) {
                         return 'Sin descripción';
                     }
                     return Str::limit(($row->descripcion), 500);
-                })->addColumn('foto_html', function($row) {
-                $url = asset($row->foto);
-                
+                })->addColumn('foto_html', function ($row) {
+                    $url = asset($row->foto);
+
                     return '<img src="' .  $url . '" alt="Foto de empleado" style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;">';
-                
-            })
-                ->rawColumns(['action', /*'verExp',*/ 'descripcion', 'foto_html'])
+                })
+                ->rawColumns(['action', 'verExp', 'descripcion', 'foto_html'])
                 ->make(true);
         }
 
@@ -87,7 +87,7 @@ class PersonalRegularController extends Controller
     public function create()
     {
         $usuarios = User::where('tipo', 1)->get();
-        return view('personal.agregar_personal_regular', compact('usuarios'));
+        return view('personal.add_personal_regular', compact('usuarios'));
     }
 
     // En tu PersonalRegularController.php
@@ -103,6 +103,8 @@ class PersonalRegularController extends Controller
             }
 
             $fotoPath = null;
+            $fotoFirma = null;
+            $firmaCorreo = null;
 
             // En tu PersonalRegularController.php
             if ($request->hasFile('fotoEmpleado')) {
@@ -115,10 +117,37 @@ class PersonalRegularController extends Controller
 
                 $fotoPath = $folder . '/' . $filename;
             }
+
+            if ($request->hasFile('firma')) {
+                $uploadedImageFirma = $request->file('firma');
+
+                $folder = 'uploads';
+
+                $filenameFirma = time() . '.' . $uploadedImageFirma->getClientOriginalExtension();
+
+                $uploadedImageFirma->move(public_path($folder), $filenameFirma);
+
+                $fotoFirma = $folder . '/' . $filenameFirma;
+            }
+
+            if ($request->hasFile('firmaCorreo')) {
+                $uploadedImageFirmaCorreo = $request->file('firmaCorreo');
+
+                $folder = 'uploads';
+
+                $filenameFirmaCorreo = time() . '.' . $uploadedImageFirmaCorreo->getClientOriginalExtension();
+
+                $uploadedImageFirmaCorreo->move(public_path($folder), $filenameFirmaCorreo);
+
+                $firmaCorreo = $folder . '/' . $filenameFirmaCorreo;
+            }
+
             PersonalRegularModel::create([
                 'nombre' => $request->nombreEmpleado,
                 'folio' => $request->folioEmpleado,
                 'foto' => $fotoPath,
+                'firma' => $fotoFirma,
+                'firma_correo' => $firmaCorreo,
                 'correo' => $request->correoEmpleado,
                 'id_usuario' => $request->idUsuario,
                 'fecha_ingreso' => $request->fechaIngreso,
@@ -145,6 +174,77 @@ class PersonalRegularController extends Controller
             Log::error('Error al agregar empleado: ' . $e->getMessage());
             return response()->json(['error' => 'Error al agregar empleado.'], 500);
         }
+    }
+
+    public function update(Request $request, $id){
+        DB::beginTransaction();
+
+        try {
+            $empleado = PersonalRegularModel::findOrFail($id);
+
+            $empleadoData = [
+                'nombre' => $request->input('nombreEmpleadoEdit'),
+                'id_usuario' => $request->input('idUsuarioEdit'),
+                'folio' => $request->input('folioEmpleadoEdit'),
+                'correo' => $request->input('correoEmpleadoEdit'),
+                'fecha_ingreso' => $request->input('fechaIngresoEdit')
+            ];
+
+            // Manejar la subida del archivo (si se proporciona uno nuevo)
+            $fotoPath = null;
+            $fotoFirma = null;
+            $firmaCorreo = null;
+
+            // En tu PersonalRegularController.php
+            if ($request->hasFile('fotoEmpleadoEdit')) {
+                $uploadedImage = $request->file('fotoEmpleado');
+
+                $folder = 'uploads';
+                $filename = time() . '.' . $uploadedImage->getClientOriginalExtension();
+
+                $uploadedImage->move(public_path($folder), $filename);
+
+                $fotoPath = $folder . '/' . $filename;
+            }
+
+            if ($request->hasFile('firmaEdit')) {
+                $uploadedImageFirma = $request->file('firma');
+
+                $folder = 'uploads';
+
+                $filenameFirma = time() . '.' . $uploadedImageFirma->getClientOriginalExtension();
+
+                $uploadedImageFirma->move(public_path($folder), $filenameFirma);
+
+                $fotoFirma = $folder . '/' . $filenameFirma;
+            }
+
+            if ($request->hasFile('firmaCorreoEdit')) {
+                $uploadedImageFirmaCorreo = $request->file('firmaCorreo');
+
+                $folder = 'uploads';
+
+                $filenameFirmaCorreo = time() . '.' . $uploadedImageFirmaCorreo->getClientOriginalExtension();
+
+                $uploadedImageFirmaCorreo->move(public_path($folder), $filenameFirmaCorreo);
+
+                $firmaCorreo = $folder . '/' . $filenameFirmaCorreo;
+            }
+
+            $empleado->update($empleadoData);
+
+            DB::commit();
+
+            return response()->json(['message' => 'Empleado actualizado correctamente.'], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Ocurrió un error al actualizar.'], 500);
+        }
+    }
+
+    public function edit($id){
+        $empleado = PersonalRegularModel::where('id_empleado', $id)->first();
+        return view('personal.edit_personal_regular', compact('empleado'));
     }
 
     public function expediente($id)
@@ -215,7 +315,7 @@ class PersonalRegularController extends Controller
         return view('personal.agregar_conflicto_interes', compact('empleado', 'area'));
     }
 
-     public function conflictoInteresPost(Request $request)
+    public function conflictoInteresPost(Request $request)
     {
 
         personalConflictoInteresModel::create([
@@ -240,7 +340,7 @@ class PersonalRegularController extends Controller
             'habilitado' => 1,
             'id_usuario' => $request->id_empleado,
             'area' => $request->area
-            
+
         ]);
 
         return response()->json(['success' => 'Conflicto de interés agregado correctamente.']);
@@ -251,5 +351,4 @@ class PersonalRegularController extends Controller
         $empleado = PersonalRegularModel::where('id_empleado', $id)->first();
         return view('personal.registrar_acuerdo_confidencialidad', compact('empleado'));
     }
-
 }

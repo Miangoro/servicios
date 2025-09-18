@@ -81,6 +81,7 @@
                                 <th scope="col" class="text-white">Fecha de ingreso</th>
                                 <th scope="col" class="text-white">Descripción</th>
                                 <th scope="col" class="text-white">Correo</th>
+                                <th scope="col" class="text-white">Ver</th>
                                 <th scope="col" class="text-white">Opciones</th>
                             </tr>
                         </thead>

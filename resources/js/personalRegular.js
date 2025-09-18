@@ -19,7 +19,7 @@ $(function () {
       { data: 'fecha_ingreso', name: 'fecha_ingreso', searchable: true },
       { data: 'descripcion', name: 'descripcion', searchable: true },
       { data: 'correo', name: 'correo', searchable: true },
-      /* { data: 'verExp', name: 'verExp', orderable: false, searchable: false },*/
+      { data: 'verExp', name: 'verExp', orderable: false, searchable: false },
       { data: 'action', name: 'action', orderable: false, searchable: false }
     ]
   }).on('init.dt', function () {
