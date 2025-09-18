@@ -147,8 +147,8 @@ class ServiciosEspecializadosController extends Controller
     {
         $rules = [
             'clave_adicional' => 'nullable|string|max:255',
+            'clave_adicional' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
-            'precio' => 'required|numeric',
             'duracion' => 'required|string|max:255',
             'requiere_muestra' => ['required', Rule::in(['si', 'no'])],
             'descripcion_muestra' => 'nullable|string',
