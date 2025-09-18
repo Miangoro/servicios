@@ -31,7 +31,7 @@
                         {{-- Fila 1: Clave, Clave Adicional, Nombre del Servicio, Precio --}}
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="clave" name="clave" class="select2 form-select" data-allow-clear="true">
+                                <select id="clave" name="clave" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="">Selecciona una clave</option>
                                     @foreach ($claves as $clave)
                                         <option value="{{ $clave->clave }}" data-nombre-lab="{{ $clave->laboratorio }}" data-id-lab="{{ $clave->id_laboratorio }}">
@@ -76,7 +76,7 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="requiereMuestra" name="requiere_muestra" class="select2 form-select" data-allow-clear="true">
+                                <select id="requiereMuestra" name="requiere_muestra" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="">Selecciona una opción</option>
                                     <option value="si">Sí</option>
                                     <option value="no">No</option>
@@ -86,7 +86,7 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="acreditacion" name="acreditacion" class="select2 form-select" data-allow-clear="true">
+                                <select id="acreditacion" name="acreditacion" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="">Selecciona una opción</option>
                                     <option value="No acreditado">No acreditado</option>
                                     <option value="Acreditado">Acreditado</option>
@@ -96,7 +96,7 @@
                         </div>
                         <div class="col-12 col-md-3">
                             <div class="form-floating form-floating-outline">
-                                <select id="estatus" name="id_habilitado" class="select2 form-select" data-allow-clear="true">
+                                <select id="estatus" name="id_habilitado" class="select form-select" data-allow-clear="true" data-minimum-results-for-search="Infinity">
                                     <option value="1">Habilitado</option>
                                     <option value="0">No habilitado</option>
                                 </select>
@@ -208,7 +208,7 @@
                         </div>
 
                         <div class="col-12 text-end mt-4">
-                            <button type="submit" class="btn btn-primary me-2">
+                            <button type="submit" id="agregar-servicio-btn" class="btn btn-primary me-2">
                                 <i class="ri-add-line"></i> Agregar
                             </button>
                             <a href="{{ route('servicios.index') }}" class="btn btn-danger">
@@ -223,13 +223,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar Select en todos los selectores
-            $('.select').select({
-                placeholder: 'Selecciona una opción',
-                allowClear: true,
-                width: '100%'
-            });
-
+            // Inicializar Select en todos los selectores con la clase 'select-laboratorio'
             $('.select-laboratorio').select({
                 placeholder: 'Selecciona un laboratorio',
                 allowClear: true,
@@ -260,14 +254,11 @@
                     </button>
                 `;
                 laboratoriosContenedor.appendChild(nuevoLaboratorio);
-                
-                // Inicializar Select en el nuevo select
-                $(nuevoLaboratorio).find('.select-laboratorio').select({
+                $(nuevoLaboratorio).find('.select-laboratorio').select2({
                     placeholder: 'Selecciona un laboratorio',
                     allowClear: true,
                     width: '100%'
                 });
-                
                 calcularTotal();
             });
 
@@ -282,6 +273,7 @@
                 }
             });
 
+            // Resto de tu lógica
             const precioTotalInput = document.getElementById('precio');
             const requiereMuestraSelect = $('#requiereMuestra');
             const descripcionMuestraField = document.getElementById('descripcionMuestraField');
