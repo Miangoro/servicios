@@ -190,22 +190,22 @@ class ServiciosEspecializadosController extends Controller
             $servicio->id_requiere_muestra = ($request->input('requiere_muestra') === 'si') ? 1 : 0;
             
             if ($request->input('requiere_muestra') === 'si') {
-                $servicio->descripcion_muestra = $request->input('descripcion_muestra') ?? '';
+                $servicio->descripcion_Muestra = $request->input('descripcion_muestra') ?? '';
             } else {
-                $servicio->descripcion_muestra = '0';
+                $servicio->descripcion_Muestra = '0';
             }
             
             $servicio->id_habilitado = $request->input('id_habilitado', 0);
             
             if ($request->input('acreditacion') === 'Acreditado') {
                 $servicio->id_acreditacion = 1;
-                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
-                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
+                $servicio->nombre_Acreditacion = $request->input('nombre_acreditacion') ?? '';
+                $servicio->descripcion_Acreditacion = $request->input('descripcion_acreditacion') ?? '';
                 $servicio->metodo = $request->input('metodo') ?? '';
             } else {
                 $servicio->id_acreditacion = 0;
-                $servicio->nombre_acreditacion = '0';
-                $servicio->descripcion_acreditacion = '0';
+                $servicio->nombre_Acreditacion = '0';
+                $servicio->descripcion_Acreditacion = '0';
                 $servicio->metodo = '0';
             }
 
@@ -361,20 +361,20 @@ class ServiciosEspecializadosController extends Controller
             
             // Actualizar descripción de muestra
             if ($request->input('requiere_muestra') === 'si') {
-                $servicio->descripcion_muestra = $request->input('descripcion_muestra') ?? '';
+                $servicio->descripcion_Muestra = $request->input('descripcion_muestra') ?? '';
             } else {
-                $servicio->descripcion_muestra = '0';
+                $servicio->descripcion_Muestra = '0';
             }
             
             // Actualizar campos de acreditación
             if ($request->input('acreditacion') === 'Acreditado') {
                 $servicio->id_acreditacion = 1;
-                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
-                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
+                $servicio->nombre_Acreditacion = $request->input('nombre_acreditacion') ?? '';
+                $servicio->descripcion_Acreditacion = $request->input('descripcion_acreditacion') ?? '';
             } else {
                 $servicio->id_acreditacion = 0;
-                $servicio->nombre_acreditacion = '0';
-                $servicio->descripcion_acreditacion = '0';
+                $servicio->nombre_Acreditacion = '0';
+                $servicio->descripcion_Acreditacion = '0';
             }
             
             $servicio->id_habilitado = $request->input('id_habilitado');

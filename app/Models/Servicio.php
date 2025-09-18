@@ -41,7 +41,7 @@ class Servicio extends Model
         'id_acreditacion',
         'id_categoria',
         'cant_muestra',
-        'id_requiere_muestra', // Corrección: Cambiado a id_requiere_muestra
+        'id_requiere_muestra',
         'nombre_Acreditacion',
         'descripcion_Acreditacion',
         'descripcion_Muestra',
@@ -49,7 +49,7 @@ class Servicio extends Model
 
     // Cast para manejar el campo id_requiere_muestra como booleano
     protected $casts = [
-        'id_requiere_muestra' => 'boolean', // Corrección: Cambiado a id_requiere_muestra
+        'id_requiere_muestra' => 'boolean',
         'id_acreditacion' => 'boolean'
     ];
 
