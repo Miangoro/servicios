@@ -223,7 +223,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar Select en todos los selectores con la clase 'select-laboratorio'
+            // Inicializar Select en todos los selectores con la clase 'select2-laboratorio'
             $('.select-laboratorio').select({
                 placeholder: 'Selecciona un laboratorio',
                 allowClear: true,
