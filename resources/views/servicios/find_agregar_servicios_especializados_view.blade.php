@@ -183,7 +183,7 @@
                                             <label>Precio *</label>
                                         </div>
                                         <div class="form-floating form-floating-outline flex-grow-1 ms-2">
-                                            <select class="form-select select2-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
+                                            <select id="primer-select-laboratorio" class="form-select select-laboratorio" name="laboratorios_responsables[]" data-allow-clear="true" required>
                                                 <option value="">Selecciona un laboratorio</option>
                                                 @foreach ($laboratorios as $laboratorio)
                                                     <option value="{{ $laboratorio->id_laboratorio }}">{{ $laboratorio->laboratorio }}</option>
@@ -223,16 +223,91 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar Select en todos los selectores con la clase 'select2-laboratorio'
-            $('.select-laboratorio').select({
+            const form = document.getElementById('formAgregarServicio');
+            const claveSelect = $('#clave');
+            const precioTotalInput = document.getElementById('precio');
+            const requiereMuestraSelect = $('#requiereMuestra');
+            const descripcionMuestraField = document.getElementById('descripcionMuestraField');
+            
+            const acreditacionSelect = $('#acreditacion');
+            const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
+            const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
+
+            const agregarLaboratorioBtn = document.getElementById('agregar-laboratorio-btn');
+            const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
+            
+            // Inicializar Select2 en todos los selectores con la clase 'select2-laboratorio'
+            $('.select2-laboratorio').select2({
                 placeholder: 'Selecciona un laboratorio',
                 allowClear: true,
                 width: '100%'
             });
 
+            // Control para mostrar el nombre del archivo seleccionado
+            const archivoInput = document.getElementById('archivoRequisitos');
+            const archivoInfo = document.getElementById('archivoInfo');
+            
+            archivoInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    archivoInfo.textContent = this.files[0].name;
+                } else {
+                    archivoInfo.textContent = 'No se ha seleccionado ningún archivo';
+                }
+            });
+
+            // Lógica para mostrar/ocultar el campo "Descripción de Muestra"
+            function toggleDescripcionMuestraField() {
+                if (requiereMuestraSelect.val() === 'si') {
+                    descripcionMuestraField.style.display = 'block';
+                    document.getElementById('descripcionMuestra').setAttribute('required', 'required');
+                } else {
+                    descripcionMuestraField.style.display = 'none';
+                    document.getElementById('descripcionMuestra').removeAttribute('required');
+                }
+            }
+            toggleDescripcionMuestraField();
+            requiereMuestraSelect.on('change', function() {
+                toggleDescripcionMuestraField();
+            });
+
+            // Lógica para mostrar/ocultar los campos de acreditación
+            function toggleAcreditacionFields() {
+                if (acreditacionSelect.val() === 'Acreditado') {
+                    campoNombreAcreditacion.style.display = 'block';
+                    campoDescripcionAcreditacion.style.display = 'block';
+                    document.getElementById('nombreAcreditacion').setAttribute('required', 'required');
+                    document.getElementById('descripcionAcreditacion').setAttribute('required', 'required');
+                } else {
+                    campoNombreAcreditacion.style.display = 'none';
+                    campoDescripcionAcreditacion.style.display = 'none';
+                    document.getElementById('nombreAcreditacion').removeAttribute('required');
+                    document.getElementById('descripcionAcreditacion').removeAttribute('required');
+                }
+            }
+            toggleAcreditacionFields();
+            acreditacionSelect.on('change', function() {
+                toggleAcreditacionFields();
+            });
+
+            // Lógica de suma para los precios
+            function calcularTotal() {
+                let total = 0;
+                const preciosLabs = document.querySelectorAll('.precio-lab');
+                preciosLabs.forEach(input => {
+                    const valor = parseFloat(input.value) || 0;
+                    total += valor;
+                });
+                precioTotalInput.value = total.toFixed(2);
+            }
+
+            laboratoriosContenedor.addEventListener('input', function(e) {
+                if (e.target.classList.contains('precio-lab')) {
+                    calcularTotal();
+                }
+            });
+
             // Lógica para agregar y eliminar campos de "Precio por laboratorio"
-            document.getElementById('agregar-laboratorio-btn').addEventListener('click', function() {
-                const laboratoriosContenedor = document.getElementById('laboratorios-contenedor');
+            agregarLaboratorioBtn.addEventListener('click', function() {
                 const nuevoLaboratorio = document.createElement('div');
                 nuevoLaboratorio.classList.add('input-group', 'mb-3', 'laboratorio-item');
                 nuevoLaboratorio.innerHTML = `
@@ -254,7 +329,7 @@
                     </button>
                 `;
                 laboratoriosContenedor.appendChild(nuevoLaboratorio);
-                $(nuevoLaboratorio).find('.select-laboratorio').select2({
+                $(nuevoLaboratorio).find('.select-laboratorio').select({
                     placeholder: 'Selecciona un laboratorio',
                     allowClear: true,
                     width: '100%'
@@ -262,7 +337,7 @@
                 calcularTotal();
             });
 
-            document.getElementById('laboratorios-contenedor').addEventListener('click', function(e) {
+            laboratoriosContenedor.addEventListener('click', function(e) {
                 if (e.target.closest('.eliminar-laboratorio-btn')) {
                     const item = e.target.closest('.laboratorio-item');
                     if (item) {
@@ -272,74 +347,8 @@
                     }
                 }
             });
-
-            // Resto de tu lógica
-            const precioTotalInput = document.getElementById('precio');
-            const requiereMuestraSelect = $('#requiereMuestra');
-            const descripcionMuestraField = document.getElementById('descripcionMuestraField');
-            const acreditacionSelect = $('#acreditacion');
-            const campoNombreAcreditacion = document.getElementById('campoNombreAcreditacion');
-            const campoDescripcionAcreditacion = document.getElementById('campoDescripcionAcreditacion');
-            const archivoInput = document.getElementById('archivoRequisitos');
-            const archivoInfo = document.getElementById('archivoInfo');
-            
-            archivoInput.addEventListener('change', function() {
-                if (this.files.length > 0) {
-                    archivoInfo.textContent = this.files[0].name;
-                } else {
-                    archivoInfo.textContent = 'No se ha seleccionado ningún archivo';
-                }
-            });
-
-            function toggleDescripcionMuestraField() {
-                if (requiereMuestraSelect.val() === 'si') {
-                    descripcionMuestraField.style.display = 'block';
-                    document.getElementById('descripcionMuestra').setAttribute('required', 'required');
-                } else {
-                    descripcionMuestraField.style.display = 'none';
-                    document.getElementById('descripcionMuestra').removeAttribute('required');
-                }
-            }
-            toggleDescripcionMuestraField();
-            requiereMuestraSelect.on('change', function() {
-                toggleDescripcionMuestraField();
-            });
-
-            function toggleAcreditacionFields() {
-                if (acreditacionSelect.val() === 'Acreditado') {
-                    campoNombreAcreditacion.style.display = 'block';
-                    campoDescripcionAcreditacion.style.display = 'block';
-                    document.getElementById('nombreAcreditacion').setAttribute('required', 'required');
-                    document.getElementById('descripcionAcreditacion').setAttribute('required', 'required');
-                } else {
-                    campoNombreAcreditacion.style.display = 'none';
-                    campoDescripcionAcreditacion.style.display = 'none';
-                    document.getElementById('nombreAcreditacion').removeAttribute('required');
-                    document.getElementById('descripcionAcreditacion').removeAttribute('required');
-                }
-            }
-            toggleAcreditacionFields();
-            acreditacionSelect.on('change', function() {
-                toggleAcreditacionFields();
-            });
-
-            function calcularTotal() {
-                let total = 0;
-                const preciosLabs = document.querySelectorAll('.precio-lab');
-                preciosLabs.forEach(input => {
-                    const valor = parseFloat(input.value) || 0;
-                    total += valor;
-                });
-                precioTotalInput.value = total.toFixed(2);
-            }
-
-            document.getElementById('laboratorios-contenedor').addEventListener('input', function(e) {
-                if (e.target.classList.contains('precio-lab')) {
-                    calcularTotal();
-                }
-            });
-
             calcularTotal();
         });
+        
     </script>
 @endsection

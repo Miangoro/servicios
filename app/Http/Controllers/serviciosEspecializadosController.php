@@ -141,26 +141,25 @@ class ServiciosEspecializadosController extends Controller
     /**
      * Stores a new service in the database.
      * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         $rules = [
-            'clave' => 'required|string|max:255',
+            'clave_adicional' => 'nullable|string|max:255',
             'clave_adicional' => 'nullable|string|max:255',
             'nombre' => 'required|string|max:255',
-            'precio' => 'required|numeric',
             'duracion' => 'required|string|max:255',
             'requiere_muestra' => ['required', Rule::in(['si', 'no'])],
             'descripcion_muestra' => 'nullable|string',
             'acreditacion' => 'required|string|max:255',
             'nombre_acreditacion' => 'nullable|string|max:255',
             'descripcion_acreditacion' => 'nullable|string',
-            'id_habilitado' => 'required|in:1,0',
+            'id_habilitado' => 'nullable|in:1,0',
             'analisis' => 'required|string|max:255',
             'unidades' => 'required|string|max:255',
             'metodo' => 'nullable|string|max:255',
-            'prueba' => 'required|string',
+            'prueba' => 'nullable|string',
             'precios_laboratorio' => 'required|array|min:1',
             'precios_laboratorio.*' => 'required|numeric',
             'laboratorios_responsables' => 'required|array|min:1',
@@ -171,46 +170,57 @@ class ServiciosEspecializadosController extends Controller
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->back()->withErrors($validator)->withInput();
         }
         
         DB::beginTransaction();
 
         try {
+            $idPrimerLaboratorio = $request->laboratorios_responsables[0];
+            $laboratorioPrincipal = CatalogoLaboratorio::findOrFail($idPrimerLaboratorio);
+            $claveBase = $laboratorioPrincipal->clave;
+
+            $ultimoServicio = Servicio::where('clave', 'like', "{$claveBase}-%")->latest('id_servicio')->first();
+            $contador = 1;
+
+            if ($ultimoServicio) {
+                $ultimaClave = $ultimoServicio->clave;
+                $partes = explode('-', $ultimaClave);
+                if (count($partes) > 1 && is_numeric(end($partes))) {
+                    $contador = (int)end($partes) + 1;
+                }
+            }
+
+            $nuevaClave = "{$claveBase}-{$contador}";
+            
             $servicio = new Servicio();
-            $servicio->clave = $request->input('clave');
-            $servicio->clave_adicional = $request->input('clave_adicional');
+            $servicio->clave = $nuevaClave;
             $servicio->nombre = $request->input('nombre');
             $servicio->precio = $request->input('precio');
             $servicio->duracion = $request->input('duracion');
             $servicio->id_requiere_muestra = ($request->input('requiere_muestra') === 'si') ? 1 : 0;
             
             if ($request->input('requiere_muestra') === 'si') {
-                $servicio->descripcion_Muestra = $request->input('descripcion_muestra') ?? '';
+                $servicio->descripcion_muestra = $request->input('descripcion_muestra') ?? '';
             } else {
-                $servicio->descripcion_Muestra = '0';
+                $servicio->descripcion_muestra = '0';
             }
             
             $servicio->id_habilitado = $request->input('id_habilitado', 0);
             
             if ($request->input('acreditacion') === 'Acreditado') {
                 $servicio->id_acreditacion = 1;
-                $servicio->nombre_Acreditacion = $request->input('nombre_acreditacion') ?? '';
-                $servicio->descripcion_Acreditacion = $request->input('descripcion_acreditacion') ?? '';
-                $servicio->metodo = $request->input('metodo') ?? '';
+                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
+                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
             } else {
                 $servicio->id_acreditacion = 0;
-                $servicio->nombre_Acreditacion = '0';
-                $servicio->descripcion_Acreditacion = '0';
-                $servicio->metodo = '0';
+                $servicio->nombre_acreditacion = '0';
+                $servicio->descripcion_acreditacion = '0';
             }
 
             $servicio->analisis = $request->input('analisis');
             $servicio->unidades = $request->input('unidades');
+            $servicio->metodo = $request->input('metodo');
             $servicio->prueba = $request->input('prueba');
             $servicio->tipo_servicio = 2;
             $servicio->id_usuario = auth()->id() ?? 1;
@@ -243,20 +253,13 @@ class ServiciosEspecializadosController extends Controller
             
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Servicio agregado con éxito. La clave generada es: ' . $servicio->clave
-            ]);
+            return redirect()->route('servicios.index')->with('success', 'Servicio agregado con éxito. La clave generada es: ' . $nuevaClave);
 
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error al guardar servicio: ' . $e->getMessage());
             Log::error('Trace: ' . $e->getTraceAsString());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Ocurrió un error al guardar el servicio: ' . $e->getMessage()
-            ], 500);
+            return redirect()->back()->with('error', 'Ocurrió un error al guardar el servicio: ' . $e->getMessage());
         }
     }
 
@@ -361,20 +364,20 @@ class ServiciosEspecializadosController extends Controller
             
             // Actualizar descripción de muestra
             if ($request->input('requiere_muestra') === 'si') {
-                $servicio->descripcion_Muestra = $request->input('descripcion_muestra') ?? '';
+                $servicio->descripcion_muestra = $request->input('descripcion_muestra') ?? '';
             } else {
-                $servicio->descripcion_Muestra = '0';
+                $servicio->descripcion_muestra = '0';
             }
             
             // Actualizar campos de acreditación
             if ($request->input('acreditacion') === 'Acreditado') {
                 $servicio->id_acreditacion = 1;
-                $servicio->nombre_Acreditacion = $request->input('nombre_acreditacion') ?? '';
-                $servicio->descripcion_Acreditacion = $request->input('descripcion_acreditacion') ?? '';
+                $servicio->nombre_acreditacion = $request->input('nombre_acreditacion') ?? '';
+                $servicio->descripcion_acreditacion = $request->input('descripcion_acreditacion') ?? '';
             } else {
                 $servicio->id_acreditacion = 0;
-                $servicio->nombre_Acreditacion = '0';
-                $servicio->descripcion_Acreditacion = '0';
+                $servicio->nombre_acreditacion = '0';
+                $servicio->descripcion_acreditacion = '0';
             }
             
             $servicio->id_habilitado = $request->input('id_habilitado');
